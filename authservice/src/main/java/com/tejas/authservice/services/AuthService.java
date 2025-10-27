@@ -5,9 +5,13 @@ import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.tejas.authservice.models.LoginRequest;
 import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
 import com.tejas.authservice.repositories.AuthRepo;
@@ -16,6 +20,12 @@ import com.tejas.authservice.repositories.AuthRepo;
 public class AuthService {
 	@Autowired
 	AuthRepo repo;
+	
+	@Autowired
+	AuthenticationManager authManager;
+	
+	@Autowired
+	JWTService jwtService;
 	
 	BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
@@ -33,7 +43,15 @@ public class AuthService {
 		return new ResponseEntity<>(user, HttpStatus.OK);		
 	}
 
-	public ResponseEntity<User> loginUser(String username, String password) {
-		return null;
+	public ResponseEntity<String> verifyUser(LoginRequest req) {
+		String username = req.getUsername();
+		String password = req.getPassword();
+		Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+		
+		if (authentication.isAuthenticated()) {
+			return new ResponseEntity<>(jwtService.generateToken(username), HttpStatus.OK);
+		}
+		
+		return new ResponseEntity<>("Failure", HttpStatus.UNAUTHORIZED);
 	}
 }
