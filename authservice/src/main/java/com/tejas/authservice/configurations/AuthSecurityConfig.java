@@ -12,12 +12,16 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableMethodSecurity
 public class AuthSecurityConfig {
 	@Autowired
 	UserDetailsService userDetailsService;
+	
+	@Autowired
+	JWTFilter jwtFilter;
 	
 	@Bean
 	AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -39,6 +43,7 @@ public class AuthSecurityConfig {
 					.requestMatchers("/auth/login","/auth/loginuser", "/auth/signup").permitAll()
 					.anyRequest().authenticated())
 			.csrf(csrf -> csrf.disable())
+			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 			.logout(logout -> logout
 					.logoutUrl("/logout")
 					.logoutSuccessUrl("/login")
