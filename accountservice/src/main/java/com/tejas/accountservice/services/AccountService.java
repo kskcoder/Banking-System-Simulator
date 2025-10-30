@@ -1,0 +1,76 @@
+package com.tejas.accountservice.services;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.tejas.accountservice.models.Account;
+import com.tejas.accountservice.models.CreateAccountDTO;
+import com.tejas.accountservice.repositories.AccountRepo;
+
+@Service
+public class AccountService {
+	@Autowired
+	private AccountRepo repo;
+	
+    public String generateAccountNumber(int userId) {
+        return "AC" + userId + System.currentTimeMillis() + (int)(Math.random() * 1000);
+    }
+	
+	public ResponseEntity<Account> createAccount(CreateAccountDTO accountReq) {
+		Account account = new Account();
+		account.setUserid(accountReq.getUserId());
+		account.setAccountnumber(generateAccountNumber(accountReq.getUserId()));
+		account.setAccounttype(accountReq.getAccounttype());
+		account.setBalance(0.0);
+		
+		repo.save(account);
+		
+		return new ResponseEntity<>(account, HttpStatus.OK);
+	}
+
+	public ResponseEntity<Account> getAccountByAccountNumber(String accountNumber) {
+		Account account = repo.getByAccountnumber(accountNumber).get();
+		
+		if (account != null) {
+			return new ResponseEntity<>(account, HttpStatus.OK);
+		}
+			
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+	}
+	
+	public ResponseEntity<List<Account>> getAccountByUserId(int id) {
+		List<Account> accounts = repo.getByUserid(id).get();
+		
+		if (accounts != null) {
+			return new ResponseEntity<>(accounts, HttpStatus.OK);
+		}
+			
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+	}
+	
+	public ResponseEntity<Double> getBalanceByAccountNumber(String accountNumber) {
+		Account account = repo.getByAccountnumber(accountNumber).get();
+		
+		if (account != null) {
+			return new ResponseEntity<>(account.getBalance(), HttpStatus.OK);
+		}
+			
+		return new ResponseEntity<>(0.0, HttpStatus.NOT_FOUND);
+	}
+	
+	public ResponseEntity<String> closeAccount(String accountNumber) {
+		Account account = repo.getByAccountnumber(accountNumber).get();
+		
+		if (account != null) {
+			repo.delete(account);
+			return new ResponseEntity<>("Successful", HttpStatus.OK);
+		}
+			
+		return new ResponseEntity<>("Could not delete!", HttpStatus.NOT_FOUND);
+		
+	}
+}
