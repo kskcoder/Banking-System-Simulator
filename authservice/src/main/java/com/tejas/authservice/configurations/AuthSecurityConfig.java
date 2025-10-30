@@ -45,8 +45,8 @@ public class AuthSecurityConfig {
 			.csrf(csrf -> csrf.disable())
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 			.logout(logout -> logout
-					.logoutUrl("/logout")
-					.logoutSuccessUrl("/login")
+					.logoutUrl("/auth/logout")
+					.logoutSuccessUrl("/auth/login")
 					.invalidateHttpSession(true)
 					.clearAuthentication(true)
 					.permitAll()

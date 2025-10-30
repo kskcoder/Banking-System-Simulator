@@ -46,10 +46,15 @@ public class AuthService {
 	public ResponseEntity<String> verifyUser(LoginRequest req) {
 		String username = req.getUsername();
 		String password = req.getPassword();
-		Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 		
-		if (authentication.isAuthenticated()) {
-			return new ResponseEntity<>(jwtService.generateToken(username), HttpStatus.OK);
+		try {
+			Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+			
+			if (authentication.isAuthenticated()) {
+				return new ResponseEntity<>(jwtService.generateToken(username), HttpStatus.OK);
+			}
+		} catch (Exception e) {
+			return new ResponseEntity<>("Failure", HttpStatus.UNAUTHORIZED);
 		}
 		
 		return new ResponseEntity<>("Failure", HttpStatus.UNAUTHORIZED);
