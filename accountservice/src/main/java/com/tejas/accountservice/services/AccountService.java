@@ -73,4 +73,13 @@ public class AccountService {
 		return new ResponseEntity<>("Could not delete!", HttpStatus.NOT_FOUND);
 		
 	}
+
+	public ResponseEntity<List<Account>> getAllAccounts() {
+		List<Account> accounts = repo.findAll();
+		
+		if (!accounts.isEmpty()) {
+			return new ResponseEntity<>(accounts, HttpStatus.OK);
+		}
+		return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+	}
 }
