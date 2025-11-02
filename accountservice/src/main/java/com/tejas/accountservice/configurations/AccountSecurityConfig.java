@@ -19,7 +19,7 @@ public class AccountSecurityConfig {
 		http
 		.csrf(csrf -> csrf.disable())
 		.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/accounts/","/accounts/user/").authenticated())
+				.anyRequest().authenticated())
 		.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 		
 		
