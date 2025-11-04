@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,9 @@ public class AuthService {
 	
 	@Autowired
 	JWTService jwtService;
+	
+	@Autowired
+	AuthUserDetailsService userDetailsService;
 	
 	BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
@@ -51,7 +55,8 @@ public class AuthService {
 			Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 			
 			if (authentication.isAuthenticated()) {
-				return new ResponseEntity<>(jwtService.generateToken(username), HttpStatus.OK);
+				UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+				return new ResponseEntity<>(jwtService.generateToken(username, userDetails), HttpStatus.OK);
 			}
 		} catch (Exception e) {
 			return new ResponseEntity<>("Failure", HttpStatus.UNAUTHORIZED);
