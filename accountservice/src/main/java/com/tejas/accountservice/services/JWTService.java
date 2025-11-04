@@ -24,7 +24,7 @@ public class JWTService {
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
 	
-	public String extractUsername(String token) {
+	public String extractUserId(String token) {
 		return extractClaim(token, Claims::getSubject);
 	}
 
