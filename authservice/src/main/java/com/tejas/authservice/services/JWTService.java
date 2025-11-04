@@ -7,7 +7,6 @@ import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,7 +23,7 @@ public class JWTService {
 	@Value("${jwt.secret}")
 	private String secretKey;
 	
-	public String generateToken(String username, UserDetails userDetails) {
+	public String generateToken(Long userId, UserDetails userDetails) {
 		Map<String, Object> claims = new HashMap<>();
 		
 		String role = userDetails.getAuthorities().stream()
@@ -37,7 +36,7 @@ public class JWTService {
 		
 		return Jwts.builder()
 				.claims(claims)
-				.subject(username)
+				.subject(String.valueOf(userId))
 				.issuedAt(new Date(System.currentTimeMillis()))
 				.expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))
 				.signWith(getKey())
@@ -49,7 +48,7 @@ public class JWTService {
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
 	
-	public String extractUsername(String token) {
+	public String extractUserId(String token) {
 		return extractClaim(token, Claims::getSubject);
 	}
 
@@ -67,7 +66,7 @@ public class JWTService {
     }
 	
 	public boolean validateToken(String token, UserDetails userDetails) {
-    	final String userName = extractUsername(token);
+    	final String userName = extractUserId(token);
         return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
 	}
 	
