@@ -11,6 +11,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.tejas.authservice.models.User;
+import com.tejas.authservice.repositories.AuthRepo;
 import com.tejas.authservice.services.AuthUserDetailsService;
 import com.tejas.authservice.services.JWTService;
 
@@ -26,6 +28,9 @@ public class JWTFilter extends OncePerRequestFilter {
 	private JWTService jwtService; 
 	
 	@Autowired
+	private AuthRepo repo; 
+	
+	@Autowired
 	ApplicationContext context;
 
 	@Override
@@ -33,15 +38,16 @@ public class JWTFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		String authHeader = request.getHeader("Authorization");
 		String token = null;
-		String username = null;
+		String userId = null;
 		
 		if (authHeader != null && authHeader.startsWith ("Bearer ")) {
 			token = authHeader.substring(7);
-			username = jwtService.extractUsername(token);
+			userId = jwtService.extractUserId(token);
 		}
 		
-		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			UserDetails userDetails = context.getBean(AuthUserDetailsService.class).loadUserByUsername(username);
+		if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+			User user = repo.getById(Integer.parseInt(userId));
+			UserDetails userDetails = context.getBean(AuthUserDetailsService.class).loadUserByUsername(user.getUsername());
 			
 			if (jwtService.validateToken(token, userDetails)) {
 				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

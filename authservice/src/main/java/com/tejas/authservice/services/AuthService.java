@@ -55,8 +55,9 @@ public class AuthService {
 			Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 			
 			if (authentication.isAuthenticated()) {
+				User user = repo.getByUsername(username);
 				UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-				return new ResponseEntity<>(jwtService.generateToken(username, userDetails), HttpStatus.OK);
+				return new ResponseEntity<>(jwtService.generateToken(user.getId(), userDetails), HttpStatus.OK);
 			}
 		} catch (Exception e) {
 			return new ResponseEntity<>("Failure", HttpStatus.UNAUTHORIZED);
