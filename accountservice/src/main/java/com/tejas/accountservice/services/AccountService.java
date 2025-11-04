@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import com.tejas.accountservice.models.Account;
@@ -32,7 +33,8 @@ public class AccountService {
 		return new ResponseEntity<>(account, HttpStatus.OK);
 	}
 
-	public ResponseEntity<Account> getAccountByAccountNumber(String accountNumber) {
+	@PreAuthorize("#username == authentication.name or hasName('ADMIN')")
+	public ResponseEntity<Account> getAccountByAccountNumber(String username, String accountNumber) {
 		Account account = repo.getByAccountnumber(accountNumber).get();
 		
 		if (account != null) {
