@@ -7,7 +7,9 @@ import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -22,9 +24,16 @@ public class JWTService {
 	@Value("${jwt.secret}")
 	private String secretKey;
 	
-
-	public String generateToken(String username) {
+	public String generateToken(String username, UserDetails userDetails) {
 		Map<String, Object> claims = new HashMap<>();
+		
+		String role = userDetails.getAuthorities().stream()
+		        .findFirst()
+		        .map(GrantedAuthority::getAuthority)
+		        .orElse("USER")
+		        .replace("ROLE_", "");
+	
+		claims.put("role", role);
 		
 		return Jwts.builder()
 				.claims(claims)
