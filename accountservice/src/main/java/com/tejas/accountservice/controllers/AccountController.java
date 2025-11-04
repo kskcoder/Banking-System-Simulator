@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +37,8 @@ public class AccountController {
 	
 	@GetMapping("/{account}")
 	public ResponseEntity<Account> getAccountByAccountNumber(@PathVariable String account) {
-		return accountService.getAccountByAccountNumber(account);
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+		return accountService.getAccountByAccountNumber(userId, account);
 	}
 	
 	@GetMapping("/user/{userId}")

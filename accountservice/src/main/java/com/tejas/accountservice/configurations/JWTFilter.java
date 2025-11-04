@@ -33,20 +33,20 @@ public class JWTFilter extends OncePerRequestFilter{
 			throws ServletException, IOException {
 		String authHeader = request.getHeader("Authorization");
 		String token = null;
-		String username = null;
+		String userId = null;
 		
 		if (authHeader != null && authHeader.startsWith ("Bearer ")) {
 			token = authHeader.substring(7);
-			username = jwtService.extractUsername(token);
+			userId = jwtService.extractUserId(token);
 		}
 		
-		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+		if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			if (jwtService.validateToken(token)) {
 			    Claims claims = jwtService.extractAllClaims(token);
 			    String role = claims.get("role", String.class);
 
 			    UsernamePasswordAuthenticationToken authToken =
-			        new UsernamePasswordAuthenticationToken(username, null,
+			        new UsernamePasswordAuthenticationToken(userId, null,
 			            List.of(new SimpleGrantedAuthority("ROLE_" + role)));
 			    SecurityContextHolder.getContext().setAuthentication(authToken);
 			}
