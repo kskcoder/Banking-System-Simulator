@@ -95,7 +95,7 @@ public class AccountService {
 		Account account = repo.getByAccountnumber(senderAccNumber)
 				.orElseThrow(() -> new RuntimeException("Account not found"));
 		
-		if (String.valueOf(account.getUserid()) == userId) {
+		if (String.valueOf(account.getUserid()).equals(userId)) {
 			if (amount > account.getBalance()) {
 				return new ResponseEntity<>("Insufficient Balance", HttpStatus.BAD_REQUEST);
 			}
