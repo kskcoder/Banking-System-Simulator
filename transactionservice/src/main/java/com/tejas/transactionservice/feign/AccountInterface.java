@@ -9,9 +9,9 @@ import com.tejas.transactionservice.models.TransferRequest;
 
 @FeignClient("account-service")
 public interface AccountInterface {
-	@PostMapping("/debit")
+	@PostMapping("accounts/debit")
 	public ResponseEntity<String> debitAccount(@RequestBody TransferRequest request);
 	
-	@PostMapping("/credit")
+	@PostMapping("accounts/credit")
 	public ResponseEntity<String> creditAccount(@RequestBody TransferRequest request);
 }
