@@ -5,12 +5,13 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import com.tejas.accountservice.Utils.AccountUtils;
 import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.models.CreateAccountDTO;
 import com.tejas.accountservice.repositories.AccountRepo;
+import com.tejas.accountservice.utils.AccountUtils;
 
 @Service
 public class AccountService {
@@ -33,8 +34,9 @@ public class AccountService {
 		return new ResponseEntity<>(account, HttpStatus.OK);
 	}
 
-	public ResponseEntity<Account> getAccountByAccountNumber(String userId, String accountNumber) {
+	public ResponseEntity<Account> getAccountByAccountNumber(String accountNumber) {
 		Account account = repo.getByAccountnumber(accountNumber).get();
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 		
 		if (account != null && (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin())) {
 			return new ResponseEntity<>(account, HttpStatus.OK);

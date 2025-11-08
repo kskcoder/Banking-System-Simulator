@@ -37,8 +37,7 @@ public class AccountController {
 	
 	@GetMapping("/{account}")
 	public ResponseEntity<Account> getAccountByAccountNumber(@PathVariable String account) {
-		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-		return accountService.getAccountByAccountNumber(userId, account);
+		return accountService.getAccountByAccountNumber(account);
 	}
 	
 	@GetMapping("/user/{userId}")

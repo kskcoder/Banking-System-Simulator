@@ -1,4 +1,4 @@
-package com.tejas.accountservice.Utils;
+package com.tejas.accountservice.utils;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
