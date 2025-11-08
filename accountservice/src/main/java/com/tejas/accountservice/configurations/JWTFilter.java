@@ -37,7 +37,6 @@ public class JWTFilter extends OncePerRequestFilter{
 		String gatewayToServiceKey = request.getHeader("X-Internal-Auth");
 		
 		if (accountSecretKey.equals(gatewayToServiceKey)) {
-			System.out.println("Hello");
 			role = request.getHeader("X-User-Role");
 			userId = request.getHeader("X-User-Id");
 			
