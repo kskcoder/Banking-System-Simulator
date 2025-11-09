@@ -11,6 +11,8 @@ import com.tejas.transactionservice.models.Transaction;
 import com.tejas.transactionservice.models.TransferRequest;
 import com.tejas.transactionservice.repositories.TransactionRepo;
 
+import feign.FeignException;
+
 @Service
 public class TransactionService {
 
@@ -30,36 +32,41 @@ public class TransactionService {
         repo.save(txn);
 
         try {
-            ResponseEntity<String> debitResponse = accountInterface.debitAccount(request);
-            if (!debitResponse.getStatusCode().is2xxSuccessful()) {
-                txn.setStatus("FAILED_DEBIT");
-                repo.save(txn);
-                return new ResponseEntity<>(txn, HttpStatus.BAD_REQUEST);
-            }
-
-            ResponseEntity<String> creditResponse = accountInterface.creditAccount(request);
-
-            if (!creditResponse.getStatusCode().is2xxSuccessful()) {
-                txn.setStatus("FAILED_CREDIT");
-                repo.save(txn);
-                 
-                TransferRequest tf = new TransferRequest();
-                tf.setToAccount(request.getFromAccount());
-                tf.setAmount(request.getAmount());
-                
-                accountInterface.creditAccount(tf);
-                return new ResponseEntity<>(txn, HttpStatus.BAD_REQUEST);
-            }
-
-            txn.setStatus("SUCCESS");
+            accountInterface.debitAccount(request);
+        } catch (FeignException e) {
+        	txn.setStatus(e.contentUTF8());
             repo.save(txn);
-            return ResponseEntity.ok(txn);
-
-        } catch (Exception e) {
-            txn.setStatus("ERROR");
-            repo.save(txn);
-            return new ResponseEntity<>(txn, HttpStatus.INTERNAL_SERVER_ERROR);
+            
+            HttpStatus status = HttpStatus.resolve(e.status());
+            if (status == null) {
+            	status = HttpStatus.INTERNAL_SERVER_ERROR; 
+            }
+            return new ResponseEntity<>(txn, status);
         }
+        
+        try {
+            accountInterface.creditAccount(request);
+        } catch (FeignException e) {
+        	txn.setStatus(e.contentUTF8());
+        	repo.save(txn);
+             
+            TransferRequest tf = new TransferRequest();
+            tf.setToAccount(request.getFromAccount());
+            tf.setAmount(request.getAmount());
+            
+            accountInterface.creditAccount(tf);
+            HttpStatus status = HttpStatus.resolve(e.status());
+            if (status == null) {
+            	status = HttpStatus.INTERNAL_SERVER_ERROR; 
+            }
+            return new ResponseEntity<>(txn, status);
+        }
+        
+        txn.setStatus("SUCCESS");
+        repo.save(txn);
+        return ResponseEntity.ok(txn);
+
+        
     }
 }
 
