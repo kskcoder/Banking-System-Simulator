@@ -92,8 +92,11 @@ public class AccountService {
 		String senderAccNumber = request.getFromAccount();
 		Double amount = request.getAmount();
 		
-		Account account = repo.getByAccountnumber(senderAccNumber)
-				.orElseThrow(() -> new RuntimeException("Account not found"));
+		Account account = repo.getByAccountnumber(senderAccNumber).orElse(null);
+		
+		if (account == null) {
+			return new ResponseEntity<>("Sender account not found", HttpStatus.NOT_FOUND);
+		}
 		
 		if (String.valueOf(account.getUserid()).equals(userId)) {
 			if (amount > account.getBalance()) {
@@ -113,7 +116,11 @@ public class AccountService {
 		Double amount = request.getAmount();
 		
 		Account account = repo.getByAccountnumber(senderAccNumber)
-				.orElseThrow(() -> new RuntimeException("Account not found")); 
+				.orElse(null);
+		
+		if (account == null) {
+			return new ResponseEntity<>("Receiver account not found", HttpStatus.NOT_FOUND);
+		}
 		
 		account.setBalance(account.getBalance() + amount);
 		repo.save(account);
