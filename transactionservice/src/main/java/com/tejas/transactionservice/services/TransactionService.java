@@ -29,6 +29,12 @@ public class TransactionService {
         txn.setToAccount(request.getToAccount());
         txn.setAmount(request.getAmount());
         txn.setStatus("PENDING");
+        
+        if (request.getAmount() <= 0.0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        } else if (request.getFromAccount().equals(request.getToAccount())) {
+        	throw new IllegalArgumentException("Sender and receiver must be different");
+        }
         repo.save(txn);
 
         try {
