@@ -4,8 +4,9 @@ import lombok.Data;
 
 @Data
 public class TransactionEvent {
-    private String transactionId;
-    private String accountNumber;
+    private long transactionId;
+    private String fromAccountNumber;
+    private String toAccountNumber;
     private double amount;
     private String type;
     private String status; 

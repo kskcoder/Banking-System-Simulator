@@ -7,4 +7,5 @@ import com.tejas.transactionservice.models.Transaction;
 
 @Repository
 public interface TransactionRepo extends JpaRepository<Transaction, Integer>{
+	public abstract Transaction findById(long Id);
 }

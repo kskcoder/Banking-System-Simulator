@@ -1,26 +1,31 @@
 package com.tejas.transactionservice.services;
 
+import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.tejas.transactionservice.feign.AccountInterface;
+import com.tejas.bankingcommon.dto.TransactionEvent;
+import com.tejas.bankingcommon.enums.TransactionStatus;
 import com.tejas.transactionservice.models.Transaction;
 import com.tejas.transactionservice.models.TransferRequest;
 import com.tejas.transactionservice.repositories.TransactionRepo;
-
-import feign.FeignException;
+import com.tejas.transactionservice.services.enums.TransactionType;
 
 @Service
 public class TransactionService {
 
     @Autowired
-    private AccountInterface accountInterface;
-
-    @Autowired
     private TransactionRepo repo;
+    
+    @Autowired
+    private TransactionProducer trProducer;
 
     @Transactional
     public ResponseEntity<Transaction> transfer(TransferRequest request) {
@@ -36,43 +41,26 @@ public class TransactionService {
         	throw new IllegalArgumentException("Sender and receiver must be different");
         }
         repo.save(txn);
-
-        try {
-            accountInterface.debitAccount(request);
-        } catch (FeignException e) {
-        	txn.setStatus(e.contentUTF8());
-            repo.save(txn);
-            
-            HttpStatus status = HttpStatus.resolve(e.status());
-            if (status == null) {
-            	status = HttpStatus.INTERNAL_SERVER_ERROR; 
-            }
-            return new ResponseEntity<>(txn, status);
-        }
         
-        try {
-            accountInterface.creditAccount(request);
-        } catch (FeignException e) {
-        	txn.setStatus(e.contentUTF8());
-        	repo.save(txn);
-             
-            TransferRequest tf = new TransferRequest();
-            tf.setToAccount(request.getFromAccount());
-            tf.setAmount(request.getAmount());
-            
-            accountInterface.creditAccount(tf);
-            HttpStatus status = HttpStatus.resolve(e.status());
-            if (status == null) {
-            	status = HttpStatus.INTERNAL_SERVER_ERROR; 
-            }
-            return new ResponseEntity<>(txn, status);
-        }
+        TransactionEvent event = new TransactionEvent(); 
+    	event.setTransactionId(txn.getId());
+    	event.setFromAccountNumber(txn.getFromAccount());
+    	event.setToAccountNumber(txn.getToAccount());
+    	event.setAmount(txn.getAmount());
+    	event.setType(TransactionType.DEBIT.toString());
+    	event.setStatus(TransactionStatus.PENDING.toString());  
         
-        txn.setStatus("SUCCESS");
-        repo.save(txn);
+        trProducer.dispatchDebitWithRetry(event);
+        
         return ResponseEntity.ok(txn);
-
-        
     }
+
+    @Transactional
+	public void saveTransaction(TransactionEvent trEvent) {
+		Transaction tx = repo.findById(trEvent.getTransactionId());
+		tx.setStatus(trEvent.getStatus());
+		
+		repo.save(tx);
+	}
 }
 
