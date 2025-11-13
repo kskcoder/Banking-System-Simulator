@@ -1,5 +1,6 @@
 package com.tejas.transactionservice.services;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,8 @@ public class TransactionService {
         txn.setToAccount(request.getToAccount());
         txn.setAmount(request.getAmount());
         txn.setStatus("PENDING");
+        txn.setCreatedAt(LocalDateTime.now());
+        txn.setUpdatedAt(LocalDateTime.now());
         
         if (request.getAmount() <= 0.0) {
             throw new IllegalArgumentException("Amount must be greater than zero");
@@ -47,7 +50,7 @@ public class TransactionService {
     	event.setFromAccountNumber(txn.getFromAccount());
     	event.setToAccountNumber(txn.getToAccount());
     	event.setAmount(txn.getAmount());
-    	event.setUserId(userId);
+    	event.setUserId(Integer.parseInt(userId));
     	event.setType(TransactionType.DEBIT.toString());
     	event.setStatus(TransactionStatus.PENDING.toString());  
         
@@ -60,7 +63,7 @@ public class TransactionService {
 	public void saveTransaction(TransactionEvent trEvent) {
 		Transaction tx = repo.findById(trEvent.getTransactionId());
 		tx.setStatus(trEvent.getStatus());
-		
+		tx.setUpdatedAt(LocalDateTime.now());
 		repo.save(tx);
 	}
 
