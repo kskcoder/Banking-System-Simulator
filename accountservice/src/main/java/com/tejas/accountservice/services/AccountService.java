@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.models.CreateAccountDTO;
-import com.tejas.accountservice.models.TransferRequest;
 import com.tejas.accountservice.repositories.AccountRepo;
 import com.tejas.accountservice.utils.AccountUtils;
 
