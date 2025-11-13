@@ -46,7 +46,7 @@ public class TransactionProducer {
 			debitRequest(trEvent).whenComplete((result, ex) -> {
 				if (ex != null) {
 					if (attempt >= MAX_CREDIT_RETRY_ATTEMPTS) {
-						trEvent.setStatus(TransactionStatus.FAILED.toString());
+						trEvent.setStatus(TransactionStatus.DEBIT_FAILED.toString());
 						trService.saveTransaction(trEvent);
 					} else {
 						trEvent.setStatus(TransactionStatus.RETRY.toString());
