@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.TransactionStatus;
-import com.tejas.transactionservice.services.enums.TransactionType;
 
 @Service
 public class TransactionProducer {
