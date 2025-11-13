@@ -38,7 +38,12 @@ public class TransactionConsumer {
 	
 	@KafkaListener(topics = "transaction-debit-repaid-topic", groupId = "banking-system-simulator-group")
 	public void debitRepaidReceiver(TransactionEvent trEvent) {
-		trService.saveTransaction(trEvent);
+		if (TransactionStatus.REPAY_SUCCESS.toString().equals(trEvent.getStatus())) {
+			trService.saveTransaction(trEvent);
+		} else {
+			trService.saveTransaction(trEvent);
+			dispatchCreditWithRetry(trEvent);
+		}		
 	}
 
 	@KafkaListener(topics = "transaction-credit-topic", groupId = "banking-system-simulator-group")
