@@ -86,44 +86,4 @@ public class AccountService {
 		}
 		return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 	}
-
-	public ResponseEntity<String> debitAccount(TransferRequest request) {
-		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-		String senderAccNumber = request.getFromAccount();
-		Double amount = request.getAmount();
-		
-		Account account = repo.getByAccountnumber(senderAccNumber).orElse(null);
-		
-		if (account == null) {
-			return new ResponseEntity<>("Sender account not found", HttpStatus.NOT_FOUND);
-		}
-		
-		if (String.valueOf(account.getUserid()).equals(userId)) {
-			if (amount > account.getBalance()) {
-				return new ResponseEntity<>("Insufficient Balance", HttpStatus.BAD_REQUEST);
-			}
-		} else {
-			return new ResponseEntity<>("Unauthorised User", HttpStatus.UNAUTHORIZED);
-		}
-		
-		account.setBalance(account.getBalance() - amount);
-		repo.save(account);
-		return new ResponseEntity<>("Debited Successfully", HttpStatus.OK);
-	}
-	
-	public ResponseEntity<String> creditAccount(TransferRequest request) {
-		String senderAccNumber = request.getToAccount();
-		Double amount = request.getAmount();
-		
-		Account account = repo.getByAccountnumber(senderAccNumber)
-				.orElse(null);
-		
-		if (account == null) {
-			return new ResponseEntity<>("Receiver account not found", HttpStatus.NOT_FOUND);
-		}
-		
-		account.setBalance(account.getBalance() + amount);
-		repo.save(account);
-		return new ResponseEntity<>("Credited Successfully", HttpStatus.OK);
-	}
 }

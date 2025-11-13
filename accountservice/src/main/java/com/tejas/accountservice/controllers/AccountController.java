@@ -1,7 +1,6 @@
 package com.tejas.accountservice.controllers;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.models.CreateAccountDTO;
-import com.tejas.accountservice.models.TransferRequest;
 import com.tejas.accountservice.services.AccountService;
 
 @RestController
@@ -49,16 +47,5 @@ public class AccountController {
 	@DeleteMapping("/close/{account}")
 	public ResponseEntity<String> closeAccount(@PathVariable String account) {
 		return accountService.closeAccount(account);
-	}
-	
-	//Routes for transaction services
-	@PostMapping("/debit")
-	public ResponseEntity<String> debitAccount(@RequestBody TransferRequest request) {
-		return accountService.debitAccount(request);
-	}
-	
-	@PostMapping("/credit")
-	public ResponseEntity<String> creditAccount(@RequestBody TransferRequest request) {
-		return accountService.creditAccount(request);
 	}
 }
