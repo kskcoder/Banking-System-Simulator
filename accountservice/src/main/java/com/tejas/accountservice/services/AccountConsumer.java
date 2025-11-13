@@ -2,7 +2,6 @@ package com.tejas.accountservice.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.tejas.accountservice.models.Account;
@@ -20,7 +19,7 @@ public class AccountConsumer {
 	
 	@KafkaListener(topics = "account-debit-topic", groupId = "banking-system-simulator-group")
 	public void debitSender(TransactionEvent trEvent) {
-		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+		String userId = String.valueOf(trEvent.getUserId());
 		String senderAccNumber = trEvent.getFromAccountNumber();
 		Double amount = trEvent.getAmount();
 		
