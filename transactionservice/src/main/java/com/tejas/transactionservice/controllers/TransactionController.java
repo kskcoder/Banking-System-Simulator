@@ -1,10 +1,14 @@
 package com.tejas.transactionservice.controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tejas.transactionservice.models.Transaction;
@@ -12,7 +16,7 @@ import com.tejas.transactionservice.models.TransferRequest;
 import com.tejas.transactionservice.services.TransactionService;
 
 @RestController
-@RequestMapping("/transaction")
+@RequestMapping("/transactions")
 public class TransactionController {
 	@Autowired
 	TransactionService accountService;
@@ -20,5 +24,25 @@ public class TransactionController {
 	@PostMapping("/transfer")
 	public ResponseEntity<Transaction> transfer(@RequestBody TransferRequest request) {
 		return accountService.transfer(request);
+	}
+	
+	@GetMapping("/transaction/{txnId}")
+	public ResponseEntity<Transaction> getTransaction(@RequestParam int txnId) {
+		return accountService.getTransaction(txnId);
+	}
+	
+	@GetMapping("/debit/{accountNumber}")
+	public ResponseEntity<List<Transaction>> getDebitTransaction(@RequestParam String accountNumber) {
+		return accountService.getDebitTransaction(accountNumber);
+	}
+	
+	@GetMapping("/credit/{accountNumber}")
+	public ResponseEntity<List<Transaction>> getCreditTransaction(@RequestParam String accountNumber) {
+		return accountService.getCreditTransaction(accountNumber);
+	}
+	
+	@GetMapping("/{accountNumber}")
+	public ResponseEntity<List<Transaction>> getAllTransaction(@RequestParam String accountNumber) {
+		return accountService.getAllTransaction(accountNumber);
 	}
 }

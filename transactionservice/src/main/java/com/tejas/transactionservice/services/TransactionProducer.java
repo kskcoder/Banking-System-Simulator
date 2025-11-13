@@ -33,8 +33,6 @@ public class TransactionProducer {
     }
 	
 	public CompletableFuture<SendResult<String, TransactionEvent>> creditRequest(TransactionEvent event) {
-    	event.setType(TransactionType.CREDIT.toString());
-    	
     	return kafkaTemplate.send("account-credit-topic", event);
     }
 	

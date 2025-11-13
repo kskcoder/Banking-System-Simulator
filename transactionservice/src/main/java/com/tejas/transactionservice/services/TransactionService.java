@@ -1,7 +1,11 @@
 package com.tejas.transactionservice.services;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,11 +40,14 @@ public class TransactionService {
         }
         repo.save(txn);
         
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        
         TransactionEvent event = new TransactionEvent(); 
     	event.setTransactionId(txn.getId());
     	event.setFromAccountNumber(txn.getFromAccount());
     	event.setToAccountNumber(txn.getToAccount());
     	event.setAmount(txn.getAmount());
+    	event.setUserId(userId);
     	event.setType(TransactionType.DEBIT.toString());
     	event.setStatus(TransactionStatus.PENDING.toString());  
         
@@ -56,5 +63,47 @@ public class TransactionService {
 		
 		repo.save(tx);
 	}
+
+	public ResponseEntity<Transaction> getTransaction(int txnId) {
+		Transaction tx = repo.findById(txnId);
+		
+		if (tx != null) {
+			return new ResponseEntity<>(tx, HttpStatus.OK);
+		}
+		
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+	}
+	
+	public ResponseEntity<List<Transaction>> getDebitTransaction(String accountNum) {
+		List<Transaction> tx = repo.findByFromAccount(accountNum);
+		
+		if (!tx.isEmpty()) {
+			return new ResponseEntity<>(tx, HttpStatus.OK);
+		}
+		
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+	}
+	
+	public ResponseEntity<List<Transaction>> getCreditTransaction(String accountNum) {
+		List<Transaction> tx = repo.findByToAccount(accountNum);
+		
+		if (!tx.isEmpty()) {
+			return new ResponseEntity<>(tx, HttpStatus.OK);
+		}
+		
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+	}
+
+	public ResponseEntity<List<Transaction>> getAllTransaction(String accountNum) {
+		List<Transaction> tx = repo.findByFromAccount(accountNum);
+		tx.addAll(repo.findByToAccount(accountNum));
+		
+		if (!tx.isEmpty()) {
+			return new ResponseEntity<>(tx, HttpStatus.OK);
+		}
+		
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+	}
+
 }
 
