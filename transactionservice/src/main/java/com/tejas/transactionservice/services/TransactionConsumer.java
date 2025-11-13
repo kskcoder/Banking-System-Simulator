@@ -30,6 +30,7 @@ public class TransactionConsumer {
 	public void debitReceiver(TransactionEvent trEvent) {
 		if (TransactionStatus.DEBIT_SUCCESS.toString().equals(trEvent.getStatus())) {
 			trService.saveTransaction(trEvent);
+			
 			dispatchCreditWithRetry(trEvent);
 		} else {
 			trService.saveTransaction(trEvent);
