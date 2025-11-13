@@ -9,9 +9,11 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.stereotype.Service;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
 
+@Service
 public class AccountProducer {
 	private static final int MAX_CREDIT_RETRY_ATTEMPTS = 3;
 	private static final Duration INITIAL_BACKOFF = Duration.ofSeconds(1);

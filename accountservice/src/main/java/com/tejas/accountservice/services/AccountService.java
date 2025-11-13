@@ -48,9 +48,14 @@ public class AccountService {
 	
 	public ResponseEntity<List<Account>> getAccountByUserId(int id) {
 		List<Account> accounts = repo.getByUserid(id).get();
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 		
 		if (accounts != null) {
-			return new ResponseEntity<>(accounts, HttpStatus.OK);
+			if (String.valueOf(accounts.stream().findFirst().get().getUserid()).equals(userId) || AccountUtils.isAdmin()) {
+				return new ResponseEntity<>(accounts, HttpStatus.OK);
+			} else {
+				return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+			}
 		}
 			
 		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
@@ -58,9 +63,14 @@ public class AccountService {
 	
 	public ResponseEntity<Double> getBalanceByAccountNumber(String accountNumber) {
 		Account account = repo.getByAccountnumber(accountNumber).get();
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 		
 		if (account != null) {
-			return new ResponseEntity<>(account.getBalance(), HttpStatus.OK);
+			if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
+				return new ResponseEntity<>(account.getBalance(), HttpStatus.OK);
+			} else {
+				return new ResponseEntity<>(0.0, HttpStatus.UNAUTHORIZED);
+			}
 		}
 			
 		return new ResponseEntity<>(0.0, HttpStatus.NOT_FOUND);
@@ -68,14 +78,18 @@ public class AccountService {
 	
 	public ResponseEntity<String> closeAccount(String accountNumber) {
 		Account account = repo.getByAccountnumber(accountNumber).get();
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 		
 		if (account != null) {
-			repo.delete(account);
-			return new ResponseEntity<>("Successful", HttpStatus.OK);
+			if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
+				repo.delete(account);
+				return new ResponseEntity<>("Successful", HttpStatus.OK);
+			} else {
+				return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
+			}
 		}
-			
-		return new ResponseEntity<>("Could not delete!", HttpStatus.NOT_FOUND);
 		
+		return new ResponseEntity<>("Could not find account!", HttpStatus.NOT_FOUND);		
 	}
 
 	public ResponseEntity<List<Account>> getAllAccounts() {

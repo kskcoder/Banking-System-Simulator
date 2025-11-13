@@ -1,16 +1,16 @@
 package com.tejas.accountservice.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 
 import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.repositories.AccountRepo;
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 
+@Service
 public class AccountConsumer {
 	@Autowired
 	AccountRepo repo;
