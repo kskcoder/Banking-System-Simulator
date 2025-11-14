@@ -6,7 +6,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
@@ -14,18 +13,18 @@ import org.springframework.stereotype.Service;
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class TransactionProducer {
 
 	private static final int MAX_CREDIT_RETRY_ATTEMPTS = 3;
 	private static final Duration INITIAL_BACKOFF = Duration.ofSeconds(1);
 	private static final ScheduledExecutorService RETRY_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
-	@Autowired
-	TransactionService trService;
-	
-    @Autowired
-    KafkaTemplate<String, TransactionEvent> kafkaTemplate;
+	private final StatusUpdater trUpdater;	
+    private final KafkaTemplate<String, TransactionEvent> kafkaTemplate;
 
 	public CompletableFuture<SendResult<String, TransactionEvent>> debitRequest(TransactionEvent event) {
     	return kafkaTemplate.send("account-debit-topic", event);
@@ -44,15 +43,17 @@ public class TransactionProducer {
 				if (ex != null) {
 					if (attempt >= MAX_CREDIT_RETRY_ATTEMPTS) {
 						trEvent.setStatus(TransactionStatus.DEBIT_FAILED.toString());
-						trService.saveTransaction(trEvent);
+						trUpdater.saveTransaction(trEvent);
 					} else {
 						trEvent.setStatus(TransactionStatus.RETRY.toString());
-						trService.saveTransaction(trEvent);
+						trUpdater.saveTransaction(trEvent);
 						Duration nextBackoff = backoff.multipliedBy(2);
 						RETRY_EXECUTOR.schedule(() -> attemptDebitDispatch(trEvent, attempt + 1, nextBackoff),
-								backoff.toMillis(), TimeUnit.MILLISECONDS);
+								nextBackoff.toMillis(), TimeUnit.MILLISECONDS);
 					}
 				}
 			});					
 	}
+	
+	
 }
