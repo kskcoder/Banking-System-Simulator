@@ -98,8 +98,6 @@ public class TransactionConsumer {
         TransactionEvent credit = cloneEvent(debitSuccessEvent);
         credit.setType("CREDIT");
         credit.setStatus(TransactionStatus.PENDING.toString());
-        credit.setFromAccountNumber(debitSuccessEvent.getToAccountNumber());
-        credit.setToAccountNumber(debitSuccessEvent.getFromAccountNumber());
         return credit;
     }
 
