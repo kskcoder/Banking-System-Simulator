@@ -9,13 +9,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 import com.tejas.transactionservice.enums.TransactionType;
+import com.tejas.transactionservice.feign.AccountInterface;
 import com.tejas.transactionservice.models.Transaction;
 import com.tejas.transactionservice.models.TransferRequest;
 import com.tejas.transactionservice.repositories.TransactionRepo;
+
+import feign.FeignException;
 
 @Service
 public class TransactionService {
@@ -25,6 +30,9 @@ public class TransactionService {
     
     @Autowired
     private TransactionProducer trProducer;
+    
+	@Autowired
+	private AccountInterface accInterface;
 
     @Transactional
     public ResponseEntity<Transaction> transfer(TransferRequest request) {
@@ -78,6 +86,8 @@ public class TransactionService {
 	}
 	
 	public ResponseEntity<List<Transaction>> getDebitTransaction(String accountNum) {
+		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
+		
 		List<Transaction> tx = repo.findByFromAccount(accountNum);
 		
 		if (!tx.isEmpty()) {
@@ -88,6 +98,8 @@ public class TransactionService {
 	}
 	
 	public ResponseEntity<List<Transaction>> getCreditTransaction(String accountNum) {
+		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
+		
 		List<Transaction> tx = repo.findByToAccount(accountNum);
 		
 		if (!tx.isEmpty()) {
@@ -98,6 +110,8 @@ public class TransactionService {
 	}
 
 	public ResponseEntity<List<Transaction>> getAllTransaction(String accountNum) {
+		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
+		
 		List<Transaction> tx = repo.findByFromAccount(accountNum);
 		tx.addAll(repo.findByToAccount(accountNum));
 		
@@ -106,6 +120,22 @@ public class TransactionService {
 		}
 		
 		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+	}
+	
+	private boolean isOwner(String pathAccNo) {
+		String role = ((ServletRequestAttributes) RequestContextHolder
+		        .getRequestAttributes())
+		        .getRequest()
+		        .getHeader("X-User-Role");
+		try {
+			 boolean isOwner = accInterface.isOwnerOfAccount(pathAccNo).getBody();
+			 if (!isOwner || !role.equals("ADMIN")) {
+				return false;                
+	    	}
+	    } catch (FeignException e) {
+	    	return false;
+	    }	
+		return true;
 	}
 
 }
