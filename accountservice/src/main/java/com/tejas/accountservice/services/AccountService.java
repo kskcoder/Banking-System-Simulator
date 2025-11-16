@@ -99,4 +99,24 @@ public class AccountService {
 		}
 		return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 	}
+
+	public ResponseEntity<String> getUserIdByAccountNumber(String accountNumber) {
+		Account account = repo.getByAccountnumber(accountNumber).get();
+		
+		if (account != null) {
+			return new ResponseEntity<>(String.valueOf(account.getUserid()), HttpStatus.OK);
+		}
+			
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+	}
+
+	public ResponseEntity<Boolean> isOwnerOfAccount(String accountNumber) {
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+		Account account = repo.getByAccountnumber(accountNumber).get();
+		if (account != null) {
+			return new ResponseEntity<>(String.valueOf(account.getUserid()).equals(userId), HttpStatus.OK);
+		}
+			
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+	}
 }

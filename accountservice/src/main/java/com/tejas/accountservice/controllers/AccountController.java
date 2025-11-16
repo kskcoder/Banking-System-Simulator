@@ -44,6 +44,11 @@ public class AccountController {
 		return accountService.getAccountByUserId(userId);
 	}
 	
+	@GetMapping("/{accountNumber}/is-owner")
+	public ResponseEntity<Boolean> isOwnerOfAccount(@PathVariable String accountNumber) {
+		return accountService.isOwnerOfAccount(accountNumber);
+	}
+	
 	@DeleteMapping("/close/{account}")
 	public ResponseEntity<String> closeAccount(@PathVariable String account) {
 		return accountService.closeAccount(account);
