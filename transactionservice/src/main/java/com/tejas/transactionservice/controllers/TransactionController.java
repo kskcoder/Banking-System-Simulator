@@ -41,7 +41,7 @@ public class TransactionController {
 		return accountService.getCreditTransaction(accountNumber);
 	}
 	
-	@GetMapping("/{accountNumber}")
+	@GetMapping("/all/{accountNumber}")
 	public ResponseEntity<List<Transaction>> getAllTransaction(@PathVariable String accountNumber) {
 		return accountService.getAllTransaction(accountNumber);
 	}
