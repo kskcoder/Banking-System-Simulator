@@ -31,7 +31,9 @@ public class AccountConsumer {
 			if (amount > account.getBalance()) {
 				trEvent.setStatus(TransactionStatus.INSUFFICIENT_BALANCE.toString());
 			} else {
-				account.setBalance(account.getBalance() - amount);
+				double newBalance = account.getBalance() - amount;
+				account.setBalance(newBalance);
+				trEvent.setBalanceAfter(newBalance);
 				trEvent.setStatus(TransactionStatus.DEBIT_SUCCESS.toString());
 				repo.save(account);
 			}
@@ -55,7 +57,9 @@ public class AccountConsumer {
 		if (account == null) {
 			trEvent.setStatus(repay ? TransactionStatus.REPAY_FAILED.toString() : TransactionStatus.CREDIT_FAILED.toString());
 		} else {
-			account.setBalance(account.getBalance() + amount);
+			double newBalance = account.getBalance() + amount;
+			account.setBalance(newBalance);
+			trEvent.setBalanceAfter(newBalance);
 			repo.save(account);
 			trEvent.setStatus(repay ? TransactionStatus.REPAY_SUCCESS.toString() : TransactionStatus.CREDIT_SUCCESS.toString());
 		}
