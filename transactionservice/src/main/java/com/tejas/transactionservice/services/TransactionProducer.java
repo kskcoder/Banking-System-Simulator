@@ -23,7 +23,7 @@ public class TransactionProducer {
 	private static final Duration INITIAL_BACKOFF = Duration.ofSeconds(1);
 	private static final ScheduledExecutorService RETRY_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
-	private final StatusUpdater trUpdater;	
+	private final TransactionAndLedgerUpdater trUpdater;	
     private final KafkaTemplate<String, TransactionEvent> kafkaTemplate;
 
 	public CompletableFuture<SendResult<String, TransactionEvent>> debitRequest(TransactionEvent event) {

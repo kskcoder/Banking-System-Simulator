@@ -1,0 +1,34 @@
+package com.tejas.transactionservice.models;
+
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Data;
+
+@Entity
+@Data
+@Table(name="transaction_ledger")
+public class TransactionLedgerRecord {
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private long id;
+	
+	private long parentTransactionId;
+	private String accountNumber;      
+    private String counterparty;   
+
+    private String type;           
+
+    private double amount;
+    private double balanceAfter;
+
+    private String status;
+
+    @Column(name="created_at")
+    private LocalDateTime createdAt; 
+}

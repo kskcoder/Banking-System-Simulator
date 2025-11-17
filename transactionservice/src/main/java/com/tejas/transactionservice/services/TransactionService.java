@@ -1,6 +1,7 @@
 package com.tejas.transactionservice.services;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,9 @@ import com.tejas.bankingcommon.enums.TransactionStatus;
 import com.tejas.transactionservice.enums.TransactionType;
 import com.tejas.transactionservice.feign.AccountInterface;
 import com.tejas.transactionservice.models.Transaction;
+import com.tejas.transactionservice.models.TransactionLedgerRecord;
 import com.tejas.transactionservice.models.TransferRequest;
+import com.tejas.transactionservice.repositories.TransactionLedgerRepo;
 import com.tejas.transactionservice.repositories.TransactionRepo;
 
 import feign.FeignException;
@@ -27,6 +30,12 @@ public class TransactionService {
 
     @Autowired
     private TransactionRepo repo;
+    
+    @Autowired
+    private TransactionLedgerRepo ledgerRepo;
+    
+    @Autowired
+    private TransactionAndLedgerUpdater trUpdater;
     
     @Autowired
     private TransactionProducer trProducer;
@@ -49,6 +58,7 @@ public class TransactionService {
         } else if (request.getFromAccount().equals(request.getToAccount())) {
         	throw new IllegalArgumentException("Sender and receiver must be different");
         }
+        
         repo.save(txn);
         
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -61,6 +71,8 @@ public class TransactionService {
     	event.setUserId(Integer.parseInt(userId));
     	event.setType(TransactionType.DEBIT.toString());
     	event.setStatus(TransactionStatus.PENDING.toString());  
+    	
+    	trUpdater.saveTransaction(event);
         
         trProducer.dispatchDebitWithRetry(event);
         
@@ -85,41 +97,31 @@ public class TransactionService {
 		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
 	}
 	
-	public ResponseEntity<List<Transaction>> getDebitTransaction(String accountNum) {
-		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
-		
-		List<Transaction> tx = repo.findByFromAccount(accountNum);
+	public ResponseEntity<List<Transaction>> getAllTransfers() {
+		List<Transaction> tx = repo.findAll();
 		
 		if (!tx.isEmpty()) {
 			return new ResponseEntity<>(tx, HttpStatus.OK);
 		}
-		
 		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
 	}
 	
-	public ResponseEntity<List<Transaction>> getCreditTransaction(String accountNum) {
+	public ResponseEntity<List<TransactionLedgerRecord>> getDebitTransaction(String accountNum) {
 		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
 		
-		List<Transaction> tx = repo.findByToAccount(accountNum);
+		return getGeneralTransactionRecords(accountNum, TransactionType.DEBIT.toString());
+	}
+	
+	public ResponseEntity<List<TransactionLedgerRecord>> getCreditTransaction(String accountNum) {
+		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
 		
-		if (!tx.isEmpty()) {
-			return new ResponseEntity<>(tx, HttpStatus.OK);
-		}
-		
-		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		return getGeneralTransactionRecords(accountNum, TransactionType.CREDIT.toString());
 	}
 
-	public ResponseEntity<List<Transaction>> getAllTransaction(String accountNum) {
+	public ResponseEntity<List<TransactionLedgerRecord>> getAllTransaction(String accountNum) {
 		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
 		
-		List<Transaction> tx = repo.findByFromAccount(accountNum);
-		tx.addAll(repo.findByToAccount(accountNum));
-		
-		if (!tx.isEmpty()) {
-			return new ResponseEntity<>(tx, HttpStatus.OK);
-		}
-		
-		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		return getGeneralTransactionRecords(accountNum, null);
 	}
 	
 	private boolean isOwner(String pathAccNo) {
@@ -129,14 +131,37 @@ public class TransactionService {
 		        .getHeader("X-User-Role");
 		try {
 			 boolean isOwner = accInterface.isOwnerOfAccount(pathAccNo).getBody();
-			 if (!isOwner || !role.equals("ADMIN")) {
-				return false;                
+			 if (!isOwner && !role.equals("ADMIN")) {
+				 return false;     				
 	    	}
 	    } catch (FeignException e) {
 	    	return false;
-	    }	
+	    }
 		return true;
 	}
+	
+	private ResponseEntity<List<TransactionLedgerRecord>> getGeneralTransactionRecords(String accountNum, String type) {
+		List<TransactionLedgerRecord> tx = new ArrayList<>(); 
+		if (TransactionType.CREDIT.toString().equals(type) || TransactionType.DEBIT.toString().equals(type)) {
+			tx = ledgerRepo.getByAccountNumberAndType(accountNum, type);
+		} else {
+			tx = ledgerRepo.getByAccountNumber(accountNum);
+		}
+		
+		if (!tx.isEmpty()) {
+			return new ResponseEntity<>(tx, HttpStatus.OK);
+		}
+		
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+	}
 
+	public ResponseEntity<List<TransactionLedgerRecord>> getAllLedgerTransaction() {
+		List<TransactionLedgerRecord> tx = ledgerRepo.findAll();
+		
+		if (!tx.isEmpty()) {
+			return new ResponseEntity<>(tx, HttpStatus.OK);
+		}
+		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+	}
 }
 
