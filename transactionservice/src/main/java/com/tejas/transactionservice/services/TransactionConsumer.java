@@ -22,38 +22,37 @@ public class TransactionConsumer {
 	private static final ScheduledExecutorService RETRY_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
     private final TransactionProducer trProducer;
-    private final StatusUpdater trUpdater;
+    private final TransactionAndLedgerUpdater trUpdater;
     
 	@KafkaListener(topics = "transaction-debit-topic", groupId = "banking-system-simulator-group")
 	public void debitReceiver(TransactionEvent trEvent) {
+		trUpdater.saveTransaction(trEvent);
+		trUpdater.saveTransactionRecord(trEvent, false);
+		
 		if (TransactionStatus.DEBIT_SUCCESS.toString().equals(trEvent.getStatus())) {
-			trUpdater.saveTransaction(trEvent);
 			TransactionEvent credEvent = createCreditEvent(trEvent);
 			
 			dispatchCreditWithRetry(credEvent);
-		} else {
-			trUpdater.saveTransaction(trEvent);
-		}
+		} 
 	}
 	
 	@KafkaListener(topics = "transaction-debit-repaid-topic", groupId = "banking-system-simulator-group")
 	public void debitRepaidReceiver(TransactionEvent trEvent) {
-		if (TransactionStatus.REPAY_SUCCESS.toString().equals(trEvent.getStatus())) {
-			trUpdater.saveTransaction(trEvent);
-		} else {
-			trUpdater.saveTransaction(trEvent);
+		trUpdater.saveTransaction(trEvent);
+		
+		if (TransactionStatus.REPAY_FAILED.toString().equals(trEvent.getStatus())) {
 			dispatchCreditWithRetry(trEvent);
-		}		
+		} else if (TransactionStatus.REPAY_SUCCESS.toString().equals(trEvent.getStatus())) {
+			trUpdater.saveTransactionRecord(trEvent, true);
+		}
 	}
 
 	@KafkaListener(topics = "transaction-credit-topic", groupId = "banking-system-simulator-group")
 	public void creditReceiver(TransactionEvent trEvent) {
-		if (TransactionStatus.CREDIT_SUCCESS.toString().equals(trEvent.getStatus())) {
-			trEvent.setStatus(TransactionStatus.SUCCESS.toString());
-			trUpdater.saveTransaction(trEvent);
+		trUpdater.saveTransaction(trEvent);
+		if (TransactionStatus.CREDIT_SUCCESS.toString().equals(trEvent.getStatus())) {			
+			trUpdater.saveTransactionRecord(trEvent, true);
 		} else {
-			trEvent.setStatus(TransactionStatus.CREDIT_FAILED.toString());
-			trUpdater.saveTransaction(trEvent);
 			TransactionEvent repayEvent = createRepayEvent(trEvent);
 			dispatchCreditWithRetry(repayEvent);
 		}
