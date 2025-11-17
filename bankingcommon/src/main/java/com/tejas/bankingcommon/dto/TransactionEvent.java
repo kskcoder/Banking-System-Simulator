@@ -9,6 +9,7 @@ public class TransactionEvent {
     private String fromAccountNumber;
     private String toAccountNumber;
     private double amount;
+    private double balanceAfter;
     private String type;
     private String status; 
 }
