@@ -1,10 +1,11 @@
 package com.tejas.transactionservice.services;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -97,6 +98,7 @@ public class TransactionService {
 		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
 	}
 	
+	//For admin to get all ledger records
 	public ResponseEntity<List<Transaction>> getAllTransfers() {
 		List<Transaction> tx = repo.findAll();
 		
@@ -106,22 +108,33 @@ public class TransactionService {
 		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
 	}
 	
-	public ResponseEntity<List<TransactionLedgerRecord>> getDebitTransaction(String accountNum) {
+	public ResponseEntity<Page<TransactionLedgerRecord>> getDebitTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
 		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
-		
-		return getGeneralTransactionRecords(accountNum, TransactionType.DEBIT.toString());
+		if (from != null && to != null) {
+			return getGeneralDatedTransactionRecords(accountNum, TransactionType.DEBIT.toString(), from, to, pageable);
+		} else {
+			return getGeneralTransactionRecords(accountNum, TransactionType.DEBIT.toString(), pageable);
+		}
 	}
 	
-	public ResponseEntity<List<TransactionLedgerRecord>> getCreditTransaction(String accountNum) {
+	public ResponseEntity<Page<TransactionLedgerRecord>> getCreditTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
 		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
 		
-		return getGeneralTransactionRecords(accountNum, TransactionType.CREDIT.toString());
+		if (from != null && to != null) {
+			return getGeneralDatedTransactionRecords(accountNum, TransactionType.CREDIT.toString(), from, to, pageable);
+		} else {
+			return getGeneralTransactionRecords(accountNum, TransactionType.CREDIT.toString(), pageable);
+		}		
 	}
 
-	public ResponseEntity<List<TransactionLedgerRecord>> getAllTransaction(String accountNum) {
+	public ResponseEntity<Page<TransactionLedgerRecord>> getAllTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
 		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
 		
-		return getGeneralTransactionRecords(accountNum, null);
+		if (from != null && to != null) {
+			return getGeneralDatedTransactionRecords(accountNum, null, from, to, pageable);
+		} else {
+			return getGeneralTransactionRecords(accountNum, null, pageable);
+		}		
 	}
 	
 	private boolean isOwner(String pathAccNo) {
@@ -140,21 +153,39 @@ public class TransactionService {
 		return true;
 	}
 	
-	private ResponseEntity<List<TransactionLedgerRecord>> getGeneralTransactionRecords(String accountNum, String type) {
-		List<TransactionLedgerRecord> tx = new ArrayList<>(); 
+	private ResponseEntity<Page<TransactionLedgerRecord>> getGeneralTransactionRecords(String accountNum, String type, Pageable pageable) {
+		Page<TransactionLedgerRecord> tx; 
 		if (TransactionType.CREDIT.toString().equals(type) || TransactionType.DEBIT.toString().equals(type)) {
-			tx = ledgerRepo.getByAccountNumberAndType(accountNum, type);
+			tx = ledgerRepo.getByAccountNumberAndType(accountNum, type, pageable);
 		} else {
-			tx = ledgerRepo.getByAccountNumber(accountNum);
+			tx = ledgerRepo.getByAccountNumber(accountNum, pageable);
 		}
 		
-		if (!tx.isEmpty()) {
+		if (tx.hasContent()) {
 			return new ResponseEntity<>(tx, HttpStatus.OK);
 		}
 		
-		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(tx, HttpStatus.NO_CONTENT);
+	}
+	
+	private ResponseEntity<Page<TransactionLedgerRecord>> getGeneralDatedTransactionRecords(String accountNum,
+			String type, LocalDateTime from, LocalDateTime to, Pageable pageable) {
+		Page<TransactionLedgerRecord> tx; 
+		if (TransactionType.CREDIT.toString().equals(type) || TransactionType.DEBIT.toString().equals(type)) {
+			tx = ledgerRepo.getByAccountNumberAndTypeAndCreatedAtBetween(accountNum, type, from, to, pageable);
+		} else {
+			tx = ledgerRepo.getByAccountNumberAndCreatedAtBetween(accountNum, from, to, pageable);
+		}
+		
+		if (tx.hasContent()) {
+			return new ResponseEntity<>(tx, HttpStatus.OK);
+		}
+		
+		return new ResponseEntity<>(tx, HttpStatus.NO_CONTENT);
 	}
 
+
+	//For admin to get all ledger records
 	public ResponseEntity<List<TransactionLedgerRecord>> getAllLedgerTransaction() {
 		List<TransactionLedgerRecord> tx = ledgerRepo.findAll();
 		
