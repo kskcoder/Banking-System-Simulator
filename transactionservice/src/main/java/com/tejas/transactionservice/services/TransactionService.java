@@ -1,12 +1,15 @@
 package com.tejas.transactionservice.services;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ import com.tejas.transactionservice.models.TransactionLedgerRecord;
 import com.tejas.transactionservice.models.TransferRequest;
 import com.tejas.transactionservice.repositories.TransactionLedgerRepo;
 import com.tejas.transactionservice.repositories.TransactionRepo;
+import com.tejas.transactionservice.utils.PdfStatementGenerator;
 
 import feign.FeignException;
 
@@ -43,6 +47,9 @@ public class TransactionService {
     
 	@Autowired
 	private AccountInterface accInterface;
+	
+	@Autowired
+	private PdfStatementGenerator statementGenerator;
 
     @Transactional
     public ResponseEntity<Transaction> transfer(TransferRequest request) {
@@ -184,7 +191,32 @@ public class TransactionService {
 		return new ResponseEntity<>(tx, HttpStatus.NO_CONTENT);
 	}
 
-
+	public ResponseEntity<byte[]> getStatement(String accountNumber, LocalDateTime from, LocalDateTime to) {
+		if (!isOwner(accountNumber)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
+		
+		List<TransactionLedgerRecord> tx;
+		
+		if (from == null && to == null) {
+			to = LocalDateTime.now();
+			from = to.minusDays(10);
+		} 
+		
+		
+		tx = ledgerRepo.getByAccountNumberAndCreatedAtBetween(accountNumber, from, to);
+		
+		byte[] data = statementGenerator.generatePdfStatement(accountNumber, from, to, tx);
+		
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_PDF);
+		
+		DateTimeFormatter ftr = DateTimeFormatter.ofPattern("ddMMMyyyyHH:mm");
+		
+		headers.set(HttpHeaders.CONTENT_DISPOSITION,
+				"attachment, filename=statement_"+accountNumber+""+LocalDateTime.now().format(ftr)+".pdf");
+		
+		return new ResponseEntity<>(data, headers, HttpStatus.OK);
+	}
+	
 	//For admin to get all ledger records
 	public ResponseEntity<List<TransactionLedgerRecord>> getAllLedgerTransaction() {
 		List<TransactionLedgerRecord> tx = ledgerRepo.findAll();

@@ -77,5 +77,13 @@ public class TransactionController {
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
 			@PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
 		return accountService.getAllTransaction(accountNumber, from, to, pageable);
-	}	
+	}
+	
+	@GetMapping("/ledger/statement/{accountNumber}")	
+	public ResponseEntity<byte[]> getStatement(
+			@PathVariable String accountNumber,
+			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+		return accountService.getStatement(accountNumber, from, to);
+	}
 }

@@ -1,6 +1,7 @@
 package com.tejas.transactionservice.repositories;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,7 @@ public interface TransactionLedgerRepo extends JpaRepository<TransactionLedgerRe
 
 	public abstract Page<TransactionLedgerRecord> getByAccountNumberAndCreatedAtBetween(String accountNum,
 			LocalDateTime from, LocalDateTime to, Pageable pageable);
-
-
+	
+	public abstract List<TransactionLedgerRecord> getByAccountNumberAndCreatedAtBetween(String accountNum,
+			LocalDateTime from, LocalDateTime to);
 }
