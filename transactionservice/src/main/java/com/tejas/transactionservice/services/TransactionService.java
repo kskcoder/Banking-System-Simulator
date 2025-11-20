@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -19,7 +18,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.TransactionStatus;
-import com.tejas.transactionservice.enums.TransactionType;
+import com.tejas.bankingcommon.enums.TransactionType;
 import com.tejas.transactionservice.feign.AccountInterface;
 import com.tejas.transactionservice.models.Transaction;
 import com.tejas.transactionservice.models.TransactionLedgerRecord;
@@ -29,27 +28,18 @@ import com.tejas.transactionservice.repositories.TransactionRepo;
 import com.tejas.transactionservice.utils.PdfStatementGenerator;
 
 import feign.FeignException;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionService {
 
-    @Autowired
-    private TransactionRepo repo;
-    
-    @Autowired
-    private TransactionLedgerRepo ledgerRepo;
-    
-    @Autowired
-    private TransactionAndLedgerUpdater trUpdater;
-    
-    @Autowired
-    private TransactionProducer trProducer;
-    
-	@Autowired
-	private AccountInterface accInterface;
-	
-	@Autowired
-	private PdfStatementGenerator statementGenerator;
+    private final TransactionRepo repo;
+    private final TransactionLedgerRepo ledgerRepo;
+    private final TransactionAndLedgerUpdater trUpdater;
+    private final TransactionProducer trProducer;
+	private final AccountInterface accInterface;
+	private final PdfStatementGenerator statementGenerator;
 
     @Transactional
     public ResponseEntity<Transaction> transfer(TransferRequest request) {
@@ -77,7 +67,7 @@ public class TransactionService {
     	event.setToAccountNumber(txn.getToAccount());
     	event.setAmount(txn.getAmount());
     	event.setUserId(Integer.parseInt(userId));
-    	event.setType(TransactionType.DEBIT.toString());
+    	event.setType(TransactionType.DEBIT);
     	event.setStatus(TransactionStatus.PENDING.toString());  
     	
     	trUpdater.saveTransaction(event);

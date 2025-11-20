@@ -55,7 +55,7 @@ public class PdfStatementGenerator {
 		    
 		    for (TransactionLedgerRecord r: tx) {
 		    	table.addCell(r.getCreatedAt().format(formatter));
-		        table.addCell(r.getType());
+		        table.addCell(r.getType().toString());
 		        table.addCell(r.getCounterparty());
 		        table.addCell(String.valueOf(r.getAmount()));
 		        table.addCell(String.valueOf(r.getBalanceAfter()));

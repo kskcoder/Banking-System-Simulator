@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
-import com.tejas.transactionservice.enums.TransactionType;
+import com.tejas.bankingcommon.enums.TransactionType;
 import com.tejas.transactionservice.models.Transaction;
 import com.tejas.transactionservice.models.TransactionLedgerRecord;
 import com.tejas.transactionservice.repositories.TransactionLedgerRepo;
@@ -21,6 +21,9 @@ public class TransactionAndLedgerUpdater {
 	private final TransactionLedgerRepo ledgerRepo;
 	
 	public void saveTransaction(TransactionEvent trEvent) {
+		if (trEvent.getTransactionId() == null) {
+			return;
+		}
 		Transaction tx = repo.findById(trEvent.getTransactionId());
 		tx.setStatus(trEvent.getStatus());
 		tx.setUpdatedAt(LocalDateTime.now());
@@ -47,13 +50,27 @@ public class TransactionAndLedgerUpdater {
 		rec.setParentTransactionId(tr.getId());
 		rec.setAccountNumber(isRepayOrCredit ? tr.getToAccount() : tr.getFromAccount());
 		rec.setCounterparty(isRepayOrCredit ? tr.getFromAccount() : tr.getToAccount());
-		rec.setType(isRepayOrCredit ? TransactionType.CREDIT.toString() : TransactionType.DEBIT.toString());     
+		rec.setType(isRepayOrCredit ? TransactionType.CREDIT : TransactionType.DEBIT);     
 		rec.setAmount(tr.getAmount());
 		rec.setBalanceAfter(isRepayOrCredit ? trEvent.getBalanceAfter() : 0.0);
 		rec.setStatus(tr.getStatus());
 		rec.setCreatedAt(tr.getCreatedAt()); 
 		
 		return rec;
+	}
+
+	public void saveInterestTransaction(TransactionEvent trEvent) {
+		TransactionLedgerRecord rec = new TransactionLedgerRecord();
+		rec.setParentTransactionId(null);
+		rec.setAccountNumber(trEvent.getToAccountNumber());
+		rec.setCounterparty(trEvent.getFromAccountNumber());
+		rec.setType(trEvent.getType());     
+		rec.setAmount(trEvent.getAmount());
+		rec.setBalanceAfter(trEvent.getBalanceAfter());
+		rec.setStatus(trEvent.getStatus());
+		rec.setCreatedAt(LocalDateTime.now()); 
+		
+		ledgerRepo.save(rec);
 	}
 
 	

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.TransactionStatus;
+import com.tejas.bankingcommon.enums.TransactionType;
 
 import lombok.RequiredArgsConstructor;
 
@@ -49,6 +50,10 @@ public class TransactionConsumer {
 
 	@KafkaListener(topics = "transaction-credit-topic", groupId = "banking-system-simulator-group")
 	public void creditReceiver(TransactionEvent trEvent) {
+		if (trEvent.getTransactionId() == null) {
+			trUpdater.saveInterestTransaction(trEvent);
+			return;
+		}
 		trUpdater.saveTransaction(trEvent);
 		if (TransactionStatus.CREDIT_SUCCESS.toString().equals(trEvent.getStatus())) {			
 			trUpdater.saveTransactionRecord(trEvent, true);
@@ -56,6 +61,11 @@ public class TransactionConsumer {
 			TransactionEvent repayEvent = createRepayEvent(trEvent);
 			dispatchCreditWithRetry(repayEvent);
 		}
+	}
+	
+	@KafkaListener(topics = "transaction-interest-topic", groupId = "banking-system-simulator-group")
+	public void interestReceiver(TransactionEvent trEvent) {
+		trUpdater.saveInterestTransaction(trEvent);
 	}
 
 	private void dispatchCreditWithRetry(TransactionEvent trEvent) {
@@ -95,7 +105,7 @@ public class TransactionConsumer {
 
     private TransactionEvent createCreditEvent(TransactionEvent debitSuccessEvent) {
         TransactionEvent credit = cloneEvent(debitSuccessEvent);
-        credit.setType("CREDIT");
+        credit.setType(TransactionType.CREDIT);
         credit.setStatus(TransactionStatus.PENDING.toString());
         return credit;
     }
@@ -104,7 +114,7 @@ public class TransactionConsumer {
         TransactionEvent repay = cloneEvent(failedCreditEvent);
         repay.setFromAccountNumber(failedCreditEvent.getToAccountNumber());
         repay.setToAccountNumber(failedCreditEvent.getFromAccountNumber());
-        repay.setType("REPAY");
+        repay.setType(failedCreditEvent.getType());
         repay.setStatus(TransactionStatus.REPAY_PENDING.toString());
         return repay;
     }	
