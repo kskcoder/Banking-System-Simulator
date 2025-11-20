@@ -12,6 +12,7 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
+import com.tejas.bankingcommon.enums.TransactionType;
 
 @Service
 public class AccountProducer {
@@ -34,26 +35,37 @@ public class AccountProducer {
     	return kafkaTemplate.send("transaction-credit-topic", event);
     }
 	
-	public void dispatchDebitResponseWithRetry(TransactionEvent trEvent) {
+	public CompletableFuture<SendResult<String, TransactionEvent>> interestCreditResponse(TransactionEvent event) {    	
+    	return kafkaTemplate.send("transaction-interest-topic", event);
+    }
+	
+	public void dispatchResponseWithRetry(TransactionEvent trEvent) {
+		CompletableFuture<SendResult<String, TransactionEvent>> function;
+		TransactionType type = trEvent.getType();
 		String status = trEvent.getStatus();
-		CompletableFuture<SendResult<String, TransactionEvent>> function = status.contains("CREDIT") 
-				? creditResponse(trEvent) 
-					: status.contains("REPAY") 
-						? debitRepayResponse(trEvent)
-							: debitResponse(trEvent);
-		
-		attemptDebitResponseDispatch(function, 1, INITIAL_BACKOFF);
+
+		if (TransactionType.INTEREST.equals(type)) {
+			function = interestCreditResponse(trEvent);
+		} else if (status != null && status.contains(TransactionType.REPAY.toString())) {
+			function = debitRepayResponse(trEvent);
+		} else if (TransactionType.CREDIT.equals(type) || (status != null && status.contains(TransactionType.CREDIT.toString()))) {
+			function = creditResponse(trEvent);
+		} else {
+			function = debitResponse(trEvent);
+		}
+
+		attemptResponseDispatch(function, 1, INITIAL_BACKOFF);
 	}
 
-	private void attemptDebitResponseDispatch(CompletableFuture<SendResult<String, TransactionEvent>> function, int attempt, Duration backoff) {
+	private void attemptResponseDispatch(CompletableFuture<SendResult<String, TransactionEvent>> function, int attempt, Duration backoff) {
 		function.whenComplete((result, ex) -> {
 				if (ex != null) {
 					if (attempt >= MAX_CREDIT_RETRY_ATTEMPTS) {
 						return;
 					} else {
 						Duration nextBackoff = backoff.multipliedBy(2);
-						RETRY_EXECUTOR.schedule(() -> attemptDebitResponseDispatch(function, attempt + 1, nextBackoff),
-								backoff.toMillis(), TimeUnit.MILLISECONDS);
+						RETRY_EXECUTOR.schedule(() -> attemptResponseDispatch(function, attempt + 1, nextBackoff),
+								nextBackoff.toMillis(), TimeUnit.MILLISECONDS);
 					}
 				}
 			});					

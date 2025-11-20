@@ -26,8 +26,8 @@ public class AccountService {
 		Account account = new Account();
 		account.setUserid(accountReq.getUserId());
 		account.setAccountnumber(generateAccountNumber(accountReq.getUserId()));
-		account.setAccounttype(accountReq.getAccounttype());
-		account.setBalance(0.0);
+		account.setAccountType(accountReq.getAccountType());
+		account.setBalance(accountReq.getInitialAmount());
 		
 		repo.save(account);
 		

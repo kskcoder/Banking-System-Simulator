@@ -1,21 +1,25 @@
 package com.tejas.accountservice.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.repositories.AccountRepo;
+import com.tejas.accountservice.utils.AccountRules;
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class AccountConsumer {
-	@Autowired
-	AccountRepo repo;
 	
-	@Autowired
-	AccountProducer accProducer;
+	private final AccountRepo repo;
+	
+	private final AccountProducer accProducer;
+	
+	private final AccountRules rules;
 	
 	@KafkaListener(topics = "account-debit-topic", groupId = "banking-system-simulator-group")
 	public void debitSender(TransactionEvent trEvent) {
@@ -28,10 +32,10 @@ public class AccountConsumer {
 		if (account == null) {
 			trEvent.setStatus(TransactionStatus.DEBIT_FAILED.toString());			
 		} else if (String.valueOf(account.getUserid()).equals(userId)) {
-			if (amount > account.getBalance()) {
+			double newBalance = account.getBalance() - amount;
+			if (newBalance < rules.getMinimumBalance(account.getAccountType())) {
 				trEvent.setStatus(TransactionStatus.INSUFFICIENT_BALANCE.toString());
 			} else {
-				double newBalance = account.getBalance() - amount;
 				account.setBalance(newBalance);
 				trEvent.setBalanceAfter(newBalance);
 				trEvent.setStatus(TransactionStatus.DEBIT_SUCCESS.toString());
@@ -41,7 +45,7 @@ public class AccountConsumer {
 			trEvent.setStatus(TransactionStatus.UNAUTHORISED.toString());
 		}
 		
-		accProducer.dispatchDebitResponseWithRetry(trEvent);
+		accProducer.dispatchResponseWithRetry(trEvent);
 	}
 	
 	@KafkaListener(topics = "account-credit-topic", groupId = "banking-system-simulator-group")
@@ -64,6 +68,6 @@ public class AccountConsumer {
 			trEvent.setStatus(repay ? TransactionStatus.REPAY_SUCCESS.toString() : TransactionStatus.CREDIT_SUCCESS.toString());
 		}
 		
-		accProducer.dispatchDebitResponseWithRetry(trEvent);
+		accProducer.dispatchResponseWithRetry(trEvent);
 	}
 }
