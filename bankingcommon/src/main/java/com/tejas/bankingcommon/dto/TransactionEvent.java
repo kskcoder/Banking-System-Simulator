@@ -1,15 +1,17 @@
 package com.tejas.bankingcommon.dto;
 
+import com.tejas.bankingcommon.enums.TransactionType;
+
 import lombok.Data;
 
 @Data
 public class TransactionEvent {
-    private long transactionId;
-    private int userId;
+    private Long transactionId;
+    private Integer userId;
     private String fromAccountNumber;
     private String toAccountNumber;
     private double amount;
     private double balanceAfter;
-    private String type;
+    private TransactionType type;
     private String status; 
 }
