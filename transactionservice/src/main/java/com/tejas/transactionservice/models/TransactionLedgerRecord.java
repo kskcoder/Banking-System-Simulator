@@ -2,8 +2,12 @@ package com.tejas.transactionservice.models;
 
 import java.time.LocalDateTime;
 
+import com.tejas.bankingcommon.enums.TransactionType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,11 +22,13 @@ public class TransactionLedgerRecord {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private long id;
 	
-	private long parentTransactionId;
+	private Long parentTransactionId;
 	private String accountNumber;      
     private String counterparty;   
 
-    private String type;           
+    @Column(name="type")
+    @Enumerated(EnumType.STRING)
+    private TransactionType type;           
 
     private double amount;
     private double balanceAfter;
