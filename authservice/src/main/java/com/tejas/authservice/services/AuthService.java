@@ -2,8 +2,6 @@ package com.tejas.authservice.services;
 
 import java.time.LocalDateTime;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,22 +14,21 @@ import com.tejas.authservice.models.LoginRequest;
 import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
 import com.tejas.authservice.repositories.AuthRepo;
+import com.tejas.bankingcommon.exceptions.GeneralServerException;
+import com.tejas.bankingcommon.exceptions.NotFoundException;
+import com.tejas.bankingcommon.exceptions.UnauthorizedException;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
-	@Autowired
-	AuthRepo repo;
+	private final AuthRepo repo;
+	private final AuthenticationManager authManager;
+	private final JWTService jwtService;
+	private final AuthUserDetailsService userDetailsService;
 	
-	@Autowired
-	AuthenticationManager authManager;
-	
-	@Autowired
-	JWTService jwtService;
-	
-	@Autowired
-	AuthUserDetailsService userDetailsService;
-	
-	BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+	private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
 	public ResponseEntity<User> signupUser(SignupRequest req) {
 		User user = new User();
@@ -42,27 +39,34 @@ public class AuthService {
 		user.setRole("USER");
 		user.setCreatedAt(LocalDateTime.now());
 		user.setUpdatedAt(LocalDateTime.now());
-		repo.save(user);
+		try {
+			repo.save(user);
+		} catch (Exception e) {
+			throw new GeneralServerException();
+		}
 		
-		return new ResponseEntity<>(user, HttpStatus.OK);		
+		return ResponseEntity.ok().body(user);		
 	}
 
 	public ResponseEntity<String> verifyUser(LoginRequest req) {
 		String username = req.getUsername();
 		String password = req.getPassword();
 		
+		User user = repo.getByUsername(username).orElse(null);
+		
+		if (user == null) {throw new NotFoundException("User not found");}
+		
 		try {
 			Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 			
 			if (authentication.isAuthenticated()) {
-				User user = repo.getByUsername(username);
 				UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-				return new ResponseEntity<>(jwtService.generateToken(user.getId(), userDetails), HttpStatus.OK);
-			}
+				return ResponseEntity.ok().body(jwtService.generateToken(user.getId(), userDetails));
+			} 
 		} catch (Exception e) {
-			return new ResponseEntity<>("Failure", HttpStatus.UNAUTHORIZED);
+			throw new UnauthorizedException("Incorrect Password");
 		}
 		
-		return new ResponseEntity<>("Failure", HttpStatus.UNAUTHORIZED);
+		throw new GeneralServerException();
 	}
 }

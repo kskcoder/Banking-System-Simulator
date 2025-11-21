@@ -17,7 +17,7 @@ public class AuthUserDetailsService implements UserDetailsService{
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		User user = repo.getByUsername(username);
+		User user = repo.getByUsername(username).orElse(null);
 		
 		if (user == null)
 			throw new UsernameNotFoundException("User not found! 404");
