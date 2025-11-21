@@ -19,6 +19,11 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 import com.tejas.bankingcommon.enums.TransactionType;
+import com.tejas.bankingcommon.exceptions.BadRequestException;
+import com.tejas.bankingcommon.exceptions.ForbiddenException;
+import com.tejas.bankingcommon.exceptions.GeneralServerException;
+import com.tejas.bankingcommon.exceptions.NoContentException;
+import com.tejas.bankingcommon.exceptions.NotFoundException;
 import com.tejas.transactionservice.feign.AccountInterface;
 import com.tejas.transactionservice.models.Transaction;
 import com.tejas.transactionservice.models.TransactionLedgerRecord;
@@ -43,6 +48,8 @@ public class TransactionService {
 
     @Transactional
     public ResponseEntity<Transaction> transfer(TransferRequest request) {
+    	if (!isOwner(request.getFromAccount())) {throw new ForbiddenException("You do not have permission to use this account.");}
+    	
         Transaction txn = new Transaction();
         txn.setFromAccount(request.getFromAccount());
         txn.setToAccount(request.getToAccount());
@@ -52,9 +59,9 @@ public class TransactionService {
         txn.setUpdatedAt(LocalDateTime.now());
         
         if (request.getAmount() <= 0.0) {
-            throw new IllegalArgumentException("Amount must be greater than zero");
+            throw new BadRequestException("Amount must be greater than zero");
         } else if (request.getFromAccount().equals(request.getToAccount())) {
-        	throw new IllegalArgumentException("Sender and receiver must be different");
+        	throw new BadRequestException("Sender and receiver must be different");
         }
         
         repo.save(txn);
@@ -74,7 +81,7 @@ public class TransactionService {
         
         trProducer.dispatchDebitWithRetry(event);
         
-        return ResponseEntity.ok(txn);
+        return ResponseEntity.ok().body(txn);
     }
 
     @Transactional
@@ -89,24 +96,14 @@ public class TransactionService {
 		Transaction tx = repo.findById(txnId);
 		
 		if (tx != null) {
-			return new ResponseEntity<>(tx, HttpStatus.OK);
+			return ResponseEntity.ok().body(tx);
 		}
 		
-		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-	}
-	
-	//For admin to get all ledger records
-	public ResponseEntity<List<Transaction>> getAllTransfers() {
-		List<Transaction> tx = repo.findAll();
-		
-		if (!tx.isEmpty()) {
-			return new ResponseEntity<>(tx, HttpStatus.OK);
-		}
-		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		throw new NotFoundException("Transaction not found");
 	}
 	
 	public ResponseEntity<Page<TransactionLedgerRecord>> getDebitTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
-		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
+		if (!isOwner(accountNum)) {throw new ForbiddenException("You do not have permission to use this account.");}
 		if (from != null && to != null) {
 			return getGeneralDatedTransactionRecords(accountNum, TransactionType.DEBIT.toString(), from, to, pageable);
 		} else {
@@ -115,7 +112,7 @@ public class TransactionService {
 	}
 	
 	public ResponseEntity<Page<TransactionLedgerRecord>> getCreditTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
-		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
+		if (!isOwner(accountNum)) {throw new ForbiddenException("You do not have permission to use this account.");}
 		
 		if (from != null && to != null) {
 			return getGeneralDatedTransactionRecords(accountNum, TransactionType.CREDIT.toString(), from, to, pageable);
@@ -125,7 +122,7 @@ public class TransactionService {
 	}
 
 	public ResponseEntity<Page<TransactionLedgerRecord>> getAllTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
-		if (!isOwner(accountNum)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
+		if (!isOwner(accountNum)) {throw new ForbiddenException("You do not have permission to use this account.");}
 		
 		if (from != null && to != null) {
 			return getGeneralDatedTransactionRecords(accountNum, null, from, to, pageable);
@@ -159,10 +156,10 @@ public class TransactionService {
 		}
 		
 		if (tx.hasContent()) {
-			return new ResponseEntity<>(tx, HttpStatus.OK);
+			return ResponseEntity.ok().body(tx);
 		}
 		
-		return new ResponseEntity<>(tx, HttpStatus.NO_CONTENT);
+		throw new NoContentException("No transactions found.");
 	}
 	
 	private ResponseEntity<Page<TransactionLedgerRecord>> getGeneralDatedTransactionRecords(String accountNum,
@@ -175,10 +172,10 @@ public class TransactionService {
 		}
 		
 		if (tx.hasContent()) {
-			return new ResponseEntity<>(tx, HttpStatus.OK);
+			return ResponseEntity.ok().body(tx);
 		}
 		
-		return new ResponseEntity<>(tx, HttpStatus.NO_CONTENT);
+		throw new NoContentException("No transactions found.");
 	}
 
 	public ResponseEntity<byte[]> getStatement(String accountNumber, LocalDateTime from, LocalDateTime to) {
@@ -194,17 +191,37 @@ public class TransactionService {
 		
 		tx = ledgerRepo.getByAccountNumberAndCreatedAtBetween(accountNumber, from, to);
 		
-		byte[] data = statementGenerator.generatePdfStatement(accountNumber, from, to, tx);
+		if (tx.isEmpty()) {
+			throw new NoContentException("No transactions found.");
+		}
 		
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_PDF);
+		try {
+			byte[] data = statementGenerator.generatePdfStatement(accountNumber, from, to, tx);
+			
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_PDF);
+			
+			DateTimeFormatter ftr = DateTimeFormatter.ofPattern("ddMMMyyyyHH:mm");
+			
+			headers.set(HttpHeaders.CONTENT_DISPOSITION,
+					"attachment, filename=statement_"+accountNumber+""+LocalDateTime.now().format(ftr)+".pdf");
+			
+			return ResponseEntity.ok().headers(headers).body(data);
+		} catch (Exception e) {
+			throw new GeneralServerException();
+		}
+	}
+
+	//Admin-only section
+	//For admin to get all ledger records
+	public ResponseEntity<List<Transaction>> getAllTransfers() {
+		List<Transaction> tx = repo.findAll();
 		
-		DateTimeFormatter ftr = DateTimeFormatter.ofPattern("ddMMMyyyyHH:mm");
+		if (!tx.isEmpty()) {
+			return new ResponseEntity<>(tx, HttpStatus.OK);
+		}
 		
-		headers.set(HttpHeaders.CONTENT_DISPOSITION,
-				"attachment, filename=statement_"+accountNumber+""+LocalDateTime.now().format(ftr)+".pdf");
-		
-		return new ResponseEntity<>(data, headers, HttpStatus.OK);
+		throw new NoContentException("No transactions found.");
 	}
 	
 	//For admin to get all ledger records
@@ -214,7 +231,7 @@ public class TransactionService {
 		if (!tx.isEmpty()) {
 			return new ResponseEntity<>(tx, HttpStatus.OK);
 		}
-		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		throw new NoContentException("No transactions found.");
 	}
 }
 

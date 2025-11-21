@@ -24,6 +24,8 @@ import com.tejas.transactionservice.models.TransactionLedgerRecord;
 import com.tejas.transactionservice.models.TransferRequest;
 import com.tejas.transactionservice.services.TransactionService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/transactions")
 public class TransactionController {
@@ -43,7 +45,7 @@ public class TransactionController {
 	}
 		
 	@PostMapping("/transfer")
-	public ResponseEntity<Transaction> transfer(@RequestBody TransferRequest request) {
+	public ResponseEntity<Transaction> transfer(@Valid @RequestBody TransferRequest request) {
 		return accountService.transfer(request);
 	}
 	
