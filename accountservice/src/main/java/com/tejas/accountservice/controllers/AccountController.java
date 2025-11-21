@@ -17,6 +17,8 @@ import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.models.CreateAccountDTO;
 import com.tejas.accountservice.services.AccountService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
@@ -30,7 +32,7 @@ public class AccountController {
 	}
 	
 	@PostMapping("/create")
-	public ResponseEntity<Account> createAccount(@RequestBody CreateAccountDTO accountReq) {
+	public ResponseEntity<Account> createAccount(@Valid @RequestBody CreateAccountDTO accountReq) {
 		return accountService.createAccount(accountReq);
 	}
 	
@@ -41,7 +43,7 @@ public class AccountController {
 	
 	@GetMapping("/user/{userId}")
 	public ResponseEntity<List<Account>> getAccountByUserId(@PathVariable int userId) {
-		return accountService.getAccountByUserId(userId);
+		return accountService.getAccountsByUserId(userId);
 	}
 	
 	@GetMapping("/{accountNumber}/is-owner")
