@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.tejas.authservice.exceptions.AlreadyUsedException;
 import com.tejas.authservice.models.LoginRequest;
 import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
@@ -32,6 +33,18 @@ public class AuthService {
 
 	public ResponseEntity<User> signupUser(SignupRequest req) {
 		User user = new User();
+		
+		user = repo.getByUsername(req.getUsername()).orElse(null);
+		if (user != null) {
+			throw new AlreadyUsedException("Username: "+req.getUsername());
+		} 
+		
+		user = repo.getByEmail(req.getEmail()).orElse(null);
+		if (user != null) {
+			throw new AlreadyUsedException("Email: "+req.getEmail());
+		}
+		
+		user = repo.getByEmail(req.getEmail()).orElse(null);
 		user.setUsername(req.getUsername());
 		user.setEmail(req.getEmail());
 		user.setPassword(encoder.encode(req.getPassword()));

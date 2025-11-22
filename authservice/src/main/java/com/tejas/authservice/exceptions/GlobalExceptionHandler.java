@@ -18,6 +18,19 @@ import jakarta.servlet.http.HttpServletRequest;
 public class GlobalExceptionHandler {
 	
 	@ExceptionHandler
+	public ResponseEntity<ApiError> handleAlreadyUsed(AlreadyUsedException e, HttpServletRequest req) {
+		ApiError error = new ApiError(
+				LocalDateTime.now(),
+				HttpStatus.CONFLICT.value(),
+				"ALREADY_USED",
+				e.getMessage() +" is already used.",
+				req.getRequestURI()
+		);
+		
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+	}
+	
+	@ExceptionHandler
 	public ResponseEntity<ApiError> handleUnauthorized(UnauthorizedException e, HttpServletRequest req) {
 		ApiError error = new ApiError(
 				LocalDateTime.now(),
