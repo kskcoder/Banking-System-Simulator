@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient("account-service")
 public interface AccountInterface {
-	@GetMapping("accounts/{accountNumber}/is-owner")
-	public ResponseEntity<Boolean> isOwnerOfAccount(@PathVariable String accountNumber);
+	@GetMapping("accounts/accountnumber/{accountNumber}/is-owner")
+	public ResponseEntity<Boolean> isOwnerOfAccountNumber(@PathVariable String accountNumber);
 }

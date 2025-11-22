@@ -137,7 +137,7 @@ public class TransactionService {
 		        .getRequest()
 		        .getHeader("X-User-Role");
 		try {
-			 boolean isOwner = accInterface.isOwnerOfAccount(pathAccNo).getBody();
+			 boolean isOwner = accInterface.isOwnerOfAccountNumber(pathAccNo).getBody();
 			 if (!isOwner && !role.equals("ADMIN")) {
 				 return false;     				
 	    	}
@@ -201,7 +201,7 @@ public class TransactionService {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_PDF);
 			
-			DateTimeFormatter ftr = DateTimeFormatter.ofPattern("ddMMMyyyyHH:mm");
+			DateTimeFormatter ftr = DateTimeFormatter.ofPattern("ddMMMyyyyHHmm");
 			
 			headers.set(HttpHeaders.CONTENT_DISPOSITION,
 					"attachment, filename=statement_"+accountNumber+""+LocalDateTime.now().format(ftr)+".pdf");
