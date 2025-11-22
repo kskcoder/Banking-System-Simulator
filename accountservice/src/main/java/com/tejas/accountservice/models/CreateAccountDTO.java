@@ -1,10 +1,9 @@
 package com.tejas.accountservice.models;
 
 
+import com.tejas.bankingcommon.enums.AccountType;
+
 import jakarta.validation.constraints.NotNull;
-
-import com.tejas.accountservice.enums.AccountType;
-
 import lombok.Data;
 
 @Data

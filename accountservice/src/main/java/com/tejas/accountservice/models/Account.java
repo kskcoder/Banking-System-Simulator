@@ -1,6 +1,6 @@
 package com.tejas.accountservice.models;
 
-import com.tejas.accountservice.enums.AccountType;
+import com.tejas.bankingcommon.enums.AccountType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

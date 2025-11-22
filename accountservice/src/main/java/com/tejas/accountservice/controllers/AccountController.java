@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.models.CreateAccountDTO;
 import com.tejas.accountservice.services.AccountService;
+import com.tejas.bankingcommon.enums.AccountType;
 
 import jakarta.validation.Valid;
 
@@ -46,13 +47,23 @@ public class AccountController {
 		return accountService.getAccountsByUserId(userId);
 	}
 	
-	@GetMapping("/{accountNumber}/is-owner")
-	public ResponseEntity<Boolean> isOwnerOfAccount(@PathVariable String accountNumber) {
-		return accountService.isOwnerOfAccount(accountNumber);
-	}
-	
 	@DeleteMapping("/close/{account}")
 	public ResponseEntity<String> closeAccount(@PathVariable String account) {
 		return accountService.closeAccount(account);
+	}
+	
+	@GetMapping("/accountnumber/{accountNumber}/is-owner")
+	public ResponseEntity<Boolean> isOwnerOfAccount(@PathVariable String accountNumber) {
+		return accountService.isOwnerOfAccountNumber(accountNumber);
+	}
+	
+	@GetMapping("/accountid/{accountId}/is-owner")
+	public ResponseEntity<Boolean> isOwnerOfAccount(@PathVariable long accountId) {
+		return accountService.isOwnerOfAccountId(accountId);
+	}
+	
+	@GetMapping("/accountid/{accountId}/type")
+	public ResponseEntity<AccountType> getAccountTypeByAccountId(@PathVariable long accountId) {
+		return accountService.getAccountTypeByAccountId(accountId);
 	}
 }

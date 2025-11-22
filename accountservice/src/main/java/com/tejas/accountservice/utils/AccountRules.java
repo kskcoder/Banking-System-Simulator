@@ -2,7 +2,7 @@ package com.tejas.accountservice.utils;
 
 import org.springframework.stereotype.Component;
 
-import com.tejas.accountservice.enums.AccountType;
+import com.tejas.bankingcommon.enums.AccountType;
 
 @Component
 public class AccountRules {

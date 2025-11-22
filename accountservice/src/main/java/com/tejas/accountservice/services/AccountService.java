@@ -11,6 +11,7 @@ import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.models.CreateAccountDTO;
 import com.tejas.accountservice.repositories.AccountRepo;
 import com.tejas.accountservice.utils.AccountUtils;
+import com.tejas.bankingcommon.enums.AccountType;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
@@ -107,12 +108,32 @@ public class AccountService {
 		throw new NoContentException("No accounts not found.");
 	}
 
-	public ResponseEntity<Boolean> isOwnerOfAccount(String accountNumber) {
+	public ResponseEntity<Boolean> isOwnerOfAccountNumber(String accountNumber) {
 		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 		Account account = repo.getByAccountnumber(accountNumber).get();
 		if (account != null) {
 			boolean isOwner = String.valueOf(account.getUserid()).equals(userId);
 			return ResponseEntity.ok().body(isOwner);
+		}
+			
+		throw new NotFoundException("Requested account not found.");
+	}
+	
+	public ResponseEntity<Boolean> isOwnerOfAccountId(long accountId) {
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+		Account account = repo.getById(accountId).get();
+		if (account != null) {
+			boolean isOwner = String.valueOf(account.getUserid()).equals(userId);
+			return ResponseEntity.ok().body(isOwner);
+		}
+			
+		throw new NotFoundException("Requested account not found.");
+	}
+
+	public ResponseEntity<AccountType> getAccountTypeByAccountId(long accountId) {
+		Account account = repo.getById(accountId).get();
+		if (account != null) {
+			return ResponseEntity.ok().body(account.getAccountType());
 		}
 			
 		throw new NotFoundException("Requested account not found.");
