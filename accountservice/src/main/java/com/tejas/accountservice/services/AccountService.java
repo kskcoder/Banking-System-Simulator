@@ -3,13 +3,18 @@ package com.tejas.accountservice.services;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.models.CreateAccountDTO;
 import com.tejas.accountservice.repositories.AccountRepo;
+import com.tejas.accountservice.utils.AccountUtils;
+import com.tejas.bankingcommon.exceptions.ForbiddenException;
+import com.tejas.bankingcommon.exceptions.GeneralServerException;
+import com.tejas.bankingcommon.exceptions.NoContentException;
+import com.tejas.bankingcommon.exceptions.NotFoundException;
 
 @Service
 public class AccountService {
@@ -24,62 +29,92 @@ public class AccountService {
 		Account account = new Account();
 		account.setUserid(accountReq.getUserId());
 		account.setAccountnumber(generateAccountNumber(accountReq.getUserId()));
-		account.setAccounttype(accountReq.getAccounttype());
-		account.setBalance(0.0);
+		account.setAccountType(accountReq.getAccountType());
+		account.setBalance(accountReq.getInitialAmount());
 		
-		repo.save(account);
+		try {
+			repo.save(account);
+		} catch (Exception e) {
+			throw new GeneralServerException();
+		}
 		
-		return new ResponseEntity<>(account, HttpStatus.OK);
+		return ResponseEntity.ok().body(account);
 	}
 
 	public ResponseEntity<Account> getAccountByAccountNumber(String accountNumber) {
 		Account account = repo.getByAccountnumber(accountNumber).get();
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 		
-		if (account != null) {
-			return new ResponseEntity<>(account, HttpStatus.OK);
+		if (account != null && (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin())) {
+			return ResponseEntity.ok().body(account);
 		}
 			
-		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		throw new ForbiddenException("You do not have permission to access this resource.");
 	}
 	
-	public ResponseEntity<List<Account>> getAccountByUserId(int id) {
+	public ResponseEntity<List<Account>> getAccountsByUserId(int id) {
 		List<Account> accounts = repo.getByUserid(id).get();
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 		
 		if (accounts != null) {
-			return new ResponseEntity<>(accounts, HttpStatus.OK);
+			if (String.valueOf(accounts.stream().findFirst().get().getUserid()).equals(userId) || AccountUtils.isAdmin()) {
+				return ResponseEntity.ok().body(accounts);
+			} else {
+				throw new ForbiddenException("You do not have permission to access this resource.");
+			}
 		}
-			
-		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		throw new NotFoundException("Requested account not found.");
 	}
 	
 	public ResponseEntity<Double> getBalanceByAccountNumber(String accountNumber) {
 		Account account = repo.getByAccountnumber(accountNumber).get();
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 		
 		if (account != null) {
-			return new ResponseEntity<>(account.getBalance(), HttpStatus.OK);
+			if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
+				return ResponseEntity.ok().body(account.getBalance());
+			} else {
+				throw new ForbiddenException("You do not have permission to access this resource.");
+			}
 		}
 			
-		return new ResponseEntity<>(0.0, HttpStatus.NOT_FOUND);
+		throw new NotFoundException("Requested account not found.");
 	}
 	
 	public ResponseEntity<String> closeAccount(String accountNumber) {
 		Account account = repo.getByAccountnumber(accountNumber).get();
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 		
 		if (account != null) {
-			repo.delete(account);
-			return new ResponseEntity<>("Successful", HttpStatus.OK);
+			if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
+				repo.delete(account);
+				return ResponseEntity.ok().body("Successful");
+			} else {
+				throw new ForbiddenException("You do not have permission to access this resource.");
+			}
 		}
-			
-		return new ResponseEntity<>("Could not delete!", HttpStatus.NOT_FOUND);
 		
+		throw new NotFoundException("Requested account not found.");		
 	}
 
 	public ResponseEntity<List<Account>> getAllAccounts() {
 		List<Account> accounts = repo.findAll();
 		
 		if (!accounts.isEmpty()) {
-			return new ResponseEntity<>(accounts, HttpStatus.OK);
+			return ResponseEntity.ok().body(accounts);
 		}
-		return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+		
+		throw new NoContentException("No accounts not found.");
+	}
+
+	public ResponseEntity<Boolean> isOwnerOfAccount(String accountNumber) {
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+		Account account = repo.getByAccountnumber(accountNumber).get();
+		if (account != null) {
+			boolean isOwner = String.valueOf(account.getUserid()).equals(userId);
+			return ResponseEntity.ok().body(isOwner);
+		}
+			
+		throw new NotFoundException("Requested account not found.");
 	}
 }

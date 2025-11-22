@@ -1,0 +1,17 @@
+package com.tejas.bankingcommon.enums;
+
+public enum TransactionStatus {
+	PENDING,
+	SUCCESS,
+	FAILED,
+	RETRY,
+	INSUFFICIENT_BALANCE,
+	UNAUTHORISED,
+	DEBIT_SUCCESS,
+	DEBIT_FAILED,
+	CREDIT_SUCCESS,
+	CREDIT_FAILED,
+	REPAY_PENDING,
+	REPAY_SUCCESS,
+	REPAY_FAILED
+}

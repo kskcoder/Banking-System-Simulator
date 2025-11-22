@@ -6,7 +6,6 @@ import java.util.function.Function;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
@@ -24,7 +23,7 @@ public class JWTService {
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
 	
-	public String extractUsername(String token) {
+	public String extractUserId(String token) {
 		return extractClaim(token, Claims::getSubject);
 	}
 
