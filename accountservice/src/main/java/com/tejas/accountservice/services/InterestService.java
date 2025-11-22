@@ -6,11 +6,11 @@ import java.util.List;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.tejas.accountservice.enums.AccountType;
 import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.repositories.AccountRepo;
 import com.tejas.accountservice.utils.AccountRules;
 import com.tejas.bankingcommon.dto.TransactionEvent;
+import com.tejas.bankingcommon.enums.AccountType;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 import com.tejas.bankingcommon.enums.TransactionType;
 
