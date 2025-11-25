@@ -12,6 +12,4 @@ public interface CardRepo extends JpaRepository<Card, Long>{
 	public boolean existsByCardNumber(String hashedCardNumber);
 
 	public boolean existsByAccountId(long accountId);
-
-	public Optional<Card> getByCardNumber(String hashedCardNumber);
 }

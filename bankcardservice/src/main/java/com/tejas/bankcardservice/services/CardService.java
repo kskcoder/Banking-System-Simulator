@@ -1,5 +1,6 @@
 package com.tejas.bankcardservice.services;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -7,15 +8,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.tejas.bankcardservice.dtos.FirstCardResponse;
+import com.tejas.bankcardservice.dtos.GeneralCardResponse;
 import com.tejas.bankcardservice.exceptions.AlreadyExistsException;
 import com.tejas.bankcardservice.feign.AccountInterface;
 import com.tejas.bankcardservice.model.Card;
 import com.tejas.bankcardservice.repositories.CardRepo;
 import com.tejas.bankcardservice.utils.CardGenerator;
+import com.tejas.bankcardservice.utils.CardMask;
+import com.tejas.bankcardservice.utils.GeneralUtils;
+import com.tejas.bankingcommon.enums.AccountCardStatus;
 import com.tejas.bankingcommon.enums.AccountType;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
-import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
+import com.tejas.bankingcommon.exceptions.NotFoundException;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +34,7 @@ public class CardService {
 	private final CardGenerator generator;	
 	private final AccountInterface accInterface;
 	
-	public ResponseEntity<Card> createCard(long accountId) {
+	public ResponseEntity<FirstCardResponse> createCard(long accountId) {
 		if (!isOwner(accountId)) {throw new ForbiddenException("You do not have permission to use this card.");}
 		if (repo.existsByAccountId(accountId)) {throw new AlreadyExistsException(String.valueOf(accountId));}
 		String rawCardNumber;
@@ -49,55 +55,105 @@ public class CardService {
 		Card card = Card.builder()
 				.cardNumber(hashedCardNumber)
 				.cvv(hashedCvvNumber)
+				.lastDigits(rawCardNumber.substring(11,16))
 				.expiryDate(expiryDate)
 				.cardLimit(type == AccountType.SAVINGS ? 50000.0 : 200000.0)
-				.isBlocked(false)
+				.status(AccountCardStatus.INACTIVE)
 				.accountId(accountId)
 				.build();
 		
 		repo.save(card);
 		
-		return ResponseEntity.ok().body(card);
+		FirstCardResponse cardNew = FirstCardResponse.builder()
+				.cardNumber(CardMask.formatCardNumber(rawCardNumber))
+				.cvv(rawCvvNumber)
+				.expiry(expiryDate)
+				.maskedCardNumber(CardMask.maskCardNumber(rawCardNumber, false))
+				.status(AccountCardStatus.INACTIVE)
+				.limit(type == AccountType.SAVINGS ? 50000.0 : 200000.0)
+				.build();
+		
+		return ResponseEntity.ok().body(cardNew);
 	}
 
-	public ResponseEntity<Card> getCardByAccountId(long accountId) {
+	public ResponseEntity<GeneralCardResponse> getCardByAccountId(long accountId) {
 		if (!isOwner(accountId)) {throw new ForbiddenException("You do not have permission to use this card.");}
-		Card card = repo.getByAccountId(accountId).get();
+		Card card = repo.getByAccountId(accountId).orElse(null);
 		
 		if (card != null) {
-			return ResponseEntity.ok().body(card);
-		}
-			
-		throw new ForbiddenException("You do not have permission to access this resource.");
+			String lastDigits = card.getLastDigits();
+			GeneralCardResponse cardNew = GeneralCardResponse.builder()
+					.expiry(card.getLastDigits())
+					.maskedCardNumber(CardMask.maskCardNumber(lastDigits, true))
+					.status(card.getStatus())
+					.limit(card.getCardLimit())
+					.build();
+			return ResponseEntity.ok().body(cardNew);
+		} 
+		
+		throw new NotFoundException("No card associated with Account ID: "+accountId);
 	}
 	
-	public ResponseEntity<Card> blockCard(long cardNumber) {
-		String hashedCardNumber = generator.hash(String.valueOf(cardNumber)); 
-		Card card = repo.getByCardNumber(hashedCardNumber).get();
+	public ResponseEntity<List<GeneralCardResponse>> getUsersAllCards() {
+		int userId = Integer.parseInt(GeneralUtils.getUserId());
+		
+		List<Long> accountIds = accInterface.getAccountIdsByUserId().getBody();
+		
+		if (!accountIds.isEmpty()) {
+			List<Card> cards = new ArrayList<>();
+			
+			for (Long id: accountIds) {
+				cards.add(repo.getByAccountId(id).orElse(null));
+			}
+			
+			if (!cards.isEmpty()) {
+				List<GeneralCardResponse> responseCards = new ArrayList<>();
+				for (Card c: cards) {
+					String lastDigits = c.getLastDigits();
+					GeneralCardResponse cardNew = GeneralCardResponse.builder()
+							.expiry(c.getLastDigits())
+							.maskedCardNumber(CardMask.maskCardNumber(lastDigits, true))
+							.status(c.getStatus())
+							.limit(c.getCardLimit())
+							.build();
+					
+					responseCards.add(cardNew);
+				}
+				return ResponseEntity.ok().body(responseCards);
+			} else {
+				throw new NotFoundException("No card associated with User ID: "+userId);
+			}
+			
+		} else {
+			throw new NotFoundException("No accounts associated with User ID: "+userId);
+		}
+	}
+	
+	public ResponseEntity<Card> blockCard(long accountId) {
+		Card card = repo.getByAccountId(accountId).orElse(null);
 		if (card != null) {
 			if (!isOwner(card.getAccountId())) {throw new ForbiddenException("You do not have permission to use this card.");}
 			
-			card.setBlocked(true);
+			card.setStatus(AccountCardStatus.BLOCKED);
 			repo.save(card);
 			return ResponseEntity.ok().body(card);
 		}
 		
-		throw new GeneralServerException();		
+		throw new NotFoundException("No card associated with Account ID: "+accountId);		
 	}
 	
 	
-	public ResponseEntity<Card> unblockCard(long cardNumber) {
-		String hashedCardNumber = generator.hash(String.valueOf(cardNumber)); 
-		Card card = repo.getByCardNumber(hashedCardNumber).get();
+	public ResponseEntity<Card> unblockCard(long accountId) {
+		Card card = repo.getByAccountId(accountId).orElse(null);
 		if (card != null) {
 			if (!isOwner(card.getAccountId())) {throw new ForbiddenException("You do not have permission to use this card.");}
 			
-			card.setBlocked(false);
+			card.setStatus(AccountCardStatus.ACTIVE);
 			repo.save(card);
 			return ResponseEntity.ok().body(card);
 		}
 		
-		throw new GeneralServerException();
+		throw new NotFoundException("No card associated with Account ID: "+accountId);
 	}
 
 	private boolean isOwner(long pathAccId) {
@@ -119,6 +175,13 @@ public class CardService {
 	//Admin related functions
 
 	public ResponseEntity<List<Card>> getAllCards() {
+		String role = ((ServletRequestAttributes) RequestContextHolder
+		        .getRequestAttributes())
+		        .getRequest()
+		        .getHeader("X-User-Role");
+		
+		if (!role.equals("ADMIN")) {throw new ForbiddenException("You do not have permission to access this resource.");}
+		
 		List<Card> cards = repo.findAll();
 		
 		if (!cards.isEmpty()) {
@@ -127,4 +190,5 @@ public class CardService {
 		
 		throw new NoContentException("No cards found.");
 	}
+
 }
