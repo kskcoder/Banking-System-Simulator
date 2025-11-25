@@ -1,10 +1,10 @@
 package com.tejas.accountservice.services;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.tejas.accountservice.models.Account;
@@ -44,7 +44,7 @@ public class AccountService {
 
 	public ResponseEntity<Account> getAccountByAccountNumber(String accountNumber) {
 		Account account = repo.getByAccountnumber(accountNumber).get();
-		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+		String userId = AccountUtils.getUserId();
 		
 		if (account != null && (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin())) {
 			return ResponseEntity.ok().body(account);
@@ -55,7 +55,7 @@ public class AccountService {
 	
 	public ResponseEntity<List<Account>> getAccountsByUserId(int id) {
 		List<Account> accounts = repo.getByUserid(id).get();
-		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+		String userId = AccountUtils.getUserId();
 		
 		if (accounts != null) {
 			if (String.valueOf(accounts.stream().findFirst().get().getUserid()).equals(userId) || AccountUtils.isAdmin()) {
@@ -69,7 +69,7 @@ public class AccountService {
 	
 	public ResponseEntity<Double> getBalanceByAccountNumber(String accountNumber) {
 		Account account = repo.getByAccountnumber(accountNumber).get();
-		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+		String userId = AccountUtils.getUserId();
 		
 		if (account != null) {
 			if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
@@ -84,7 +84,7 @@ public class AccountService {
 	
 	public ResponseEntity<String> closeAccount(String accountNumber) {
 		Account account = repo.getByAccountnumber(accountNumber).get();
-		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+		String userId = AccountUtils.getUserId();
 		
 		if (account != null) {
 			if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
@@ -98,18 +98,8 @@ public class AccountService {
 		throw new NotFoundException("Requested account not found.");		
 	}
 
-	public ResponseEntity<List<Account>> getAllAccounts() {
-		List<Account> accounts = repo.findAll();
-		
-		if (!accounts.isEmpty()) {
-			return ResponseEntity.ok().body(accounts);
-		}
-		
-		throw new NoContentException("No accounts not found.");
-	}
-
 	public ResponseEntity<Boolean> isOwnerOfAccountNumber(String accountNumber) {
-		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+		String userId = AccountUtils.getUserId();
 		Account account = repo.getByAccountnumber(accountNumber).get();
 		if (account != null) {
 			boolean isOwner = String.valueOf(account.getUserid()).equals(userId);
@@ -120,7 +110,7 @@ public class AccountService {
 	}
 	
 	public ResponseEntity<Boolean> isOwnerOfAccountId(long accountId) {
-		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+		String userId = AccountUtils.getUserId();
 		Account account = repo.getById(accountId).get();
 		if (account != null) {
 			boolean isOwner = String.valueOf(account.getUserid()).equals(userId);
@@ -137,5 +127,33 @@ public class AccountService {
 		}
 			
 		throw new NotFoundException("Requested account not found.");
+	}
+
+	public ResponseEntity<List<Long>> getAccountIdsByUserId() {
+		String userId = AccountUtils.getUserId();
+		List<Account> accounts = repo.getByUserid(Long.parseLong(userId)).get();
+		
+		if (accounts != null) {
+			if (String.valueOf(accounts.stream().findFirst().get().getUserid()).equals(userId) || AccountUtils.isAdmin()) {
+				List<Long> accountIds = accounts.stream().map(Account::getId).collect(Collectors.toList());
+				return ResponseEntity.ok().body(accountIds);
+			} else {
+				throw new ForbiddenException("You do not have permission to access this resource.");
+			}
+		}
+		
+		throw new NoContentException("No accounts found.");
+	}
+	
+	//Admin related functions
+	public ResponseEntity<List<Account>> getAllAccounts() {
+		if (!AccountUtils.isAdmin()) {throw new ForbiddenException("You do not have permission to access this resource.");}
+		List<Account> accounts = repo.findAll();
+		
+		if (!accounts.isEmpty()) {
+			return ResponseEntity.ok().body(accounts);
+		}
+		
+		throw new NoContentException("No accounts found.");
 	}
 }

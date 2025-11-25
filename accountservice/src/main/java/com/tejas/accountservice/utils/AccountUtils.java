@@ -15,6 +15,10 @@ public class AccountUtils {
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(role -> role.equals("ROLE_ADMIN"));
         return isAdmin;
-        
     }
+    
+    public static String getUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+    
 }
