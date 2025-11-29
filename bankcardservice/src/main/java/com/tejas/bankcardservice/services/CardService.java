@@ -155,6 +155,19 @@ public class CardService {
 		
 		throw new NotFoundException("No card associated with Account ID: "+accountId);
 	}
+	
+	public ResponseEntity<Card> deleteCard(long accountId) {
+		Card card = repo.getByAccountId(accountId).orElse(null);
+		if (card != null) {
+			if (!isOwner(card.getAccountId())) {throw new ForbiddenException("You do not have permission to use this card.");}
+			
+			card.setStatus(AccountCardStatus.ACTIVE);
+			repo.delete(card);
+			return ResponseEntity.ok().body(card);
+		}
+		
+		throw new NotFoundException("No card associated with Account ID: "+accountId);
+	}
 
 	private boolean isOwner(long pathAccId) {
 		String role = ((ServletRequestAttributes) RequestContextHolder
