@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import lombok.Data;
 
 @Configuration
-@ConfigurationProperties(prefix="gateway")
+@ConfigurationProperties(value="gateway")
 @Data
-public class GatewaySecretsConfig {
-	Map<String, String> secrets;
+public class ExternalServiceSercretsConfig {
+	private Map<String, String> external;
 }
