@@ -12,6 +12,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.tejas.bankingcommon.enums.UserType;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -29,7 +31,7 @@ public class JWTService {
 		String role = userDetails.getAuthorities().stream()
 		        .findFirst()
 		        .map(GrantedAuthority::getAuthority)
-		        .orElse("USER")
+		        .orElse(UserType.USER.toString())
 		        .replace("ROLE_", "");
 	
 		claims.put("role", role);
