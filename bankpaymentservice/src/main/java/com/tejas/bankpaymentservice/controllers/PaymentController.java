@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tejas.bankingcommon.enums.AccountType;
 import com.tejas.bankpaymentservice.models.InitiatePaymentDTO;
+import com.tejas.bankpaymentservice.models.Payment;
 import com.tejas.bankpaymentservice.models.PaymentResponse;
 import com.tejas.bankpaymentservice.services.PaymentService;
 
@@ -26,8 +27,8 @@ public class PaymentController {
 	PaymentService paymentService;
 	
 	@GetMapping
-	public ResponseEntity<List<Account>> getAllAccounts() {
-		return accountService.getAllAccounts();
+	public ResponseEntity<List<Payment>> getAllAccounts() {
+		return paymentService.getAllPayments();
 	}
 	
 	@PostMapping("/initiate")

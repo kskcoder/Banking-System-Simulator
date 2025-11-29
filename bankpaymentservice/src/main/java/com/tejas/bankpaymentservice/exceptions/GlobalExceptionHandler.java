@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
 		ApiError error = new ApiError(
 				LocalDateTime.now(),
 				HttpStatus.NOT_FOUND.value(),
-				"TRANSACTION_NOT_FOUND",
+				"PAYMENT_NOT_FOUND",
 				e.getMessage(),
 				req.getRequestURI()
 		);

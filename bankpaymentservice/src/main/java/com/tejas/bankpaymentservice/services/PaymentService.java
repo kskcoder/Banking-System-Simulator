@@ -13,7 +13,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.tejas.bankingcommon.enums.AccountCardStatus;
 import com.tejas.bankingcommon.enums.AccountType;
 import com.tejas.bankingcommon.enums.PaymentStatus;
+import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
+import com.tejas.bankingcommon.exceptions.NoContentException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
 import com.tejas.bankpaymentservice.models.InitiatePaymentDTO;
 import com.tejas.bankpaymentservice.models.Payment;
@@ -22,8 +24,6 @@ import com.tejas.bankpaymentservice.repositories.PaymentRepo;
 
 import feign.FeignException;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.ForbiddenException;
-import jakarta.ws.rs.core.NoContentException;
 import lombok.RequiredArgsConstructor;
 
 
@@ -48,10 +48,14 @@ public class PaymentService {
 			throw new GeneralServerException();
 		}
 		
+		
+		
 		PaymentResponse paymentRes = PaymentResponse.builder()
 				.paymentId(payment.getId())
 				.status(PaymentStatus.INITIATED)
 				.build();
+		
+		
 		
 		return ResponseEntity.ok().body(paymentRes);
 	}
@@ -196,7 +200,7 @@ public class PaymentService {
 	
 	//Admin related functions
 
-	public ResponseEntity<List<Payment>> getAllCards() {
+	public ResponseEntity<List<Payment>> getAllPayments() {
 		String role = ((ServletRequestAttributes) RequestContextHolder
 		        .getRequestAttributes())
 		        .getRequest()
@@ -204,13 +208,13 @@ public class PaymentService {
 		
 		if (!role.equals("ADMIN")) {throw new ForbiddenException("You do not have permission to access this resource.");}
 		
-		List<Payment> cards = repo.findAll();
+		List<Payment> payments = repo.findAll();
 		
-		if (!cards.isEmpty()) {
-			return ResponseEntity.ok().body(cards);
+		if (!payments.isEmpty()) {
+			return ResponseEntity.ok().body(payments);
 		}
 		
-		throw new NoContentException("No cards found.");
+		throw new NoContentException("No payments found.");
 	}
 
 }
