@@ -15,6 +15,7 @@ import com.tejas.authservice.models.LoginRequest;
 import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
 import com.tejas.authservice.repositories.AuthRepo;
+import com.tejas.bankingcommon.enums.UserType;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
 import com.tejas.bankingcommon.exceptions.UnauthorizedException;
@@ -49,7 +50,7 @@ public class AuthService {
 		user.setEmail(req.getEmail());
 		user.setPassword(encoder.encode(req.getPassword()));
 		user.setPhone(req.getPhone());
-		user.setRole("USER");
+		user.setRole(UserType.USER);
 		user.setCreatedAt(LocalDateTime.now());
 		user.setUpdatedAt(LocalDateTime.now());
 		try {
