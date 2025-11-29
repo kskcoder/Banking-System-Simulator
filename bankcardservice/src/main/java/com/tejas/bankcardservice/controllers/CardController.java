@@ -3,6 +3,7 @@ package com.tejas.bankcardservice.controllers;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,5 +52,10 @@ public class CardController {
 	@PutMapping("/unblock/{accountId}")
 	public ResponseEntity<Card> unblockCard(@PathVariable long accountId) {
 		return cardService.unblockCard(accountId);
+	}
+	
+	@DeleteMapping("/delete/{accountId}")
+	public ResponseEntity<Card> deleteCard(@PathVariable long accountId) {
+		return cardService.deleteCard(accountId);
 	}
 }
