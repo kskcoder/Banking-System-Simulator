@@ -18,7 +18,8 @@ import com.tejas.bankcardservice.repositories.CardRepo;
 import com.tejas.bankcardservice.utils.CardGenerals;
 import com.tejas.bankcardservice.utils.CardMask;
 import com.tejas.bankcardservice.utils.GeneralUtils;
-import com.tejas.bankingcommon.dto.CardVerificationDTO;
+import com.tejas.bankingcommon.dto.CardVerificationRequest;
+import com.tejas.bankingcommon.dto.CardVerificationResponse;
 import com.tejas.bankingcommon.enums.AccountCardStatus;
 import com.tejas.bankingcommon.enums.AccountType;
 import com.tejas.bankingcommon.exceptions.BadRequestException;
@@ -172,7 +173,7 @@ public class CardService {
 		throw new NotFoundException("No card associated with Account ID: "+accountId);
 	}
 	
-	public ResponseEntity<Boolean> verifyCard(@RequestBody CardVerificationDTO request) {
+	public ResponseEntity<CardVerificationResponse> verifyCard(@RequestBody CardVerificationRequest request) {
 		String hashedCard = generals.hash(request.getCardNumber());
 		Card card = repo.getByCardNumber(hashedCard).orElse(null);
 		
@@ -197,10 +198,14 @@ public class CardService {
 				throw new BadRequestException("Incorrect CVV number and Card has expired.");
 			} else if (hasExceededLimit) {
 				throw new BadRequestException("Card has exceeded daily limit.");
-			} else if (card.getStatus() != AccountCardStatus.ACTIVE) {
-				throw new BadRequestException("Card is inactive or blocked.");
+			} else if (card.getStatus() == AccountCardStatus.BLOCKED) {
+				throw new BadRequestException("Card is blocked.");
 			} else {
-				return ResponseEntity.ok().body(true);
+				CardVerificationResponse reponse = CardVerificationResponse.builder()
+						.accountId(card.getAccountId())
+						.validated(true)
+						.build();
+				return ResponseEntity.ok().body(reponse);
 			}
 			
 		} else {

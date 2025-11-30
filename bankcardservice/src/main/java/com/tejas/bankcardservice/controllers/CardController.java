@@ -16,7 +16,8 @@ import com.tejas.bankcardservice.dtos.FirstCardResponse;
 import com.tejas.bankcardservice.dtos.GeneralCardResponse;
 import com.tejas.bankcardservice.model.Card;
 import com.tejas.bankcardservice.services.CardService;
-import com.tejas.bankingcommon.dto.CardVerificationDTO;
+import com.tejas.bankingcommon.dto.CardVerificationRequest;
+import com.tejas.bankingcommon.dto.CardVerificationResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,7 +43,7 @@ public class CardController {
 	}
 	
 	@PostMapping("/verify")
-	public ResponseEntity<Boolean> verifyCard(@RequestBody CardVerificationDTO request) {
+	public ResponseEntity<CardVerificationResponse> verifyCard(@RequestBody CardVerificationRequest request) {
 		return cardService.verifyCard(request);
 	}
 	

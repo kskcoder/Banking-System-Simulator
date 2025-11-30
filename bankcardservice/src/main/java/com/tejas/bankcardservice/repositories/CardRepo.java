@@ -1,10 +1,12 @@
 package com.tejas.bankcardservice.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.tejas.bankcardservice.model.Card;
+import com.tejas.bankingcommon.enums.AccountCardStatus;
 
 public interface CardRepo extends JpaRepository<Card, Long>{
 	public Optional<Card> getByAccountId(long accountId);
@@ -14,4 +16,6 @@ public interface CardRepo extends JpaRepository<Card, Long>{
 	public boolean existsByCardNumber(String hashedCardNumber);
 
 	public boolean existsByAccountId(long accountId);
+
+	public List<Card> getByStatus(AccountCardStatus active);
 }
