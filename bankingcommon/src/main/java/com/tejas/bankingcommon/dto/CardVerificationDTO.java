@@ -13,4 +13,6 @@ public class CardVerificationDTO {
 	private String cvv;
 	@NotNull
 	private String expiryDate;
+	@NotNull
+	private double amount;
 }
