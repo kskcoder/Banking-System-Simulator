@@ -6,13 +6,10 @@ import lombok.Data;
 
 @Data
 @Builder
-public class CardVerificationDTO {
+public class UserContactDetails {
 	@NotNull
-	private String cardNumber;
+	private String email;
+	
 	@NotNull
-	private String cvv;
-	@NotNull
-	private String expiryDate;
-	@NotNull
-	private double amount;
+	private String phone;
 }
