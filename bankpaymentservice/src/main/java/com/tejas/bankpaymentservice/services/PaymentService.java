@@ -10,13 +10,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.tejas.bankingcommon.dto.CardVerificationDTO;
 import com.tejas.bankingcommon.enums.AccountCardStatus;
 import com.tejas.bankingcommon.enums.AccountType;
 import com.tejas.bankingcommon.enums.PaymentStatus;
+import com.tejas.bankingcommon.exceptions.BadRequestException;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
+import com.tejas.bankpaymentservice.feign.CardInterface;
 import com.tejas.bankpaymentservice.models.InitiatePaymentDTO;
 import com.tejas.bankpaymentservice.models.Payment;
 import com.tejas.bankpaymentservice.models.PaymentResponse;
@@ -31,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PaymentService {
 	private final PaymentRepo repo;
+	private final CardInterface cardInt;
 	
 	public ResponseEntity<PaymentResponse> initiateRequest(@Valid InitiatePaymentDTO initiateReq) {
 		
@@ -48,7 +52,24 @@ public class PaymentService {
 			throw new GeneralServerException();
 		}
 		
-		
+		if (initiateReq.getType() == 1) {
+			CardVerificationDTO verifyReq = CardVerificationDTO.builder()
+					.cardNumber(initiateReq.getCardNumber())			
+					.cvv(String.valueOf(initiateReq.getCvv()))
+					.expiryDate(initiateReq.getExpiry())
+					.build();
+			
+			try {
+				boolean cardVerified = cardInt.verifyCard(verifyReq).getBody();
+				
+				if (cardVerified) {
+					
+				}
+			} catch (FeignException e) {
+				throw new BadRequestException(e.contentUTF8());
+			}
+			
+		}
 		
 		PaymentResponse paymentRes = PaymentResponse.builder()
 				.paymentId(payment.getId())

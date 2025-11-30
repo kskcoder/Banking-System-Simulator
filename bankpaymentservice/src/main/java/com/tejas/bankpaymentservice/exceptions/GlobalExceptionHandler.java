@@ -71,6 +71,19 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler
+	public ResponseEntity<ApiError> handleAlreadyExists(BadRequestException e, HttpServletRequest req) {
+		ApiError error = new ApiError(
+				LocalDateTime.now(),
+				HttpStatus.BAD_REQUEST.value(),
+				"BAD_REQUEST",
+				e.getMessage(),
+				req.getRequestURI()
+		);
+		
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+	}
+	
+	@ExceptionHandler
 	public ResponseEntity<ApiError> handleGeneralGeneration(GeneralServerException e, HttpServletRequest req) {
 		ApiError error = new ApiError(
 				LocalDateTime.now(),
