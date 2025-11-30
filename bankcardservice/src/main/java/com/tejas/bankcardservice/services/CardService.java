@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -14,11 +15,13 @@ import com.tejas.bankcardservice.exceptions.AlreadyExistsException;
 import com.tejas.bankcardservice.feign.AccountInterface;
 import com.tejas.bankcardservice.model.Card;
 import com.tejas.bankcardservice.repositories.CardRepo;
-import com.tejas.bankcardservice.utils.CardGenerator;
+import com.tejas.bankcardservice.utils.CardGenerals;
 import com.tejas.bankcardservice.utils.CardMask;
 import com.tejas.bankcardservice.utils.GeneralUtils;
+import com.tejas.bankingcommon.dto.CardVerificationDTO;
 import com.tejas.bankingcommon.enums.AccountCardStatus;
 import com.tejas.bankingcommon.enums.AccountType;
+import com.tejas.bankingcommon.exceptions.BadRequestException;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
@@ -31,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CardService {
 	private final CardRepo repo;
-	private final CardGenerator generator;	
+	private final CardGenerals generals;	
 	private final AccountInterface accInterface;
 	
 	public ResponseEntity<FirstCardResponse> createCard(long accountId) {
@@ -41,16 +44,16 @@ public class CardService {
 		String hashedCardNumber;
 		
 		do {
-			rawCardNumber = generator.cardNumberGenerator();
-			hashedCardNumber = generator.hash(rawCardNumber);
+			rawCardNumber = generals.cardNumberGenerator();
+			hashedCardNumber = generals.hash(rawCardNumber);
 			
 		} while (repo.existsByCardNumber(hashedCardNumber));
 		
 		AccountType type = accInterface.getAccountTypeByAccountId(accountId).getBody();
-		String rawCvvNumber = generator.cardNumberGenerator();
-		String hashedCvvNumber = generator.hash(rawCvvNumber);
+		String rawCvvNumber = generals.cardNumberGenerator();
+		String hashedCvvNumber = generals.hash(rawCvvNumber);
 		
-		String expiryDate = generator.expiryGenerator();
+		String expiryDate = generals.expiryGenerator();
 		
 		Card card = Card.builder()
 				.cardNumber(hashedCardNumber)
@@ -168,6 +171,37 @@ public class CardService {
 		
 		throw new NotFoundException("No card associated with Account ID: "+accountId);
 	}
+	
+	public ResponseEntity<Boolean> verifyCard(@RequestBody CardVerificationDTO request) {
+		String hashedCard = generals.hash(request.getCardNumber());
+		Card card = repo.getByCardNumber(hashedCard).orElse(null);
+		
+		if (card != null) {
+			String hashedCvv = generals.hash(request.getCvv());
+			boolean isCvvCorrect = card.getCvv().equals(hashedCvv);
+			boolean matchesExpiry = card.getExpiryDate().equals(request.getExpiryDate());
+			
+			if (!matchesExpiry) {
+				throw new BadRequestException("Incorrect expiry date");
+			}
+			
+			boolean isExpired = generals.isExpired(request.getExpiryDate());
+			
+			if (isCvvCorrect && !isExpired) {
+				throw new BadRequestException("Card has expired");
+			} else if (!isCvvCorrect && isExpired) {
+				throw new BadRequestException("Incorrect CVV number");
+			} else if (!isCvvCorrect && !isExpired) {
+				throw new BadRequestException("Incorrect CVV number and Card has expired");
+			} else {
+				return ResponseEntity.ok().body(true);
+			}
+			
+		} else {
+			throw new NotFoundException("Card not found");
+		}
+	}
+	
 
 	private boolean isOwner(long pathAccId) {
 		String role = ((ServletRequestAttributes) RequestContextHolder

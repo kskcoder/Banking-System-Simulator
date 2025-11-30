@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.tejas.bankingcommon.dto.ApiError;
+import com.tejas.bankingcommon.exceptions.BadRequestException;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
@@ -81,5 +82,18 @@ public class GlobalExceptionHandler {
 		);
 		
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+	}
+	
+	@ExceptionHandler
+	public ResponseEntity<ApiError> handleAlreadyExists(BadRequestException e, HttpServletRequest req) {
+		ApiError error = new ApiError(
+				LocalDateTime.now(),
+				HttpStatus.BAD_REQUEST.value(),
+				"BAD_REQUEST",
+				e.getMessage(),
+				req.getRequestURI()
+		);
+		
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
 	}
 }
