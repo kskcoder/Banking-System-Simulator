@@ -8,6 +8,8 @@ import java.util.Random;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Component;
 
+import com.tejas.bankingcommon.enums.AccountType;
+
 @Component
 public class CardGenerals {
 	public String cardNumberGenerator() {
@@ -44,5 +46,9 @@ public class CardGenerals {
 	    LocalDate today = LocalDate.now();
 
 	    return today.isAfter(expiryDate);
+	}
+	
+	public double getDailyLimit(AccountType type) {
+		return type == AccountType.SAVINGS ? 50000.0 : 200000.0;
 	}
 }

@@ -60,7 +60,7 @@ public class CardService {
 				.cvv(hashedCvvNumber)
 				.lastDigits(rawCardNumber.substring(11,16))
 				.expiryDate(expiryDate)
-				.cardLimit(type == AccountType.SAVINGS ? 50000.0 : 200000.0)
+				.cardLimit(generals.getDailyLimit(AccountType.SAVINGS))
 				.status(AccountCardStatus.INACTIVE)
 				.accountId(accountId)
 				.build();
@@ -187,12 +187,18 @@ public class CardService {
 			
 			boolean isExpired = generals.isExpired(request.getExpiryDate());
 			
+			boolean hasExceededLimit = (card.getCardLimit() - request.getAmount()) < 0;
+			
 			if (isCvvCorrect && !isExpired) {
-				throw new BadRequestException("Card has expired");
+				throw new BadRequestException("Card has expired.");
 			} else if (!isCvvCorrect && isExpired) {
-				throw new BadRequestException("Incorrect CVV number");
+				throw new BadRequestException("Incorrect CVV number.");
 			} else if (!isCvvCorrect && !isExpired) {
-				throw new BadRequestException("Incorrect CVV number and Card has expired");
+				throw new BadRequestException("Incorrect CVV number and Card has expired.");
+			} else if (hasExceededLimit) {
+				throw new BadRequestException("Card has exceeded daily limit.");
+			} else if (card.getStatus() != AccountCardStatus.ACTIVE) {
+				throw new BadRequestException("Card is inactive or blocked.");
 			} else {
 				return ResponseEntity.ok().body(true);
 			}
