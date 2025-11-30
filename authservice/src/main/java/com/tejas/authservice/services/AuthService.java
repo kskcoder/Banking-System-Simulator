@@ -15,6 +15,7 @@ import com.tejas.authservice.models.LoginRequest;
 import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
 import com.tejas.authservice.repositories.AuthRepo;
+import com.tejas.bankingcommon.dto.UserContactDetails;
 import com.tejas.bankingcommon.enums.UserType;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
@@ -82,5 +83,18 @@ public class AuthService {
 		}
 		
 		throw new GeneralServerException();
+	}
+
+	public ResponseEntity<UserContactDetails> getUserDetailsByUserId(long userId) {
+		User user = repo.getByUserId(userId).orElse(null);
+		
+		if (user == null) {throw new NotFoundException("User not found");}
+		
+		UserContactDetails details = UserContactDetails.builder()
+				.email(user.getEmail())
+				.phone(user.getPhone())
+				.build();
+		
+		return ResponseEntity.ok().body(details);
 	}
 }

@@ -69,4 +69,9 @@ public class AccountController {
 	public ResponseEntity<AccountType> getAccountTypeByAccountId(@PathVariable long accountId) {
 		return accountService.getAccountTypeByAccountId(accountId);
 	}
+	
+	@GetMapping("/accountid/{accountId}/userid")
+	public ResponseEntity<Long> getuserIdByAccountId(@PathVariable long accountId) {
+		return accountService.getuserIdByAccountId(accountId);
+	}
 }

@@ -46,7 +46,7 @@ public class JWTFilter extends OncePerRequestFilter {
 		}
 		
 		if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			User user = repo.getById(Integer.parseInt(userId));
+			User user = repo.getById(Long.parseLong(userId));
 			UserDetails userDetails = context.getBean(AuthUserDetailsService.class).loadUserByUsername(user.getUsername());
 			
 			if (jwtService.validateToken(token, userDetails)) {
