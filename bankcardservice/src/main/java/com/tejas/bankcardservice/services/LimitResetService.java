@@ -9,6 +9,7 @@ import com.tejas.bankcardservice.feign.AccountInterface;
 import com.tejas.bankcardservice.model.Card;
 import com.tejas.bankcardservice.repositories.CardRepo;
 import com.tejas.bankcardservice.utils.CardGenerals;
+import com.tejas.bankingcommon.enums.AccountCardStatus;
 import com.tejas.bankingcommon.enums.AccountType;
 
 import lombok.AllArgsConstructor;
@@ -22,7 +23,7 @@ public class LimitResetService {
 	
 	@Scheduled(cron = "0 0 0 * * ?")
 	public void resetDailyLimit() {
-		List<Card> list = repo.findAll();
+		List<Card> list = repo.getByStatus(AccountCardStatus.ACTIVE);
 		
 		if (!list.isEmpty()) {
 			for (Card card: list) {
