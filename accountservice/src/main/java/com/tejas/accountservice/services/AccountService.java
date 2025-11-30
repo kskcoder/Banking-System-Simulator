@@ -145,6 +145,15 @@ public class AccountService {
 		throw new NoContentException("No accounts found.");
 	}
 	
+	public ResponseEntity<Long> getuserIdByAccountId(long accountId) {
+		Account account = repo.getById(accountId).get();
+		if (account != null) {
+			return ResponseEntity.ok().body(account.getUserid());
+		}
+			
+		throw new NotFoundException("Requested account not found.");
+	}
+	
 	//Admin related functions
 	public ResponseEntity<List<Account>> getAllAccounts() {
 		if (!AccountUtils.isAdmin()) {throw new ForbiddenException("You do not have permission to access this resource.");}
