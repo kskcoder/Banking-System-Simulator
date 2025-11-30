@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,6 +16,7 @@ import com.tejas.bankcardservice.dtos.FirstCardResponse;
 import com.tejas.bankcardservice.dtos.GeneralCardResponse;
 import com.tejas.bankcardservice.model.Card;
 import com.tejas.bankcardservice.services.CardService;
+import com.tejas.bankingcommon.dto.CardVerificationDTO;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,6 +39,11 @@ public class CardController {
 	@PostMapping("/create/{accountId}")
 	public ResponseEntity<FirstCardResponse> createCard(@PathVariable long accountId) {
 		return cardService.createCard(accountId);
+	}
+	
+	@PostMapping("/verify")
+	public ResponseEntity<Boolean> verifyCard(@RequestBody CardVerificationDTO request) {
+		return cardService.verifyCard(request);
 	}
 	
 	@GetMapping("/account/{accountId}")
