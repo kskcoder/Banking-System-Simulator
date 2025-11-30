@@ -16,4 +16,6 @@ public class PaymentResponse {
 	
 	@Enumerated(EnumType.STRING)
 	private PaymentStatus status;
+	
+	private String message;
 }
