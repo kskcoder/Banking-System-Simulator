@@ -17,6 +17,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
+import com.tejas.bankingcommon.dto.TransferRequest;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 import com.tejas.bankingcommon.enums.TransactionType;
 import com.tejas.bankingcommon.exceptions.BadRequestException;
@@ -27,7 +28,6 @@ import com.tejas.bankingcommon.exceptions.NotFoundException;
 import com.tejas.transactionservice.feign.AccountInterface;
 import com.tejas.transactionservice.models.Transaction;
 import com.tejas.transactionservice.models.TransactionLedgerRecord;
-import com.tejas.transactionservice.models.TransferRequest;
 import com.tejas.transactionservice.repositories.TransactionLedgerRepo;
 import com.tejas.transactionservice.repositories.TransactionRepo;
 import com.tejas.transactionservice.utils.PdfStatementGenerator;
