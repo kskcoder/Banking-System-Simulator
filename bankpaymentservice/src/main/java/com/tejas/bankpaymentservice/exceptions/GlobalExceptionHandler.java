@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler
-	public ResponseEntity<ApiError> handleTransactionNotFound(NotFoundException e, HttpServletRequest req) {
+	public ResponseEntity<ApiError> handlePaymentNotFound(NotFoundException e, HttpServletRequest req) {
 		ApiError error = new ApiError(
 				LocalDateTime.now(),
 				HttpStatus.NOT_FOUND.value(),
