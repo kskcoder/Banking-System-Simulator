@@ -5,4 +5,6 @@ import com.tejas.bankpaymentservice.models.Payment;
 
 public interface PaymentRepo extends JpaRepository<Payment, Long>{
 	public abstract boolean existsById(Long id);
+	
+	public abstract Payment getById(Long id);
 }
