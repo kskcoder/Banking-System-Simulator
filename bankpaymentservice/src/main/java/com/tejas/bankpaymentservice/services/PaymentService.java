@@ -9,6 +9,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.tejas.bankingcommon.dto.CardVerificationRequest;
 import com.tejas.bankingcommon.dto.CardVerificationResponse;
+import com.tejas.bankingcommon.dto.SubmitOtp;
 import com.tejas.bankingcommon.dto.UserContactDetails;
 import com.tejas.bankingcommon.enums.PaymentStatus;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
@@ -23,6 +24,7 @@ import com.tejas.bankpaymentservice.models.PaymentResponse;
 import com.tejas.bankpaymentservice.repositories.PaymentRepo;
 
 import feign.FeignException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 
@@ -129,6 +131,11 @@ public class PaymentService {
 			
 		}
 		return ResponseEntity.ok().body(null);
+	}
+
+	public ResponseEntity<PaymentResponse> submitOtp(@Valid SubmitOtp otpRequest) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
