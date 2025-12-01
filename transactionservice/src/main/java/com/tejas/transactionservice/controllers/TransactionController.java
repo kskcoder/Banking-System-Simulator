@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tejas.bankingcommon.dto.TransferRequest;
 import com.tejas.transactionservice.models.Transaction;
 import com.tejas.transactionservice.models.TransactionLedgerRecord;
-import com.tejas.transactionservice.models.TransferRequest;
 import com.tejas.transactionservice.services.TransactionService;
 
 import jakarta.validation.Valid;
