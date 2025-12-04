@@ -8,14 +8,14 @@ import lombok.Data;
 
 @Data
 @Builder
-public class OtpEvent {
+public class MessageEvent {
 	@NotNull
 	private String otpNumber;
 	@NotNull
 	private String email;
 	@NotNull
 	@Enumerated(EnumType.STRING)
-	private OtpType type;
+	private MessageType type;
 	@NotNull
 	private String message; 
 }
