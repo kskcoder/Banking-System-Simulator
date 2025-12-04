@@ -11,7 +11,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
-import com.tejas.bankingcommon.dto.OtpEvent;
+import com.tejas.bankingcommon.dto.MessageEvent;
 
 @Service
 public class AuthOtpProducer {
@@ -20,18 +20,18 @@ public class AuthOtpProducer {
 	private static final ScheduledExecutorService RETRY_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 	
 	@Autowired
-	KafkaTemplate<String, OtpEvent> kafkaTemplate;
+	KafkaTemplate<String, MessageEvent> kafkaTemplate;
 	
-	public CompletableFuture<SendResult<String, OtpEvent>> otpRequest(OtpEvent event) {
+	public CompletableFuture<SendResult<String, MessageEvent>> otpRequest(MessageEvent event) {
     	return kafkaTemplate.send("messaging-otp-topic", event);
     }
 
-	public void dispatchResponseWithRetry(OtpEvent event) {
+	public void dispatchResponseWithRetry(MessageEvent event) {
 
 		attemptResponseDispatch(event,1, INITIAL_BACKOFF);
 	}
 
-	private void attemptResponseDispatch(OtpEvent event, int attempt, Duration backoff) {
+	private void attemptResponseDispatch(MessageEvent event, int attempt, Duration backoff) {
 		otpRequest(event).whenComplete((result, ex) -> {
 				if (ex != null) {
 					if (attempt >= MAX_CREDIT_RETRY_ATTEMPTS) {

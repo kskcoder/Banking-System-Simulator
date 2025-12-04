@@ -17,24 +17,22 @@ import com.tejas.authservice.models.Otp;
 import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
 import com.tejas.authservice.repositories.AuthRepo;
-import com.tejas.bankingcommon.dto.OtpEvent;
-import com.tejas.bankingcommon.dto.OtpReferenceId;
+import com.tejas.authservice.repositories.OtpRepo;
+import com.tejas.bankingcommon.dto.MessageEvent;
 import com.tejas.bankingcommon.dto.OtpRequestDTO;
-import com.tejas.bankingcommon.dto.OtpType;
+import com.tejas.bankingcommon.dto.MessageType;
 import com.tejas.bankingcommon.enums.UserType;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
 import com.tejas.bankingcommon.exceptions.UnauthorizedException;
 
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 	private final AuthRepo repo;
+	private final OtpRepo otpRepo;
 	private final AuthenticationManager authManager;
 	private final JWTService jwtService;
 	private final AuthUserDetailsService userDetailsService;
@@ -103,7 +101,7 @@ public class AuthService {
 		
 		Otp otp = Otp.builder()
 				.otpHash(OtpUtils.hash(rawOtp))
-				.type(OtpType.PAYMENT)
+				.type(MessageType.PAYMENT_OTP)
 				.referenceId(String.valueOf(request.getReferenceId()))
 				.createdAt(LocalDateTime.now())
 				.expiresAt(LocalDateTime.now().plusMinutes(5))
@@ -112,14 +110,14 @@ public class AuthService {
 				.used(false)
 				.build();
 		
-		OtpEvent event = OtpEvent.builder()
+		MessageEvent event = MessageEvent.builder()
 				.otpNumber(rawOtp)
 				.email(user.getEmail())
-				.type(OtpType.PAYMENT)
+				.type(MessageType.PAYMENT_OTP)
 				.build();
 		
 		otpProducer.dispatchResponseWithRetry(event);
-		
+		otpRepo.save(otp);
 		
 		return ResponseEntity.ok().body(true);
 	}

@@ -2,7 +2,7 @@ package com.tejas.authservice.models;
 
 import java.time.LocalDateTime;
 
-import com.tejas.bankingcommon.dto.OtpType;
+import com.tejas.bankingcommon.dto.MessageType;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -29,7 +29,7 @@ public class Otp {
 	
 	@NotNull
 	@Enumerated(EnumType.STRING)
-	private OtpType type;
+	private MessageType type;
 	
 	@NotNull
 	private String referenceId;
