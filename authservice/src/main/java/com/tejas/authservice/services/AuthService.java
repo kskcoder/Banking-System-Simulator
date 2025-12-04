@@ -10,17 +10,25 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.tejas.authservice.OtpUtils;
 import com.tejas.authservice.exceptions.AlreadyUsedException;
 import com.tejas.authservice.models.LoginRequest;
+import com.tejas.authservice.models.Otp;
 import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
 import com.tejas.authservice.repositories.AuthRepo;
-import com.tejas.bankingcommon.dto.UserContactDetails;
+import com.tejas.bankingcommon.dto.OtpEvent;
+import com.tejas.bankingcommon.dto.OtpReferenceId;
+import com.tejas.bankingcommon.dto.OtpRequestDTO;
+import com.tejas.bankingcommon.dto.OtpType;
 import com.tejas.bankingcommon.enums.UserType;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
 import com.tejas.bankingcommon.exceptions.UnauthorizedException;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -30,6 +38,7 @@ public class AuthService {
 	private final AuthenticationManager authManager;
 	private final JWTService jwtService;
 	private final AuthUserDetailsService userDetailsService;
+	private final AuthOtpProducer otpProducer;
 	
 	private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
@@ -85,16 +94,33 @@ public class AuthService {
 		throw new GeneralServerException();
 	}
 
-	public ResponseEntity<UserContactDetails> getUserDetailsByUserId(long userId) {
-		User user = repo.getByUserId(userId).orElse(null);
+	public ResponseEntity<Boolean> sendPaymentOtp(OtpRequestDTO request) {
+		User user = repo.getByUserId(request.getUserId()).orElse(null);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
 		
-		UserContactDetails details = UserContactDetails.builder()
-				.email(user.getEmail())
-				.phone(user.getPhone())
+		String rawOtp = OtpUtils.otpGenerator();
+		
+		Otp otp = Otp.builder()
+				.otpHash(OtpUtils.hash(rawOtp))
+				.type(OtpType.PAYMENT)
+				.referenceId(String.valueOf(request.getReferenceId()))
+				.createdAt(LocalDateTime.now())
+				.expiresAt(LocalDateTime.now().plusMinutes(5))
+				.attempts(0)
+				.maxAttempts(3)
+				.used(false)
 				.build();
 		
-		return ResponseEntity.ok().body(details);
+		OtpEvent event = OtpEvent.builder()
+				.otpNumber(rawOtp)
+				.email(user.getEmail())
+				.type(OtpType.PAYMENT)
+				.build();
+		
+		otpProducer.dispatchResponseWithRetry(event);
+		
+		
+		return ResponseEntity.ok().body(true);
 	}
 }

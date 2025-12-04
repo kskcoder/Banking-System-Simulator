@@ -6,10 +6,10 @@ import lombok.Data;
 
 @Data
 @Builder
-public class UserContactDetails {
+public class OtpRequestDTO {
 	@NotNull
-	private String email;
+	private long referenceId;
 	
 	@NotNull
-	private String phone;
+	private long userId;
 }

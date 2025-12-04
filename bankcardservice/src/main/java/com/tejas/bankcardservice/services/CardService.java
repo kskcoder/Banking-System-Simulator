@@ -51,7 +51,7 @@ public class CardService {
 		} while (repo.existsByCardNumber(hashedCardNumber));
 		
 		AccountType type = accInterface.getAccountTypeByAccountId(accountId).getBody();
-		String rawCvvNumber = generals.cardNumberGenerator();
+		String rawCvvNumber = generals.cvvGenerator();
 		String hashedCvvNumber = generals.hash(rawCvvNumber);
 		
 		String expiryDate = generals.expiryGenerator();
