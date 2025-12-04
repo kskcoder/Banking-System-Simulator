@@ -11,7 +11,7 @@ import com.tejas.bankingcommon.dto.CardVerificationRequest;
 import com.tejas.bankingcommon.dto.CardVerificationResponse;
 import com.tejas.bankingcommon.dto.SubmitOtp;
 import com.tejas.bankingcommon.dto.TransferRequest;
-import com.tejas.bankingcommon.dto.UserContactDetails;
+import com.tejas.bankingcommon.dto.OtpRequestDTO;
 import com.tejas.bankingcommon.enums.PaymentStatus;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
@@ -109,7 +109,7 @@ public class PaymentService {
 		if (cardVerifyResponse.isValidated()) {
 			try {
 				long userId = accInt.getuserIdByAccountId(cardVerifyResponse.getAccountId()).getBody();
-				UserContactDetails userDetails = userInt.getUserDetailsByUserId(userId).getBody();
+				OtpRequestDTO userDetails = userInt.getUserDetailsByUserId(userId).getBody();
 				
 				PaymentResponse paymentRes = PaymentResponse.builder()
 						.paymentId(payment.getId())
