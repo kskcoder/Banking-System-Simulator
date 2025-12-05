@@ -7,27 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
-import com.tejas.bankingcommon.dto.CardVerificationRequest;
-import com.tejas.bankingcommon.dto.CardVerificationResponse;
-import com.tejas.bankingcommon.dto.MessageType;
-import com.tejas.bankingcommon.dto.OtpRequestDTO;
-import com.tejas.bankingcommon.dto.OtpValidateRequest;
-import com.tejas.bankingcommon.dto.OtpValidateResponse;
-import com.tejas.bankingcommon.dto.SubmitPaymentOtp;
-import com.tejas.bankingcommon.dto.TransferRequest;
+import com.tejas.bankingcommon.dto.*;
 import com.tejas.bankingcommon.enums.PaymentStatus;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
-import com.tejas.bankpaymentservice.feign.AccountInterface;
-import com.tejas.bankpaymentservice.feign.AuthInterface;
-import com.tejas.bankpaymentservice.feign.CardInterface;
-import com.tejas.bankpaymentservice.feign.TransactionInterface;
-import com.tejas.bankpaymentservice.models.InitiatePaymentDTO;
-import com.tejas.bankpaymentservice.models.Payment;
-import com.tejas.bankpaymentservice.models.PaymentResponse;
+import com.tejas.bankpaymentservice.feign.*;
+import com.tejas.bankpaymentservice.models.*;
 import com.tejas.bankpaymentservice.repositories.PaymentRepo;
 
 import feign.FeignException;
@@ -177,6 +164,28 @@ public class PaymentService {
 				
 				return new ResponseEntity<>(submitResponse, HttpStatus.UNAUTHORIZED);
 			}
+			OtpValidateRequest submitRequest = OtpValidateRequest.builder()
+					.referenceId(String.valueOf(otpRequest.getPaymentId()))
+					.type(MessageType.PAYMENT_OTP)
+					.otpValue(otpRequest.getOtp())
+					.build();
+			
+			boolean isValidated = false;
+			
+			try {
+				isValidated = authInt.validateOtp(submitRequest).getBody().isValidated();				
+			} catch (FeignException e) {
+				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
+						.referenceId(String.valueOf(otpRequest.getPaymentId()))
+						.validated(isValidated)
+						.message(e.contentUTF8())
+						.build();
+				
+				payment.setStatus(PaymentStatus.INCORRECT_OTP);
+				repo.save(payment);
+				
+				return new ResponseEntity<>(submitResponse, HttpStatus.UNAUTHORIZED);
+			}
 			
 			if (isValidated) {			
 				TransferRequest req = TransferRequest.builder()
@@ -192,9 +201,8 @@ public class PaymentService {
 				} catch (FeignException e) {
 					throw new GeneralServerException();
 				}
-				
 				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
-						.referenceId(otpRequest.getPaymentId())
+						.referenceId(String.valueOf(otpRequest.getPaymentId()))
 						.validated(isValidated)
 						.message("OTP verified. Payment is processing.")
 						.build();
