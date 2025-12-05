@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tejas.bankingcommon.dto.SubmitOtp;
+import com.tejas.bankingcommon.dto.OtpValidateResponse;
+import com.tejas.bankingcommon.dto.SubmitPaymentOtp;
 import com.tejas.bankpaymentservice.models.InitiatePaymentDTO;
 import com.tejas.bankpaymentservice.models.Payment;
 import com.tejas.bankpaymentservice.models.PaymentResponse;
@@ -35,7 +36,7 @@ public class PaymentController {
 	}
 	
 	@PostMapping("/submitotp")
-	public ResponseEntity<PaymentResponse> submitOtp(@Valid @RequestBody SubmitOtp otpRequest) {
+	public ResponseEntity<OtpValidateResponse> submitOtp(@Valid @RequestBody SubmitPaymentOtp otpRequest) {
 		return paymentService.submitOtp(otpRequest);
 	}
 	
