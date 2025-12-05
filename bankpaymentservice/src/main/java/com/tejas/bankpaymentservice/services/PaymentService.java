@@ -143,7 +143,7 @@ public class PaymentService {
 		
 		if (payment != null) {
 			OtpValidateRequest submitRequest = OtpValidateRequest.builder()
-					.referenceId(otpRequest.getPaymentId())
+					.referenceId(String.valueOf(otpRequest.getPaymentId()))
 					.type(MessageType.PAYMENT_OTP)
 					.otpValue(otpRequest.getOtp())
 					.build();
@@ -154,7 +154,7 @@ public class PaymentService {
 				isValidated = authInt.validateOtp(submitRequest).getBody().isValidated();				
 			} catch (FeignException e) {
 				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
-						.referenceId(otpRequest.getPaymentId())
+						.referenceId(String.valueOf(otpRequest.getPaymentId()))
 						.validated(isValidated)
 						.message(e.contentUTF8())
 						.build();
@@ -164,13 +164,6 @@ public class PaymentService {
 				
 				return new ResponseEntity<>(submitResponse, HttpStatus.UNAUTHORIZED);
 			}
-			OtpValidateRequest submitRequest = OtpValidateRequest.builder()
-					.referenceId(String.valueOf(otpRequest.getPaymentId()))
-					.type(MessageType.PAYMENT_OTP)
-					.otpValue(otpRequest.getOtp())
-					.build();
-			
-			boolean isValidated = false;
 			
 			try {
 				isValidated = authInt.validateOtp(submitRequest).getBody().isValidated();				
