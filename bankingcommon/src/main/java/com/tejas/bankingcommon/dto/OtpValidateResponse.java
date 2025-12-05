@@ -6,13 +6,15 @@ import lombok.Data;
 
 @Data
 @Builder
-public class OtpRequestDTO {
+public class OtpValidateResponse {
+	
 	@NotNull
 	private long referenceId;
 	
 	@NotNull
-	private MessageType type;
+	private boolean type;
 	
 	@NotNull
-	private long userId;
+	private String message;
+	
 }
