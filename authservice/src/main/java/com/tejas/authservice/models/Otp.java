@@ -3,6 +3,7 @@ package com.tejas.authservice.models;
 import java.time.LocalDateTime;
 
 import com.tejas.bankingcommon.dto.MessageType;
+import com.tejas.bankingcommon.dto.OtpStatus;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -47,5 +48,6 @@ public class Otp {
 	private int maxAttempts;
 	
 	@NotNull
-	private Boolean used;
+	@Enumerated(EnumType.STRING)
+	private OtpStatus status;
 }
