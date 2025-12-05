@@ -2,6 +2,7 @@ package com.tejas.authservice.services;
 
 import java.time.LocalDateTime;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -10,7 +11,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.tejas.authservice.OtpUtils;
 import com.tejas.authservice.exceptions.AlreadyUsedException;
 import com.tejas.authservice.models.LoginRequest;
 import com.tejas.authservice.models.Otp;
@@ -18,8 +18,10 @@ import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
 import com.tejas.authservice.repositories.AuthRepo;
 import com.tejas.authservice.repositories.OtpRepo;
+import com.tejas.authservice.utils.OtpUtils;
 import com.tejas.bankingcommon.dto.MessageEvent;
 import com.tejas.bankingcommon.dto.OtpRequestDTO;
+import com.tejas.bankingcommon.dto.OtpStatus;
 import com.tejas.bankingcommon.dto.OtpValidateRequest;
 import com.tejas.bankingcommon.dto.OtpValidateResponse;
 import com.tejas.bankingcommon.enums.UserType;
@@ -108,7 +110,7 @@ public class AuthService {
 				.expiresAt(LocalDateTime.now().plusMinutes(5))
 				.attempts(0)
 				.maxAttempts(3)
-				.used(false)
+				.status(OtpStatus.PENDING)
 				.build();
 		
 		MessageEvent event = MessageEvent.builder()
@@ -124,7 +126,47 @@ public class AuthService {
 	}
 
 	public ResponseEntity<OtpValidateResponse> validateOtp(OtpValidateRequest request) {
+		Otp otp = otpRepo.findByReferenceIdAndType(request.getReferenceId(), request.getType()).orElse(null);
 		
-		return null;
+		OtpValidateResponse otpResponse = OtpValidateResponse.builder()
+				.referenceId(request.getReferenceId())
+				.build();
+		
+		if (otp != null) {
+			if (otp.getStatus() == OtpStatus.PENDING) {
+				if (otp.getExpiresAt().isBefore(LocalDateTime.now()) || otp.getExpiresAt().isEqual(LocalDateTime.now())) {
+					otp.setStatus(OtpStatus.EXPIRED);
+				} else if (otp.getAttempts() >= otp.getMaxAttempts()) {
+					otp.setStatus(OtpStatus.MAX_ATTEMPTS);
+				} else {
+					int attempts = otp.getAttempts() + 1;
+					otp.setAttempts(attempts);
+					
+					String reqHashedOtp = OtpUtils.hash((String.valueOf(request.getOtpValue())));
+					
+					if (otp.getOtpHash().equals(reqHashedOtp)) {
+						otp.setStatus(OtpStatus.VERIFIED);
+						otpResponse.setValidated(true);
+						otpResponse.setMessage("OTP verfied successfully.");
+						return ResponseEntity.ok().body(otpResponse);
+					} else if (otp.getExpiresAt().isBefore(LocalDateTime.now()) || otp.getExpiresAt().isEqual(LocalDateTime.now())) {
+						otp.setStatus(OtpStatus.EXPIRED);
+					} else if (otp.getAttempts() >= otp.getMaxAttempts()) {
+						otp.setStatus(OtpStatus.MAX_ATTEMPTS);						
+					}
+				}				
+			} 
+			
+			if (otp.getStatus() == OtpStatus.MAX_ATTEMPTS) {
+				otpResponse.setMessage("Max attempts crossed for this OTP.");
+			} else if (otp.getStatus() == OtpStatus.VERIFIED) {
+				otpResponse.setMessage("OTP already used.");
+			} else if (otp.getStatus() == OtpStatus.EXPIRED) {
+				otpResponse.setMessage("OTP has expired.");
+			}
+			otpRepo.save(otp);
+		}
+		otpResponse.setValidated(false);
+		return new ResponseEntity<>(otpResponse, HttpStatus.FORBIDDEN);
 	}
 }

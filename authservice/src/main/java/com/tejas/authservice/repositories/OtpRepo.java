@@ -1,9 +1,12 @@
 package com.tejas.authservice.repositories;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.tejas.authservice.models.Otp;
+import com.tejas.bankingcommon.dto.MessageType;
 
 public interface OtpRepo extends JpaRepository<Otp, Long> {
-	
+	public abstract Optional<Otp> findByReferenceIdAndType(String referenceId, MessageType type);
 }
