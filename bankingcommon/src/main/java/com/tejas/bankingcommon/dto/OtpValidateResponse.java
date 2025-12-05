@@ -12,7 +12,7 @@ public class OtpValidateResponse {
 	private long referenceId;
 	
 	@NotNull
-	private boolean type;
+	private boolean validated;
 	
 	@NotNull
 	private String message;
