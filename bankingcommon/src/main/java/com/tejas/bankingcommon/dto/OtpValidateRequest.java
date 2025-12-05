@@ -1,5 +1,7 @@
 package com.tejas.bankingcommon.dto;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -8,9 +10,10 @@ import lombok.Data;
 @Builder
 public class OtpValidateRequest {
 	@NotNull
-	private long referenceId;
+	private String referenceId;
 	
 	@NotNull
+	@Enumerated(EnumType.STRING)
 	private MessageType type;
 	
 	@NotNull

@@ -9,7 +9,7 @@ import lombok.Data;
 public class OtpValidateResponse {
 	
 	@NotNull
-	private long referenceId;
+	private String referenceId;
 	
 	@NotNull
 	private boolean validated;
