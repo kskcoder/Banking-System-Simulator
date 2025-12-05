@@ -1,7 +1,6 @@
 package com.tejas.authservice.controllers;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +11,8 @@ import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
 import com.tejas.authservice.services.AuthService;
 import com.tejas.bankingcommon.dto.OtpRequestDTO;
+import com.tejas.bankingcommon.dto.OtpValidateRequest;
+import com.tejas.bankingcommon.dto.OtpValidateResponse;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +33,13 @@ public class AuthController {
 		return service.verifyUser(req);
 	}
 	
-	@GetMapping("/sendotp/{userId}")
-	public ResponseEntity<Boolean> sendPaymentOtp(@RequestBody OtpRequestDTO request) {
-		return service.sendPaymentOtp(request);
+	@PostMapping("/sendotp/{userId}")
+	public ResponseEntity<Boolean> sendOtp(@Valid @RequestBody OtpRequestDTO request) {
+		return service.sendOtp(request);
+	}
+	
+	@PostMapping("/submitotp")
+	public ResponseEntity<OtpValidateResponse> validateOtp(@Valid @RequestBody OtpValidateRequest request) {
+		return service.validateOtp(request);
 	}
 }

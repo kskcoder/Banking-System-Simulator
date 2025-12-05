@@ -20,7 +20,8 @@ import com.tejas.authservice.repositories.AuthRepo;
 import com.tejas.authservice.repositories.OtpRepo;
 import com.tejas.bankingcommon.dto.MessageEvent;
 import com.tejas.bankingcommon.dto.OtpRequestDTO;
-import com.tejas.bankingcommon.dto.MessageType;
+import com.tejas.bankingcommon.dto.OtpValidateRequest;
+import com.tejas.bankingcommon.dto.OtpValidateResponse;
 import com.tejas.bankingcommon.enums.UserType;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
@@ -92,7 +93,7 @@ public class AuthService {
 		throw new GeneralServerException();
 	}
 
-	public ResponseEntity<Boolean> sendPaymentOtp(OtpRequestDTO request) {
+	public ResponseEntity<Boolean> sendOtp(OtpRequestDTO request) {
 		User user = repo.getByUserId(request.getUserId()).orElse(null);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
@@ -101,7 +102,7 @@ public class AuthService {
 		
 		Otp otp = Otp.builder()
 				.otpHash(OtpUtils.hash(rawOtp))
-				.type(MessageType.PAYMENT_OTP)
+				.type(request.getType())
 				.referenceId(String.valueOf(request.getReferenceId()))
 				.createdAt(LocalDateTime.now())
 				.expiresAt(LocalDateTime.now().plusMinutes(5))
@@ -113,12 +114,17 @@ public class AuthService {
 		MessageEvent event = MessageEvent.builder()
 				.otpNumber(rawOtp)
 				.email(user.getEmail())
-				.type(MessageType.PAYMENT_OTP)
+				.type(request.getType())
 				.build();
 		
 		otpProducer.dispatchResponseWithRetry(event);
 		otpRepo.save(otp);
 		
 		return ResponseEntity.ok().body(true);
+	}
+
+	public ResponseEntity<OtpValidateResponse> validateOtp(OtpValidateRequest request) {
+		
+		return null;
 	}
 }
