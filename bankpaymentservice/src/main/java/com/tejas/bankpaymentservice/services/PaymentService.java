@@ -2,6 +2,7 @@ package com.tejas.bankpaymentservice.services;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -11,6 +12,7 @@ import com.tejas.bankingcommon.dto.CardVerificationRequest;
 import com.tejas.bankingcommon.dto.CardVerificationResponse;
 import com.tejas.bankingcommon.dto.MessageType;
 import com.tejas.bankingcommon.dto.OtpRequestDTO;
+import com.tejas.bankingcommon.dto.OtpValidateRequest;
 import com.tejas.bankingcommon.dto.OtpValidateResponse;
 import com.tejas.bankingcommon.dto.SubmitPaymentOtp;
 import com.tejas.bankingcommon.dto.TransferRequest;
@@ -20,9 +22,9 @@ import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
 import com.tejas.bankpaymentservice.feign.AccountInterface;
+import com.tejas.bankpaymentservice.feign.AuthInterface;
 import com.tejas.bankpaymentservice.feign.CardInterface;
 import com.tejas.bankpaymentservice.feign.TransactionInterface;
-import com.tejas.bankpaymentservice.feign.UserInterface;
 import com.tejas.bankpaymentservice.models.InitiatePaymentDTO;
 import com.tejas.bankpaymentservice.models.Payment;
 import com.tejas.bankpaymentservice.models.PaymentResponse;
@@ -37,7 +39,7 @@ public class PaymentService {
 	private final PaymentRepo repo;
 	private final CardInterface cardInt;
 	private final AccountInterface accInt;
-	private final UserInterface userInt;
+	private final AuthInterface authInt;
 	private final TransactionInterface trInt;
 	
 	public ResponseEntity<PaymentResponse> initiateRequest(InitiatePaymentDTO initiateReq) {
@@ -118,7 +120,7 @@ public class PaymentService {
 						.build();
 				
 				try {
-					userInt.sendPaymentOtp(otpReq).getBody();
+					authInt.sendPaymentOtp(otpReq).getBody();
 					
 					//Not needed to check if call has succeeded as failure is caught as exception.
 				} catch (FeignException e) {
@@ -153,7 +155,29 @@ public class PaymentService {
 		Payment payment = repo.getById(otpRequest.getPaymentId());
 		
 		if (payment != null) {
-			boolean isValidated = true;
+			OtpValidateRequest submitRequest = OtpValidateRequest.builder()
+					.referenceId(otpRequest.getPaymentId())
+					.type(MessageType.PAYMENT_OTP)
+					.otpValue(otpRequest.getOtp())
+					.build();
+			
+			boolean isValidated = false;
+			
+			try {
+				isValidated = authInt.validateOtp(submitRequest).getBody().isValidated();				
+			} catch (FeignException e) {
+				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
+						.referenceId(otpRequest.getPaymentId())
+						.validated(isValidated)
+						.message(e.contentUTF8())
+						.build();
+				
+				payment.setStatus(PaymentStatus.INCORRECT_OTP);
+				repo.save(payment);
+				
+				return new ResponseEntity<>(submitResponse, HttpStatus.UNAUTHORIZED);
+			}
+			
 			if (isValidated) {			
 				TransferRequest req = TransferRequest.builder()
 						.fromAccount(payment.getFromAccountNumber())
@@ -169,31 +193,22 @@ public class PaymentService {
 					throw new GeneralServerException();
 				}
 				
-				PaymentResponse paymentRes = PaymentResponse.builder()
-						.paymentId(payment.getId())
-						.status(PaymentStatus.OTP_VERIFIED)
+				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
+						.referenceId(otpRequest.getPaymentId())
+						.validated(isValidated)
 						.message("OTP verified. Payment is processing.")
 						.build();
 				
 				payment.setStatus(PaymentStatus.OTP_VERIFIED);
 				repo.save(payment);
 				
-				return ResponseEntity.ok().body(paymentRes);
-			} else {
-				PaymentResponse paymentRes = PaymentResponse.builder()
-						.paymentId(payment.getId())
-						.status(PaymentStatus.INCORRECT_OTP)
-						.message("Incorrect OTP.")
-						.build();
-				
-				payment.setStatus(PaymentStatus.INCORRECT_OTP);
-				repo.save(payment);
-				
-				return ResponseEntity.badRequest().body(paymentRes);
+				return ResponseEntity.ok().body(submitResponse);
 			}
 		} else {
 			throw new NotFoundException("Incorrect Payment Id");
 		}
+		
+		throw new GeneralServerException();
 	}
 
 }
