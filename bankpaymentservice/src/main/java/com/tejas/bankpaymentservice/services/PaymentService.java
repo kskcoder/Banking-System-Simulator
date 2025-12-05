@@ -9,9 +9,11 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.tejas.bankingcommon.dto.CardVerificationRequest;
 import com.tejas.bankingcommon.dto.CardVerificationResponse;
-import com.tejas.bankingcommon.dto.SubmitOtp;
-import com.tejas.bankingcommon.dto.TransferRequest;
+import com.tejas.bankingcommon.dto.MessageType;
 import com.tejas.bankingcommon.dto.OtpRequestDTO;
+import com.tejas.bankingcommon.dto.OtpValidateResponse;
+import com.tejas.bankingcommon.dto.SubmitPaymentOtp;
+import com.tejas.bankingcommon.dto.TransferRequest;
 import com.tejas.bankingcommon.enums.PaymentStatus;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
@@ -109,8 +111,20 @@ public class PaymentService {
 		if (cardVerifyResponse.isValidated()) {
 			try {
 				long userId = accInt.getuserIdByAccountId(cardVerifyResponse.getAccountId()).getBody();
-				OtpRequestDTO userDetails = userInt.getUserDetailsByUserId(userId).getBody();
+				OtpRequestDTO otpReq = OtpRequestDTO.builder()
+						.referenceId(payment.getId())
+						.type(MessageType.PAYMENT_OTP)
+						.userId(userId)
+						.build();
 				
+				try {
+					userInt.sendPaymentOtp(otpReq).getBody();
+					
+					//Not needed to check if call has succeeded as failure is caught as exception.
+				} catch (FeignException e) {
+					throw new GeneralServerException();
+				}
+								
 				PaymentResponse paymentRes = PaymentResponse.builder()
 						.paymentId(payment.getId())
 						.status(PaymentStatus.INITIATED)
@@ -131,11 +145,11 @@ public class PaymentService {
 				return ResponseEntity.ok().body(paymentRes);
 			}
 			
-		}
+		} 
 		return ResponseEntity.ok().body(null);
 	}
 
-	public ResponseEntity<PaymentResponse> submitOtp(SubmitOtp otpRequest) {
+	public ResponseEntity<OtpValidateResponse> submitOtp(SubmitPaymentOtp otpRequest) {
 		Payment payment = repo.getById(otpRequest.getPaymentId());
 		
 		if (payment != null) {
