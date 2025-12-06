@@ -15,7 +15,7 @@ import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.TransactionType;
 
 @Service
-public class AccountProducer {
+public class AccountTransactionProducer {
 	private static final int MAX_CREDIT_RETRY_ATTEMPTS = 3;
 	private static final Duration INITIAL_BACKOFF = Duration.ofSeconds(1);
 	private static final ScheduledExecutorService RETRY_EXECUTOR = Executors.newSingleThreadScheduledExecutor();

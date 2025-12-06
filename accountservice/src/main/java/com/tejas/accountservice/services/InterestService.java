@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class InterestService {
 	private final AccountRepo repo;
 	private final AccountRules rules;
-	private final AccountProducer acProducer;
+	private final AccountTransactionProducer acProducer;
 	
 	@Scheduled(cron = "0 0 0 1 * ?", zone = "Asia/Kolkata")
 	public void processMonthlyInterest() {
