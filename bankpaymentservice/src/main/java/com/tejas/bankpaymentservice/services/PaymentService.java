@@ -142,6 +142,16 @@ public class PaymentService {
 		Payment payment = repo.getById(otpRequest.getPaymentId());
 		
 		if (payment != null) {
+			if (payment.getStatus().equals(PaymentStatus.FAILED)) {
+				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
+						.referenceId(String.valueOf(otpRequest.getPaymentId()))
+						.validated(false)
+						.message("Payment has failed, inititate new payment")
+						.build();
+				
+				return new ResponseEntity<>(submitResponse, HttpStatus.FORBIDDEN);
+			}
+			
 			OtpValidateRequest submitRequest = OtpValidateRequest.builder()
 					.referenceId(String.valueOf(otpRequest.getPaymentId()))
 					.type(MessageType.PAYMENT_OTP)
@@ -165,51 +175,40 @@ public class PaymentService {
 				return new ResponseEntity<>(submitResponse, HttpStatus.UNAUTHORIZED);
 			}
 			
-			try {
-				isValidated = authInt.validateOtp(submitRequest).getBody().isValidated();				
-			} catch (FeignException e) {
-				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
-						.referenceId(String.valueOf(otpRequest.getPaymentId()))
-						.validated(isValidated)
-						.message(e.contentUTF8())
-						.build();
-				
-				payment.setStatus(PaymentStatus.INCORRECT_OTP);
-				repo.save(payment);
-				
-				return new ResponseEntity<>(submitResponse, HttpStatus.UNAUTHORIZED);
+			if (isValidated) {			
+				return validOtp(payment);
 			}
 			
-			if (isValidated) {			
-				TransferRequest req = TransferRequest.builder()
-						.fromAccount(payment.getFromAccountNumber())
-						.toAccount(payment.getToAccountNumber())
-						.amount(payment.getAmount())
-						.build();
-				
-				try {
-					trInt.transfer(req).getBody();
-					
-					//Not needed to check if transaction call has succeeded as failure is caught as exception. 
-				} catch (FeignException e) {
-					throw new GeneralServerException();
-				}
-				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
-						.referenceId(String.valueOf(otpRequest.getPaymentId()))
-						.validated(isValidated)
-						.message("OTP verified. Payment is processing.")
-						.build();
-				
-				payment.setStatus(PaymentStatus.OTP_VERIFIED);
-				repo.save(payment);
-				
-				return ResponseEntity.ok().body(submitResponse);
-			}
 		} else {
 			throw new NotFoundException("Incorrect Payment Id");
 		}
 		
 		throw new GeneralServerException();
 	}
-
+	
+	public ResponseEntity<OtpValidateResponse> validOtp(Payment payment) {
+		TransferRequest req = TransferRequest.builder()
+				.fromAccount(payment.getFromAccountNumber())
+				.toAccount(payment.getToAccountNumber())
+				.amount(payment.getAmount())
+				.build();
+		
+		try {
+			trInt.transfer(req).getBody();
+			
+			//Not needed to check if transaction call has succeeded as failure is caught as exception. 
+		} catch (FeignException e) {
+			throw new GeneralServerException();
+		}
+		OtpValidateResponse submitResponse = OtpValidateResponse.builder()
+				.referenceId(String.valueOf(payment.getId()))
+				.validated(true)
+				.message("OTP verified. Payment is processing.")
+				.build();
+		
+		payment.setStatus(PaymentStatus.OTP_VERIFIED);
+		repo.save(payment);
+		
+		return ResponseEntity.ok().body(submitResponse);
+	}
 }
