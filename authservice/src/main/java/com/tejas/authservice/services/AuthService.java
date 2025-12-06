@@ -21,6 +21,7 @@ import com.tejas.authservice.repositories.AuthRepo;
 import com.tejas.authservice.repositories.OtpRepo;
 import com.tejas.authservice.utils.AuthUtils;
 import com.tejas.authservice.utils.OtpUtils;
+import com.tejas.bankingcommon.dto.ContactDetails;
 import com.tejas.bankingcommon.dto.MessageEvent;
 import com.tejas.bankingcommon.dto.OtpRequestDTO;
 import com.tejas.bankingcommon.dto.OtpStatus;
@@ -125,7 +126,6 @@ public class AuthService {
 		
 		return ResponseEntity.ok().body("User deleted successfully.");
 	}	
-	
 
 	public ResponseEntity<String> makeAdmin(Long userId) {
 		User user = repo.getByUserId(userId).orElse(null);
@@ -156,6 +156,25 @@ public class AuthService {
 		}
 				
 		return ResponseEntity.ok().body("User deleted successfully.");
+	}
+	
+	public ResponseEntity<ContactDetails> getContact(Long userId) {
+		User user = repo.getByUserId(userId).orElse(null);
+		
+		if (user == null) {throw new NotFoundException("User not found");}
+		String id = AuthUtils.getUserId();
+		
+		ContactDetails details = ContactDetails.builder()
+				.email(user.getEmail())
+				.phone(user.getPhone())
+				.build();
+				
+		if (id.equals("INTERNAL_PAYMENT_SERVICE") || AuthUtils.isAdmin()) {
+			repo.delete(user);
+			return ResponseEntity.ok().body(details);
+		} else {
+			throw new UnauthorizedException("You do not have access to this account.");
+		}
 	}
 
 	public ResponseEntity<Boolean> sendOtp(OtpRequestDTO request) {
