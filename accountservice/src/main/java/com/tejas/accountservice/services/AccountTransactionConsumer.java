@@ -3,9 +3,13 @@ package com.tejas.accountservice.services;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import com.tejas.accountservice.feign.AuthInterface;
 import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.repositories.AccountRepo;
 import com.tejas.accountservice.utils.AccountRules;
+import com.tejas.bankingcommon.dto.ContactDetails;
+import com.tejas.bankingcommon.dto.MessageEvent;
+import com.tejas.bankingcommon.dto.MessageType;
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 
@@ -13,13 +17,12 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class AccountConsumer {
-	
-	private final AccountRepo repo;
-	
-	private final AccountProducer accProducer;
-	
+public class AccountTransactionConsumer {	
+	private final AccountRepo repo;	
+	private final AccountTransactionProducer accProducer;	
+	private final AccountMessageProducer acMsgProducer;
 	private final AccountRules rules;
+	private final AuthInterface authInt;
 	
 	@KafkaListener(topics = "account-debit-topic", groupId = "banking-system-simulator-group")
 	public void debitSender(TransactionEvent trEvent) {
@@ -39,6 +42,18 @@ public class AccountConsumer {
 				account.setBalance(newBalance);
 				trEvent.setBalanceAfter(newBalance);
 				trEvent.setStatus(TransactionStatus.DEBIT_SUCCESS.toString());
+				
+				ContactDetails details = authInt.getContact(account.getUserid()).getBody();
+				
+				String message = account.getId() + "," + amount + "," +newBalance;
+						
+				MessageEvent event = MessageEvent.builder()
+						.email(details.getEmail())
+						.type(MessageType.DEBIT)
+						.message(message)
+						.build();
+				
+				acMsgProducer.dispatchResponseWithRetry(event);
 				repo.save(account);
 			}
 		} else {
@@ -64,6 +79,19 @@ public class AccountConsumer {
 			double newBalance = account.getBalance() + amount;
 			account.setBalance(newBalance);
 			trEvent.setBalanceAfter(newBalance);
+			
+			ContactDetails details = authInt.getContact(account.getUserid()).getBody();
+			
+			String message = account.getId() + "," + amount + "," +newBalance;
+					
+			MessageEvent event = MessageEvent.builder()
+					.email(details.getEmail())
+					.type(MessageType.CREDIT)
+					.message(message)
+					.build();
+			
+			acMsgProducer.dispatchResponseWithRetry(event);
+			
 			repo.save(account);
 			trEvent.setStatus(repay ? TransactionStatus.REPAY_SUCCESS.toString() : TransactionStatus.CREDIT_SUCCESS.toString());
 		}
