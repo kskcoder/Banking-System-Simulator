@@ -12,12 +12,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.tejas.authservice.exceptions.AlreadyUsedException;
+import com.tejas.authservice.models.ChangePasswordRequest;
 import com.tejas.authservice.models.LoginRequest;
 import com.tejas.authservice.models.Otp;
 import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
 import com.tejas.authservice.repositories.AuthRepo;
 import com.tejas.authservice.repositories.OtpRepo;
+import com.tejas.authservice.utils.AuthUtils;
 import com.tejas.authservice.utils.OtpUtils;
 import com.tejas.bankingcommon.dto.MessageEvent;
 import com.tejas.bankingcommon.dto.OtpRequestDTO;
@@ -25,6 +27,7 @@ import com.tejas.bankingcommon.dto.OtpStatus;
 import com.tejas.bankingcommon.dto.OtpValidateRequest;
 import com.tejas.bankingcommon.dto.OtpValidateResponse;
 import com.tejas.bankingcommon.enums.UserType;
+import com.tejas.bankingcommon.exceptions.BadRequestException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
 import com.tejas.bankingcommon.exceptions.UnauthorizedException;
@@ -59,7 +62,7 @@ public class AuthService {
 		user = repo.getByEmail(req.getEmail()).orElse(null);
 		user.setUsername(req.getUsername());
 		user.setEmail(req.getEmail());
-		user.setPassword(encoder.encode(req.getPassword()));
+		user.setPassword(encoder.encode(AuthUtils.hash(req.getPassword())));
 		user.setPhone(req.getPhone());
 		user.setRole(UserType.USER);
 		user.setCreatedAt(LocalDateTime.now());
@@ -76,23 +79,83 @@ public class AuthService {
 	public ResponseEntity<String> verifyUser(LoginRequest req) {
 		String username = req.getUsername();
 		String password = req.getPassword();
+		String hashedPassword = AuthUtils.hash(password);
 		
 		User user = repo.getByUsername(username).orElse(null);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
 		
 		try {
-			Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+			Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, hashedPassword));
 			
 			if (authentication.isAuthenticated()) {
 				UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 				return ResponseEntity.ok().body(jwtService.generateToken(user.getId(), userDetails));
-			} 
+			} else {
+				throw new UnauthorizedException("Incorrect Password");
+			}
 		} catch (Exception e) {
 			throw new UnauthorizedException("Incorrect Password");
 		}
+	}
+	
+	public ResponseEntity<String> changePassword(Long userId, ChangePasswordRequest request) {
+		User user = repo.getByUserId(userId).orElse(null);
 		
-		throw new GeneralServerException();
+		if (user == null) {throw new NotFoundException("User not found");}
+		String id = AuthUtils.getUserId();
+		
+		if (String.valueOf(userId).equals(id) || AuthUtils.isAdmin()) {
+			String hashedOldPassword = user.getPassword();
+			String hashedSentOldPassword = AuthUtils.hash(request.getOldPassword());
+			String hashedSentNewPassword = AuthUtils.hash(request.getNewPassword());
+			if (hashedOldPassword.equals(hashedSentOldPassword)) {
+				if (hashedOldPassword.equals(hashedSentNewPassword)) {
+					throw new BadRequestException("Incorrect old password.");
+				} else {
+					user.setPassword(hashedSentNewPassword);
+					repo.save(user);
+				}				
+			} else {
+				throw new BadRequestException("Incorrect old password.");
+			}
+		} else {
+			throw new UnauthorizedException("You do not have access to this account.");
+		}
+		
+		return ResponseEntity.ok().body("User deleted successfully.");
+	}	
+	
+
+	public ResponseEntity<String> makeAdmin(Long userId) {
+		User user = repo.getByUserId(userId).orElse(null);
+		
+		if (user == null) {throw new NotFoundException("User not found");}
+		
+		if (AuthUtils.isAdmin()) {
+			if (user.getRole().equals(UserType.ADMIN)) {
+				throw new BadRequestException("Incorrect old password.");
+			} else {
+				user.setRole(UserType.ADMIN);
+				repo.save(user);
+			}
+		}
+		return ResponseEntity.ok().body("Changed role to admin successfully.");
+	}
+
+	public ResponseEntity<String> deleteUser(Long userId) {
+		User user = repo.getByUserId(userId).orElse(null);
+		
+		if (user == null) {throw new NotFoundException("User not found");}
+		String id = AuthUtils.getUserId();
+		
+		if (String.valueOf(userId).equals(id) || AuthUtils.isAdmin()) {
+			repo.delete(user);
+		} else {
+			throw new UnauthorizedException("You do not have access to this account.");
+		}
+				
+		return ResponseEntity.ok().body("User deleted successfully.");
 	}
 
 	public ResponseEntity<Boolean> sendOtp(OtpRequestDTO request) {

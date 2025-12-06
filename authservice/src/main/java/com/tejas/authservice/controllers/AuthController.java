@@ -1,11 +1,15 @@
 package com.tejas.authservice.controllers;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tejas.authservice.models.ChangePasswordRequest;
 import com.tejas.authservice.models.LoginRequest;
 import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
@@ -32,6 +36,23 @@ public class AuthController {
 	public ResponseEntity<String> loginUser(@Valid @RequestBody LoginRequest req) {
 		return service.verifyUser(req);
 	}
+	
+	@PutMapping("/changepassword/{userId}")
+	public ResponseEntity<String> changePassword(@Valid @PathVariable Long userId, @Valid @RequestBody ChangePasswordRequest request) {
+		return service.changePassword(userId, request);
+	}	
+	
+	@PutMapping("/makeadmin/{userId}")
+	public ResponseEntity<String> makeAdmin(@Valid @PathVariable Long userId) {
+		return service.makeAdmin(userId);
+	}
+	
+	@DeleteMapping("/deleteuser/{userId}")
+	public ResponseEntity<String> deleteUser(@Valid @PathVariable Long userId) {
+		return service.deleteUser(userId);
+	}	
+	
+	
 	
 	@PostMapping("/sendotp/{userId}")
 	public ResponseEntity<Boolean> sendOtp(@Valid @RequestBody OtpRequestDTO request) {

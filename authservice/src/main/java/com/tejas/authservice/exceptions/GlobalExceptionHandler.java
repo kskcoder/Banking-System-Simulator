@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.tejas.bankingcommon.dto.ApiError;
+import com.tejas.bankingcommon.exceptions.BadRequestException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
 import com.tejas.bankingcommon.exceptions.UnauthorizedException;
@@ -35,7 +36,7 @@ public class GlobalExceptionHandler {
 		ApiError error = new ApiError(
 				LocalDateTime.now(),
 				HttpStatus.UNAUTHORIZED.value(),
-				"INCORRECT_PASSWORD",
+				"UNAUTHORIZED_USER",
 				e.getMessage(),
 				req.getRequestURI()
 		);
@@ -54,6 +55,19 @@ public class GlobalExceptionHandler {
 		);
 		
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+	}
+	
+	@ExceptionHandler
+	public ResponseEntity<ApiError> handleBadRequest(BadRequestException e, HttpServletRequest req) {
+		ApiError error = new ApiError(
+				LocalDateTime.now(),
+				HttpStatus.BAD_REQUEST.value(),
+				"BAD_REQUEST",
+				e.getMessage(),
+				req.getRequestURI()
+		);
+		
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
 	}
 	
 	@ExceptionHandler
