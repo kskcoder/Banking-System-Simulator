@@ -23,7 +23,7 @@ public class AuthOtpProducer {
 	KafkaTemplate<String, MessageEvent> kafkaTemplate;
 	
 	public CompletableFuture<SendResult<String, MessageEvent>> otpRequest(MessageEvent event) {
-    	return kafkaTemplate.send("messaging-otp-topic", event);
+    	return kafkaTemplate.send("messaging-send-topic", event);
     }
 
 	public void dispatchResponseWithRetry(MessageEvent event) {
