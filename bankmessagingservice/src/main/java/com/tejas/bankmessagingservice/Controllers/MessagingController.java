@@ -19,7 +19,7 @@ public class MessagingController {
 	
 //	@PostMapping("/testOtp")
 	public ResponseEntity<Boolean> testOtp(@Valid @RequestBody MessageEvent event) {
-		msgConsumer.sendOtp(event);
+		msgConsumer.sendMessage(event);
 		return ResponseEntity.ok().body(true);
 	}
 }
