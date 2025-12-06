@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MessageEvent {
-	@NotNull
 	private String otpNumber;
 	@NotNull
 	private String email;
