@@ -2,6 +2,7 @@ package com.tejas.authservice.controllers;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -14,6 +15,7 @@ import com.tejas.authservice.models.LoginRequest;
 import com.tejas.authservice.models.SignupRequest;
 import com.tejas.authservice.models.User;
 import com.tejas.authservice.services.AuthService;
+import com.tejas.bankingcommon.dto.ContactDetails;
 import com.tejas.bankingcommon.dto.OtpRequestDTO;
 import com.tejas.bankingcommon.dto.OtpValidateRequest;
 import com.tejas.bankingcommon.dto.OtpValidateResponse;
@@ -37,6 +39,11 @@ public class AuthController {
 		return service.verifyUser(req);
 	}
 	
+	@GetMapping("/getcontact/{userId}")
+	public ResponseEntity<ContactDetails> getContact(@Valid @PathVariable Long userId) {
+		return service.getContact(userId);
+	}
+	
 	@PutMapping("/changepassword/{userId}")
 	public ResponseEntity<String> changePassword(@Valid @PathVariable Long userId, @Valid @RequestBody ChangePasswordRequest request) {
 		return service.changePassword(userId, request);
@@ -51,8 +58,6 @@ public class AuthController {
 	public ResponseEntity<String> deleteUser(@Valid @PathVariable Long userId) {
 		return service.deleteUser(userId);
 	}	
-	
-	
 	
 	@PostMapping("/sendotp/{userId}")
 	public ResponseEntity<Boolean> sendOtp(@Valid @RequestBody OtpRequestDTO request) {
