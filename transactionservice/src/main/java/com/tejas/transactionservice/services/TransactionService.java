@@ -13,8 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.dto.TransferRequest;
@@ -31,6 +29,7 @@ import com.tejas.transactionservice.models.Transaction;
 import com.tejas.transactionservice.models.TransactionLedgerRecord;
 import com.tejas.transactionservice.repositories.TransactionLedgerRepo;
 import com.tejas.transactionservice.repositories.TransactionRepo;
+import com.tejas.transactionservice.utils.AuthUtils;
 import com.tejas.transactionservice.utils.PdfStatementGenerator;
 
 import feign.FeignException;
@@ -69,12 +68,15 @@ public class TransactionService {
         
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         
+        Long paymentId = AuthUtils.getRole().equals(UserType.INTERNAL_SERVICE.toString()) ? request.getPaymentId() : null;
+        
         TransactionEvent event = new TransactionEvent(); 
     	event.setTransactionId(txn.getId());
+    	event.setUserId(Integer.parseInt(userId));
+    	event.setPaymentId(paymentId);
     	event.setFromAccountNumber(txn.getFromAccount());
     	event.setToAccountNumber(txn.getToAccount());
     	event.setAmount(txn.getAmount());
-    	event.setUserId(Integer.parseInt(userId));
     	event.setType(TransactionType.DEBIT);
     	event.setStatus(TransactionStatus.PENDING.toString());  
     	
@@ -133,10 +135,7 @@ public class TransactionService {
 	}
 	
 	private boolean isOwner(String pathAccNo) {
-		String role = ((ServletRequestAttributes) RequestContextHolder
-		        .getRequestAttributes())
-		        .getRequest()
-		        .getHeader("X-User-Role");
+		String role = AuthUtils.getRole();
 		
 		if (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString())) {
 			return true;

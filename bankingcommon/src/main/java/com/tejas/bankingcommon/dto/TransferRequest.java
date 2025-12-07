@@ -13,4 +13,6 @@ public class TransferRequest {
     private String toAccount;
 	@NotNull
     private double amount;
+	
+	private long paymentId;
 }

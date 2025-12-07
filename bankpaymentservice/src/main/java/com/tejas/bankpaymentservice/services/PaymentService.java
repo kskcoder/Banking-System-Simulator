@@ -191,6 +191,7 @@ public class PaymentService {
 				.fromAccount(payment.getFromAccountNumber())
 				.toAccount(payment.getToAccountNumber())
 				.amount(payment.getAmount())
+				.paymentId(payment.getId())
 				.build();
 		
 		try {

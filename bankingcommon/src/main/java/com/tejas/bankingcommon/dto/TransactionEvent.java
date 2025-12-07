@@ -8,6 +8,7 @@ import lombok.Data;
 public class TransactionEvent {
     private Long transactionId;
     private Integer userId;
+    private Long paymentId;
     private String fromAccountNumber;
     private String toAccountNumber;
     private double amount;
