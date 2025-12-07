@@ -34,7 +34,9 @@ public class TransactionConsumer {
 			TransactionEvent credEvent = createCreditEvent(trEvent);
 			
 			dispatchCreditWithRetry(credEvent);
-		} 
+		} else if (trEvent.getPaymentId() != null) {
+			trProducer.dispatchMessageWithRetry(trEvent);
+		}
 	}
 	
 	@KafkaListener(topics = "transaction-debit-repaid-topic", groupId = "banking-system-simulator-group")
@@ -55,9 +57,11 @@ public class TransactionConsumer {
 			return;
 		}
 		trUpdater.saveTransaction(trEvent);
-		if (TransactionStatus.CREDIT_SUCCESS.toString().equals(trEvent.getStatus())) {			
+		if (TransactionStatus.CREDIT_SUCCESS.toString().equals(trEvent.getStatus())) {
+			trProducer.dispatchMessageWithRetry(trEvent);
 			trUpdater.saveTransactionRecord(trEvent, true);
 		} else {
+			trProducer.dispatchMessageWithRetry(trEvent);
 			TransactionEvent repayEvent = createRepayEvent(trEvent);
 			dispatchCreditWithRetry(repayEvent);
 		}

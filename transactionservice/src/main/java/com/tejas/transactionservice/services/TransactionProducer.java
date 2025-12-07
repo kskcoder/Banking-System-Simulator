@@ -34,6 +34,10 @@ public class TransactionProducer {
     	return kafkaTemplate.send("account-credit-topic", event);
     }
 	
+	public CompletableFuture<SendResult<String, TransactionEvent>> sendMessage(TransactionEvent event) {
+    	return kafkaTemplate.send("payment-message-topic", event);
+    }
+	
 	public void dispatchDebitWithRetry(TransactionEvent trEvent) {
 		attemptDebitDispatch(trEvent, 1, INITIAL_BACKOFF);
 	}
@@ -54,6 +58,24 @@ public class TransactionProducer {
 				}
 			});					
 	}
+	
+	public void dispatchMessageWithRetry(TransactionEvent trEvent) {
+		attemptMessageDispatch(trEvent, 1, INITIAL_BACKOFF);
+	}
+
+	private void attemptMessageDispatch(TransactionEvent trEvent, int attempt, Duration backoff) {
+		sendMessage(trEvent).whenComplete((result, ex) -> {
+				if (ex != null) {
+					if (attempt < MAX_CREDIT_RETRY_ATTEMPTS) {
+						Duration nextBackoff = backoff.multipliedBy(2);
+						RETRY_EXECUTOR.schedule(() -> attemptDebitDispatch(trEvent, attempt + 1, nextBackoff),
+								nextBackoff.toMillis(), TimeUnit.MILLISECONDS);
+					}
+				}
+			});					
+	}
+	
+	
 	
 	
 }
