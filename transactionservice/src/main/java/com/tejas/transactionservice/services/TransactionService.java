@@ -137,15 +137,21 @@ public class TransactionService {
 		        .getRequestAttributes())
 		        .getRequest()
 		        .getHeader("X-User-Role");
+		
+		if (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString())) {
+			return true;
+		}
+		
 		try {
 			 boolean isOwner = accInterface.isOwnerOfAccountNumber(pathAccNo).getBody();
-			 if (!isOwner && !role.equals(UserType.ADMIN.toString()) && !role.equals(UserType.INTERNAL_SERVICE.toString())) {
-				 return false;     				
-	    	}
+			 if (isOwner) {
+				 return true;     				
+			 } else {
+				 return false;
+			 }
 	    } catch (FeignException e) {
 	    	return false;
 	    }
-		return true;
 	}
 	
 	private ResponseEntity<Page<TransactionLedgerRecord>> getGeneralTransactionRecords(String accountNum, String type, Pageable pageable) {
