@@ -20,6 +20,7 @@ import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.dto.TransferRequest;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 import com.tejas.bankingcommon.enums.TransactionType;
+import com.tejas.bankingcommon.enums.UserType;
 import com.tejas.bankingcommon.exceptions.BadRequestException;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
@@ -138,7 +139,7 @@ public class TransactionService {
 		        .getHeader("X-User-Role");
 		try {
 			 boolean isOwner = accInterface.isOwnerOfAccountNumber(pathAccNo).getBody();
-			 if (!isOwner && !role.equals("ADMIN")) {
+			 if (!isOwner && !role.equals(UserType.ADMIN.toString()) && !role.equals(UserType.INTERNAL_SERVICE.toString())) {
 				 return false;     				
 	    	}
 	    } catch (FeignException e) {

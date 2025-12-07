@@ -30,28 +30,28 @@ import jakarta.validation.Valid;
 @RequestMapping("/transactions")
 public class TransactionController {
 	@Autowired
-	TransactionService accountService;
+	TransactionService trService;
 
 	@GetMapping("/all")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<List<Transaction>> getAllTransfers() {
-		return accountService.getAllTransfers();
+		return trService.getAllTransfers();
 	}
 	
 	@GetMapping("/ledger/all")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<List<TransactionLedgerRecord>> getAllLedgerTransactions() {
-		return accountService.getAllLedgerTransaction();
+		return trService.getAllLedgerTransaction();
 	}
 		
 	@PostMapping("/transfer")
 	public ResponseEntity<Transaction> transfer(@Valid @RequestBody TransferRequest request) {
-		return accountService.transfer(request);
+		return trService.transfer(request);
 	}
 	
 	@GetMapping("/transaction/{txnId}")
 	public ResponseEntity<Transaction> getTransaction(@PathVariable int txnId) {
-		return accountService.getTransaction(txnId);
+		return trService.getTransaction(txnId);
 	}
 	
 	@GetMapping("/ledger/debit/{accountNumber}")
@@ -60,7 +60,7 @@ public class TransactionController {
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to, 
 			@PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
-		return accountService.getDebitTransaction(accountNumber, from, to, pageable);
+		return trService.getDebitTransaction(accountNumber, from, to, pageable);
 	}
 	
 	@GetMapping("/ledger/credit/{accountNumber}")
@@ -69,7 +69,7 @@ public class TransactionController {
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to, 
 			@PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
-		return accountService.getCreditTransaction(accountNumber, from, to, pageable);
+		return trService.getCreditTransaction(accountNumber, from, to, pageable);
 	}
 	
 	@GetMapping("/ledger/all/{accountNumber}")	
@@ -78,7 +78,7 @@ public class TransactionController {
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
 			@PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
-		return accountService.getAllTransaction(accountNumber, from, to, pageable);
+		return trService.getAllTransaction(accountNumber, from, to, pageable);
 	}
 	
 	@GetMapping("/ledger/statement/{accountNumber}")	
@@ -86,6 +86,6 @@ public class TransactionController {
 			@PathVariable String accountNumber,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-		return accountService.getStatement(accountNumber, from, to);
+		return trService.getStatement(accountNumber, from, to);
 	}
 }
