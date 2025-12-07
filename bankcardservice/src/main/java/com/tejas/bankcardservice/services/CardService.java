@@ -22,6 +22,7 @@ import com.tejas.bankingcommon.dto.CardVerificationRequest;
 import com.tejas.bankingcommon.dto.CardVerificationResponse;
 import com.tejas.bankingcommon.enums.AccountCardStatus;
 import com.tejas.bankingcommon.enums.AccountType;
+import com.tejas.bankingcommon.enums.UserType;
 import com.tejas.bankingcommon.exceptions.BadRequestException;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
@@ -219,15 +220,21 @@ public class CardService {
 		        .getRequestAttributes())
 		        .getRequest()
 		        .getHeader("X-User-Role");
+		
+		if (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString())) {
+			return true;
+		}
+		
 		try {
 			 boolean isOwner = accInterface.isOwnerOfAccountId(pathAccId).getBody();
-			 if (!isOwner && !role.equals("ADMIN")) {
-				 return false;     				
-	    	}
+			 if (isOwner) {
+				 return true;     				
+	    	 } else {
+	    		 return false;
+	    	 }
 	    } catch (FeignException e) {
 	    	return false;
 	    }
-		return true;
 	}
 	
 	//Admin related functions
