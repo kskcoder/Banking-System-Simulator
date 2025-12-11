@@ -14,7 +14,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
-import com.tejas.bankapigateway.services.ExternalServiceValidation;
+import com.tejas.bankapigateway.services.VendorValidation;
 import com.tejas.bankapigateway.services.JWTService;
 import com.tejas.bankingcommon.enums.UserType;
 
@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
 public class JWTFilter implements WebFilter, Ordered{
 	private final JWTService jwtService;
 	private final GatewaySecretsConfig secretsConfig;
-	private final ExternalServiceValidation serviceValidator;
+	private final VendorValidation serviceValidator;
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -43,6 +43,7 @@ public class JWTFilter implements WebFilter, Ordered{
 		
 		if (external.equals("1")) {
 			String vendorId = request.getHeaders().getFirst("X-Vendor-Id");
+			String vendorSecret = request.getHeaders().getFirst("X-Vendor-Secret");
 			String timestamp = request.getHeaders().getFirst("X-Timestamp");
 			String signature = request.getHeaders().getFirst("X-Signature");
 			String body = exchange.getAttributeOrDefault("cachedRequestBody", "");
@@ -52,7 +53,7 @@ public class JWTFilter implements WebFilter, Ordered{
 	            return exchange.getResponse().setComplete();
 			}			
 			
-			boolean validated = serviceValidator.verifySignature(vendorId, timestamp, body, signature);
+			boolean validated = serviceValidator.verifySignature(vendorId, vendorSecret, timestamp, body, signature);
 			
 			if (validated) {
 				String userId = "INTERNAL_PAYMENT_SERVICE";
@@ -84,7 +85,6 @@ public class JWTFilter implements WebFilter, Ordered{
 		 if (authHeader == null || !authHeader.startsWith("Bearer ")) {
 	            return chain.filter(exchange);
 	        }
-
 	        token = authHeader.substring(7);
 	        try {
 	            Claims claims = jwtService.extractAllClaims(token);

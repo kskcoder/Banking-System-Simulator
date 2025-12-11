@@ -10,6 +10,6 @@ import lombok.Data;
 @Configuration
 @ConfigurationProperties(value="gateway")
 @Data
-public class ExternalServiceSercretsConfig {
-	private Map<String, String> external;
+public class ExternalVendorSecretsConfig {
+	private Map<String, String> vendorKey;
 }
