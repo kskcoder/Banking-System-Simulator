@@ -5,6 +5,7 @@ public enum PaymentStatus {
 	OTP_SENT,
 	OTP_VERIFIED,
 	INCORRECT_OTP,
+	INSUFFICIENT_BALANCE,
 	FAILED,
 	SUCCESS
 }

@@ -59,7 +59,7 @@ public class PdfStatementGenerator {
 		        table.addCell(r.getCounterparty());
 		        table.addCell(String.valueOf(r.getAmount()));
 		        table.addCell(String.valueOf(r.getBalanceAfter()));
-		        table.addCell(r.getStatus().replace("_", ""));
+		        table.addCell(r.getStatus().toString().replace("_", ""));
 		        table.addCell(String.valueOf(r.getParentTransactionId()));
 		    }
 		    

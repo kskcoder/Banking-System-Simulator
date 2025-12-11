@@ -30,7 +30,7 @@ public class TransactionConsumer {
 		trUpdater.saveTransaction(trEvent);
 		trUpdater.saveTransactionRecord(trEvent, false);
 		
-		if (TransactionStatus.DEBIT_SUCCESS.toString().equals(trEvent.getStatus())) {
+		if (TransactionStatus.DEBIT_SUCCESS.equals(trEvent.getStatus())) {
 			TransactionEvent credEvent = createCreditEvent(trEvent);
 			
 			dispatchCreditWithRetry(credEvent);
@@ -43,9 +43,9 @@ public class TransactionConsumer {
 	public void debitRepaidReceiver(TransactionEvent trEvent) {
 		trUpdater.saveTransaction(trEvent);
 		
-		if (TransactionStatus.REPAY_FAILED.toString().equals(trEvent.getStatus())) {
+		if (TransactionStatus.REPAY_FAILED.equals(trEvent.getStatus())) {
 			dispatchCreditWithRetry(trEvent);
-		} else if (TransactionStatus.REPAY_SUCCESS.toString().equals(trEvent.getStatus())) {
+		} else if (TransactionStatus.REPAY_SUCCESS.equals(trEvent.getStatus())) {
 			trUpdater.saveTransactionRecord(trEvent, true);
 		}
 	}
@@ -57,7 +57,7 @@ public class TransactionConsumer {
 			return;
 		}
 		trUpdater.saveTransaction(trEvent);
-		if (TransactionStatus.CREDIT_SUCCESS.toString().equals(trEvent.getStatus())) {
+		if (TransactionStatus.CREDIT_SUCCESS.equals(trEvent.getStatus())) {
 			trProducer.dispatchMessageWithRetry(trEvent);
 			trUpdater.saveTransactionRecord(trEvent, true);
 		} else {
@@ -80,7 +80,7 @@ public class TransactionConsumer {
 		trProducer.creditRequest(trEvent).whenComplete((result, ex) -> {
 			if (ex != null) {
 				if (attempt >= MAX_CREDIT_RETRY_ATTEMPTS) {
-					trEvent.setStatus(TransactionStatus.CREDIT_FAILED.toString());
+					trEvent.setStatus(TransactionStatus.CREDIT_FAILED);
 					trUpdater.saveTransaction(trEvent);						
 					TransactionEvent repayEvent = createRepayEvent(trEvent);
 					dispatchCreditWithRetry(repayEvent);
@@ -110,7 +110,7 @@ public class TransactionConsumer {
     private TransactionEvent createCreditEvent(TransactionEvent debitSuccessEvent) {
         TransactionEvent credit = cloneEvent(debitSuccessEvent);
         credit.setType(TransactionType.CREDIT);
-        credit.setStatus(TransactionStatus.PENDING.toString());
+        credit.setStatus(TransactionStatus.PENDING);
         return credit;
     }
 
@@ -119,7 +119,7 @@ public class TransactionConsumer {
         repay.setFromAccountNumber(failedCreditEvent.getToAccountNumber());
         repay.setToAccountNumber(failedCreditEvent.getFromAccountNumber());
         repay.setType(failedCreditEvent.getType());
-        repay.setStatus(TransactionStatus.REPAY_PENDING.toString());
+        repay.setStatus(TransactionStatus.REPAY_PENDING);
         return repay;
     }	
 

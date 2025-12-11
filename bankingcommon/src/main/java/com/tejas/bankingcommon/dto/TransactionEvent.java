@@ -1,5 +1,6 @@
 package com.tejas.bankingcommon.dto;
 
+import com.tejas.bankingcommon.enums.TransactionStatus;
 import com.tejas.bankingcommon.enums.TransactionType;
 
 import lombok.Data;
@@ -14,5 +15,5 @@ public class TransactionEvent {
     private double amount;
     private double balanceAfter;
     private TransactionType type;
-    private String status; 
+    private TransactionStatus status; 
 }

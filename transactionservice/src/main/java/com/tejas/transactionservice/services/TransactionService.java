@@ -54,7 +54,7 @@ public class TransactionService {
         txn.setFromAccount(request.getFromAccount());
         txn.setToAccount(request.getToAccount());
         txn.setAmount(request.getAmount());
-        txn.setStatus("PENDING");
+        txn.setStatus(TransactionStatus.PENDING);
         txn.setCreatedAt(LocalDateTime.now());
         txn.setUpdatedAt(LocalDateTime.now());
         
@@ -78,7 +78,7 @@ public class TransactionService {
     	event.setToAccountNumber(txn.getToAccount());
     	event.setAmount(txn.getAmount());
     	event.setType(TransactionType.DEBIT);
-    	event.setStatus(TransactionStatus.PENDING.toString());  
+    	event.setStatus(TransactionStatus.PENDING);  
     	
     	trUpdater.saveTransaction(event);
         

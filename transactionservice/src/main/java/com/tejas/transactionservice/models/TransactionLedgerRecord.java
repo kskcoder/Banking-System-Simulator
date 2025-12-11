@@ -2,6 +2,7 @@ package com.tejas.transactionservice.models;
 
 import java.time.LocalDateTime;
 
+import com.tejas.bankingcommon.enums.TransactionStatus;
 import com.tejas.bankingcommon.enums.TransactionType;
 
 import jakarta.persistence.Column;
@@ -33,7 +34,8 @@ public class TransactionLedgerRecord {
     private double amount;
     private double balanceAfter;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+	private TransactionStatus status;
 
     @Column(name="created_at")
     private LocalDateTime createdAt; 

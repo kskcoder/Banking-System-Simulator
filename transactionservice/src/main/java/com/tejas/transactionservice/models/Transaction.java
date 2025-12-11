@@ -2,8 +2,12 @@ package com.tejas.transactionservice.models;
 
 import java.time.LocalDateTime;
 
+import com.tejas.bankingcommon.enums.TransactionStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,7 +24,10 @@ public class Transaction {
 	private String fromAccount;
 	private String toAccount;
 	private double amount;
-	private String status;
+	
+	@Enumerated(EnumType.STRING)
+	private TransactionStatus status;
+	
 	@Column(name="created_at")
 	private LocalDateTime createdAt; 
 	
