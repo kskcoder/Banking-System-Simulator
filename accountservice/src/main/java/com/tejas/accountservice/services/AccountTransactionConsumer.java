@@ -33,15 +33,15 @@ public class AccountTransactionConsumer {
 		Account account = repo.getByAccountnumber(senderAccNumber).orElse(null);
 		
 		if (account == null) {
-			trEvent.setStatus(TransactionStatus.DEBIT_FAILED.toString());			
+			trEvent.setStatus(TransactionStatus.DEBIT_FAILED);			
 		} else if (String.valueOf(account.getUserid()).equals(userId)) {
 			double newBalance = account.getBalance() - amount;
 			if (newBalance < rules.getMinimumBalance(account.getAccountType())) {
-				trEvent.setStatus(TransactionStatus.INSUFFICIENT_BALANCE.toString());
+				trEvent.setStatus(TransactionStatus.INSUFFICIENT_BALANCE);
 			} else {
 				account.setBalance(newBalance);
 				trEvent.setBalanceAfter(newBalance);
-				trEvent.setStatus(TransactionStatus.DEBIT_SUCCESS.toString());
+				trEvent.setStatus(TransactionStatus.DEBIT_SUCCESS);
 				
 				ContactDetails details = authInt.getContact(account.getUserid()).getBody();
 				
@@ -57,7 +57,7 @@ public class AccountTransactionConsumer {
 				repo.save(account);
 			}
 		} else {
-			trEvent.setStatus(TransactionStatus.UNAUTHORISED.toString());
+			trEvent.setStatus(TransactionStatus.UNAUTHORISED);
 		}
 		
 		accProducer.dispatchResponseWithRetry(trEvent);
@@ -65,8 +65,8 @@ public class AccountTransactionConsumer {
 	
 	@KafkaListener(topics = "account-credit-topic", groupId = "banking-system-simulator-group")
 	public void creditReceiver(TransactionEvent trEvent) {
-		String status = trEvent.getStatus();
-		Boolean repay = TransactionStatus.REPAY_PENDING.toString().equals(status);
+		TransactionStatus status = trEvent.getStatus();
+		Boolean repay = TransactionStatus.REPAY_PENDING.equals(status);
 		String senderAccNumber = trEvent.getToAccountNumber();
 		Double amount = trEvent.getAmount();
 		
@@ -74,7 +74,7 @@ public class AccountTransactionConsumer {
 				.orElse(null);
 		
 		if (account == null) {
-			trEvent.setStatus(repay ? TransactionStatus.REPAY_FAILED.toString() : TransactionStatus.CREDIT_FAILED.toString());
+			trEvent.setStatus(repay ? TransactionStatus.REPAY_FAILED : TransactionStatus.CREDIT_FAILED);
 		} else {
 			double newBalance = account.getBalance() + amount;
 			account.setBalance(newBalance);
@@ -93,7 +93,7 @@ public class AccountTransactionConsumer {
 			acMsgProducer.dispatchResponseWithRetry(event);
 			
 			repo.save(account);
-			trEvent.setStatus(repay ? TransactionStatus.REPAY_SUCCESS.toString() : TransactionStatus.CREDIT_SUCCESS.toString());
+			trEvent.setStatus(repay ? TransactionStatus.REPAY_SUCCESS : TransactionStatus.CREDIT_SUCCESS);
 		}
 		
 		accProducer.dispatchResponseWithRetry(trEvent);

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,7 @@ public class AccountService {
 		return ResponseEntity.ok().body(account);
 	}
 
+	@Cacheable(value="account_details", key="#accountNumber", unless="#result != null")
 	public ResponseEntity<Account> getAccountByAccountNumber(String accountNumber) {
 		Account account = repo.getByAccountnumber(accountNumber).get();
 		String userId = AccountUtils.getUserId();

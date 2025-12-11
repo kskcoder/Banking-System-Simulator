@@ -43,7 +43,7 @@ public class InterestService {
 			trEvent.setBalanceAfter(newBalance);
 	        trEvent.setAmount(interestAmt);
 	        trEvent.setType(TransactionType.INTEREST);
-	        trEvent.setStatus(TransactionStatus.CREDIT_SUCCESS.toString()); 
+	        trEvent.setStatus(TransactionStatus.CREDIT_SUCCESS); 
 	        
 	        acc.setBalance(newBalance);
 	        repo.save(acc);

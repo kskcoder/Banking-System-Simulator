@@ -12,6 +12,7 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
+import com.tejas.bankingcommon.enums.TransactionStatus;
 import com.tejas.bankingcommon.enums.TransactionType;
 
 @Service
@@ -42,13 +43,13 @@ public class AccountTransactionProducer {
 	public void dispatchResponseWithRetry(TransactionEvent trEvent) {
 		CompletableFuture<SendResult<String, TransactionEvent>> function;
 		TransactionType type = trEvent.getType();
-		String status = trEvent.getStatus();
+		TransactionStatus status = trEvent.getStatus();
 
 		if (TransactionType.INTEREST.equals(type)) {
 			function = interestCreditResponse(trEvent);
-		} else if (status != null && status.contains(TransactionType.REPAY.toString())) {
+		} else if (status != null && status.toString().contains(TransactionType.REPAY.toString())) {
 			function = debitRepayResponse(trEvent);
-		} else if (TransactionType.CREDIT.equals(type) || (status != null && status.contains(TransactionType.CREDIT.toString()))) {
+		} else if (TransactionType.CREDIT.equals(type) || (status != null && status.toString().contains(TransactionType.CREDIT.toString()))) {
 			function = creditResponse(trEvent);
 		} else {
 			function = debitResponse(trEvent);
