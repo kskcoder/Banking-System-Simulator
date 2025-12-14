@@ -8,6 +8,8 @@ import java.util.Random;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Component;
 
+import com.tejas.bankcardservice.dtos.GeneralCardResponse;
+import com.tejas.bankcardservice.model.Card;
 import com.tejas.bankingcommon.enums.AccountType;
 
 @Component
@@ -51,4 +53,14 @@ public class CardGenerals {
 	public double getDailyLimit(AccountType type) {
 		return type == AccountType.SAVINGS ? 50000.0 : 200000.0;
 	}
+	
+	public GeneralCardResponse createGeneralCardResponse(Card card) {
+		return GeneralCardResponse.builder()
+				.expiry(card.getLastDigits())
+				.maskedCardNumber(CardMask.maskCardNumber(card.getLastDigits(), true))
+				.status(card.getStatus())
+				.limit(card.getCardLimit())
+				.build();
+	}
+	
 }

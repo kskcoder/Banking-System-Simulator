@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tejas.bankcardservice.dtos.FirstCardResponse;
 import com.tejas.bankcardservice.dtos.GeneralCardResponse;
-import com.tejas.bankcardservice.model.Card;
 import com.tejas.bankcardservice.services.CardService;
 import com.tejas.bankingcommon.dto.CardVerificationRequest;
 import com.tejas.bankingcommon.dto.CardVerificationResponse;
@@ -28,42 +27,42 @@ public class CardController {
 	private final CardService cardService;
 	
 	@GetMapping("/admin/all")
-	public ResponseEntity<List<Card>> getAllCards() {
-		return cardService.getAllCards();
+	public ResponseEntity<List<GeneralCardResponse>> getAllCards() {
+		return ResponseEntity.ok().body(cardService.getAllCards());
 	}
 	
 	@GetMapping("/user/all")
 	public ResponseEntity<List<GeneralCardResponse>> getAllUserCards() {
-		return cardService.getUsersAllCards();
+		return ResponseEntity.ok().body(cardService.getUsersAllCards());
 	}
 	
 	@PostMapping("/create/{accountId}")
 	public ResponseEntity<FirstCardResponse> createCard(@PathVariable long accountId) {
-		return cardService.createCard(accountId);
+		return ResponseEntity.ok().body(cardService.createCard(accountId));
 	}
 	
 	@PostMapping("/verify")
 	public ResponseEntity<CardVerificationResponse> verifyCard(@RequestBody CardVerificationRequest request) {
-		return cardService.verifyCard(request);
+		return ResponseEntity.ok().body(cardService.verifyCard(request));
 	}
 	
 	@GetMapping("/account/{accountId}")
 	public ResponseEntity<GeneralCardResponse> getCardByAccountId(@PathVariable long accountId) {
-		return cardService.getCardByAccountId(accountId);
+		return ResponseEntity.ok().body(cardService.getCardByAccountId(accountId));
 	}
 	
 	@PutMapping("/block/{accountId}")
-	public ResponseEntity<Card> blockCard(@PathVariable long accountId) {
-		return cardService.blockCard(accountId);
+	public ResponseEntity<GeneralCardResponse> blockCard(@PathVariable long accountId) {
+		return ResponseEntity.ok().body(cardService.blockCard(accountId));
 	}
 	
 	@PutMapping("/unblock/{accountId}")
-	public ResponseEntity<Card> unblockCard(@PathVariable long accountId) {
-		return cardService.unblockCard(accountId);
+	public ResponseEntity<GeneralCardResponse> unblockCard(@PathVariable long accountId) {
+		return ResponseEntity.ok().body(cardService.unblockCard(accountId));
 	}
 	
 	@DeleteMapping("/delete/{accountId}")
-	public ResponseEntity<Card> deleteCard(@PathVariable long accountId) {
-		return cardService.deleteCard(accountId);
+	public ResponseEntity<GeneralCardResponse> deleteCard(@PathVariable long accountId) {
+		return ResponseEntity.ok().body(cardService.deleteCard(accountId));
 	}
 }
