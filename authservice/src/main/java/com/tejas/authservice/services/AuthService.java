@@ -2,8 +2,7 @@ package com.tejas.authservice.services;
 
 import java.time.LocalDateTime;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -47,7 +46,7 @@ public class AuthService {
 	
 	private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
-	public ResponseEntity<User> signupUser(SignupRequest req) {
+	public User signupUser(SignupRequest req) {
 		User user = new User();
 		
 		user = repo.getByUsername(req.getUsername()).orElse(null);
@@ -74,10 +73,10 @@ public class AuthService {
 			throw new GeneralServerException();
 		}
 		
-		return ResponseEntity.ok().body(user);		
+		return user;		
 	}
 
-	public ResponseEntity<String> verifyUser(LoginRequest req) {
+	public String verifyUser(LoginRequest req) {
 		String username = req.getUsername();
 		String password = req.getPassword();
 		String hashedPassword = AuthUtils.hash(password);
@@ -91,7 +90,7 @@ public class AuthService {
 			
 			if (authentication.isAuthenticated()) {
 				UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-				return ResponseEntity.ok().body(jwtService.generateToken(user.getId(), userDetails));
+				return jwtService.generateToken(user.getId(), userDetails);
 			} else {
 				throw new UnauthorizedException("Incorrect Password");
 			}
@@ -100,7 +99,7 @@ public class AuthService {
 		}
 	}
 	
-	public ResponseEntity<String> changePassword(Long userId, ChangePasswordRequest request) {
+	public String changePassword(Long userId, ChangePasswordRequest request) {
 		User user = repo.getByUserId(userId).orElse(null);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
@@ -124,26 +123,26 @@ public class AuthService {
 			throw new UnauthorizedException("You do not have access to this account.");
 		}
 		
-		return ResponseEntity.ok().body("User deleted successfully.");
+		return "User deleted successfully.";
 	}	
 
-	public ResponseEntity<String> makeAdmin(Long userId) {
+	public String makeAdmin(Long userId) {
 		User user = repo.getByUserId(userId).orElse(null);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
 		
 		if (AuthUtils.isAdmin()) {
 			if (user.getRole().equals(UserType.ADMIN)) {
-				throw new BadRequestException("Incorrect old password.");
+				throw new BadRequestException("User is already an admin.");
 			} else {
 				user.setRole(UserType.ADMIN);
 				repo.save(user);
 			}
 		}
-		return ResponseEntity.ok().body("Changed role to admin successfully.");
+		return "Changed role to admin successfully.";
 	}
 
-	public ResponseEntity<String> deleteUser(Long userId) {
+	public String deleteUser(Long userId) {
 		User user = repo.getByUserId(userId).orElse(null);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
@@ -155,29 +154,33 @@ public class AuthService {
 			throw new UnauthorizedException("You do not have access to this account.");
 		}
 				
-		return ResponseEntity.ok().body("User deleted successfully.");
+		return "User deleted successfully.";
 	}
 	
-	public ResponseEntity<ContactDetails> getContact(Long userId) {
+	public ContactDetails getContact(Long userId) {
+		String id = AuthUtils.getUserId();
+		if (id.equals("INTERNAL_PAYMENT_SERVICE") || AuthUtils.isAdmin()) {
+			return cachedGetContact(userId);
+		} else {
+			throw new UnauthorizedException("You do not have access to this account.");
+		}
+	}
+	
+	@Cacheable(value="contact_details", key="userId", unless="#result == null")
+	protected ContactDetails cachedGetContact(Long userId) {
 		User user = repo.getByUserId(userId).orElse(null);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
-		String id = AuthUtils.getUserId();
 		
 		ContactDetails details = ContactDetails.builder()
 				.email(user.getEmail())
 				.phone(user.getPhone())
 				.build();
-				
-		if (id.equals("INTERNAL_PAYMENT_SERVICE") || AuthUtils.isAdmin()) {
-			repo.delete(user);
-			return ResponseEntity.ok().body(details);
-		} else {
-			throw new UnauthorizedException("You do not have access to this account.");
-		}
+		
+			return details;
 	}
 
-	public ResponseEntity<Boolean> sendOtp(OtpRequestDTO request) {
+	public Boolean sendOtp(OtpRequestDTO request) {
 		User user = repo.getByUserId(request.getUserId()).orElse(null);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
@@ -204,10 +207,10 @@ public class AuthService {
 		otpProducer.dispatchResponseWithRetry(event);
 		otpRepo.save(otp);
 		
-		return ResponseEntity.ok().body(true);
+		return true;
 	}
 
-	public ResponseEntity<OtpValidateResponse> validateOtp(OtpValidateRequest request) {
+	public OtpValidateResponse validateOtp(OtpValidateRequest request) {
 		Otp otp = otpRepo.findByReferenceIdAndType(request.getReferenceId(), request.getType()).orElse(null);
 		
 		OtpValidateResponse otpResponse = OtpValidateResponse.builder()
@@ -230,7 +233,7 @@ public class AuthService {
 						otp.setStatus(OtpStatus.VERIFIED);
 						otpResponse.setValidated(true);
 						otpResponse.setMessage("OTP verfied successfully.");
-						return ResponseEntity.ok().body(otpResponse);
+						return otpResponse;
 					} else if (otp.getExpiresAt().isBefore(LocalDateTime.now()) || otp.getExpiresAt().isEqual(LocalDateTime.now())) {
 						otp.setStatus(OtpStatus.EXPIRED);
 					} else if (otp.getAttempts() >= otp.getMaxAttempts()) {
@@ -249,6 +252,6 @@ public class AuthService {
 			otpRepo.save(otp);
 		}
 		otpResponse.setValidated(false);
-		return new ResponseEntity<>(otpResponse, HttpStatus.FORBIDDEN);
+		return otpResponse;
 	}
 }
