@@ -13,7 +13,9 @@ import com.tejas.accountservice.models.Account;
 import com.tejas.accountservice.models.CreateAccountDTO;
 import com.tejas.accountservice.repositories.AccountRepo;
 import com.tejas.accountservice.utils.AccountUtils;
+import com.tejas.accountservice.utils.AuthUtils;
 import com.tejas.bankingcommon.enums.AccountType;
+import com.tejas.bankingcommon.enums.UserType;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
@@ -64,7 +66,7 @@ public class AccountService {
 		List<Account> accounts = repo.getByUserid(userId).get();
 		
 		if (accounts != null) {
-			if (isOwnerOfAccountId(accounts.stream().findFirst().get().getId()) || AccountUtils.isAdmin()) {
+			if (isOwnerOfAccountId(accounts.stream().findFirst().get().getId())) {
 				return accounts;
 			} else {
 				throw new ForbiddenException("You do not have permission to access this resource.");
@@ -115,6 +117,12 @@ public class AccountService {
 	}
 
 	public Boolean isOwnerOfAccountNumber(String accountNumber) {
+		String role = AuthUtils.getRole();
+		
+		if (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString())) {
+			return true;
+		}
+		
 		String userId = AccountUtils.getUserId();
 		Account account = repo.getByAccountnumber(accountNumber).get();
 		if (account != null) {
@@ -126,6 +134,12 @@ public class AccountService {
 	}
 	
 	public Boolean isOwnerOfAccountId(long accountId) {
+		String role = AuthUtils.getRole();
+		
+		if (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString())) {
+			return true;
+		}
+		
 		String userId = AccountUtils.getUserId();
 		Account account = repo.getById(accountId).get();
 		if (account != null) {
