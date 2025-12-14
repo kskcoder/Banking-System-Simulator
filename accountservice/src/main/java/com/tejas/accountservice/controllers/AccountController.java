@@ -27,51 +27,51 @@ public class AccountController {
 	
 	@GetMapping
 	public ResponseEntity<List<Account>> getAllAccounts() {
-		return accountService.getAllAccounts();
+		return ResponseEntity.ok().body(accountService.getAllAccounts());
 	}
 	
 	@PostMapping("/create")
 	public ResponseEntity<Account> createAccount(@Valid @RequestBody CreateAccountDTO accountReq) {
-		return accountService.createAccount(accountReq);
+		return ResponseEntity.ok().body(accountService.createAccount(accountReq));
 	}
 	
 	@GetMapping("/{account}")
 	public ResponseEntity<Account> getAccountByAccountNumber(@PathVariable String account) {
-		return accountService.getAccountByAccountNumber(account);
+		return ResponseEntity.ok().body(accountService.getAccountByAccountNumber(account));
 	}
 	
 	@GetMapping("/user/{userId}")
 	public ResponseEntity<List<Account>> getAccountByUserId(@PathVariable int userId) {
-		return accountService.getAccountsByUserId(userId);
+		return ResponseEntity.ok().body(accountService.getAccountsByUserId(userId));
 	}
 	
 	@GetMapping("/accountIds")
 	public ResponseEntity<List<Long>> getAccountIdsByUserId() {
-		return accountService.getAccountIdsByUserId();
+		return ResponseEntity.ok().body(accountService.getAccountIdsByUserId());
 	}
 	
 	@DeleteMapping("/close/{account}")
 	public ResponseEntity<String> closeAccount(@PathVariable String account) {
-		return accountService.closeAccount(account);
+		return ResponseEntity.ok().body(accountService.closeAccount(account));
 	}
 	
 	@GetMapping("/accountnumber/{accountNumber}/is-owner")
 	public ResponseEntity<Boolean> isOwnerOfAccount(@PathVariable String accountNumber) {
-		return accountService.isOwnerOfAccountNumber(accountNumber);
+		return ResponseEntity.ok().body(accountService.isOwnerOfAccountNumber(accountNumber));
 	}
 	
 	@GetMapping("/accountid/{accountId}/is-owner")
 	public ResponseEntity<Boolean> isOwnerOfAccount(@PathVariable long accountId) {
-		return accountService.isOwnerOfAccountId(accountId);
+		return ResponseEntity.ok().body(accountService.isOwnerOfAccountId(accountId));
 	}
 	
 	@GetMapping("/accountid/{accountId}/type")
 	public ResponseEntity<AccountType> getAccountTypeByAccountId(@PathVariable long accountId) {
-		return accountService.getAccountTypeByAccountId(accountId);
+		return ResponseEntity.ok().body(accountService.getAccountTypeByAccountId(accountId));
 	}
 	
 	@GetMapping("/accountid/{accountId}/userid")
 	public ResponseEntity<Long> getuserIdByAccountId(@PathVariable long accountId) {
-		return accountService.getuserIdByAccountId(accountId);
+		return ResponseEntity.ok().body(accountService.getuserIdByAccountId(accountId));
 	}
 }
