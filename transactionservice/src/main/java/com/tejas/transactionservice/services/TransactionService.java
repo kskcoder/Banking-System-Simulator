@@ -1,15 +1,11 @@
 package com.tejas.transactionservice.services;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +43,7 @@ public class TransactionService {
 	private final PdfStatementGenerator statementGenerator;
 
     @Transactional
-    public ResponseEntity<Transaction> transfer(TransferRequest request) {
+    public Transaction transfer(TransferRequest request) {
     	if (!isOwner(request.getFromAccount())) {throw new ForbiddenException("You do not have permission to use this account.");}
     	
         Transaction txn = new Transaction();
@@ -84,7 +80,7 @@ public class TransactionService {
         
         trProducer.dispatchDebitWithRetry(event);
         
-        return ResponseEntity.ok().body(txn);
+        return txn;
     }
 
     @Transactional
@@ -95,42 +91,47 @@ public class TransactionService {
 		repo.save(tx);
 	}
 
-	public ResponseEntity<Transaction> getTransaction(int txnId) {
+	public Transaction getTransaction(int txnId) {
+		return cachedGetTransaction(txnId);
+	}
+	
+	@Cacheable(value="transaction_details", key="#txnId", unless="#result == null")
+	protected Transaction cachedGetTransaction(int txnId) {
 		Transaction tx = repo.findById(txnId);
 		
 		if (tx != null) {
-			return ResponseEntity.ok().body(tx);
+			return tx;
 		}
 		
 		throw new NotFoundException("Transaction not found");
 	}
 	
-	public ResponseEntity<Page<TransactionLedgerRecord>> getDebitTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
+	public Page<TransactionLedgerRecord> getDebitTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
 		if (!isOwner(accountNum)) {throw new ForbiddenException("You do not have permission to use this account.");}
 		if (from != null && to != null) {
-			return getGeneralDatedTransactionRecords(accountNum, TransactionType.DEBIT.toString(), from, to, pageable);
+			return cachedGetGeneralDatedTransactionRecords(accountNum, TransactionType.DEBIT.toString(), from, to, pageable);
 		} else {
-			return getGeneralTransactionRecords(accountNum, TransactionType.DEBIT.toString(), pageable);
+			return cachedGetGeneralTransactionRecords(accountNum, TransactionType.DEBIT.toString(), pageable);
 		}
 	}
 	
-	public ResponseEntity<Page<TransactionLedgerRecord>> getCreditTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
+	public Page<TransactionLedgerRecord> getCreditTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
 		if (!isOwner(accountNum)) {throw new ForbiddenException("You do not have permission to use this account.");}
 		
 		if (from != null && to != null) {
-			return getGeneralDatedTransactionRecords(accountNum, TransactionType.CREDIT.toString(), from, to, pageable);
+			return cachedGetGeneralDatedTransactionRecords(accountNum, TransactionType.CREDIT.toString(), from, to, pageable);
 		} else {
-			return getGeneralTransactionRecords(accountNum, TransactionType.CREDIT.toString(), pageable);
+			return cachedGetGeneralTransactionRecords(accountNum, TransactionType.CREDIT.toString(), pageable);
 		}		
 	}
 
-	public ResponseEntity<Page<TransactionLedgerRecord>> getAllTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
+	public Page<TransactionLedgerRecord> getAllTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
 		if (!isOwner(accountNum)) {throw new ForbiddenException("You do not have permission to use this account.");}
 		
 		if (from != null && to != null) {
-			return getGeneralDatedTransactionRecords(accountNum, null, from, to, pageable);
+			return cachedGetGeneralDatedTransactionRecords(accountNum, null, from, to, pageable);
 		} else {
-			return getGeneralTransactionRecords(accountNum, null, pageable);
+			return cachedGetGeneralTransactionRecords(accountNum, null, pageable);
 		}		
 	}
 	
@@ -139,6 +140,10 @@ public class TransactionService {
 		
 		if (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString())) {
 			return true;
+		}
+		
+		if (pathAccNo.equals("") || pathAccNo == null) {
+			return false;
 		}
 		
 		try {
@@ -153,7 +158,8 @@ public class TransactionService {
 	    }
 	}
 	
-	private ResponseEntity<Page<TransactionLedgerRecord>> getGeneralTransactionRecords(String accountNum, String type, Pageable pageable) {
+	@Cacheable(value="transaction_records", key="#accountNum + '_' + #type + '_' + #pageable.pageNumber + '_' + #pageable.pageSize", unless="#result == null || !#result.hasContent()")
+	protected Page<TransactionLedgerRecord> cachedGetGeneralTransactionRecords(String accountNum, String type, Pageable pageable) {
 		Page<TransactionLedgerRecord> tx; 
 		if (TransactionType.CREDIT.toString().equals(type) || TransactionType.DEBIT.toString().equals(type)) {
 			tx = ledgerRepo.getByAccountNumberAndType(accountNum, type, pageable);
@@ -162,13 +168,14 @@ public class TransactionService {
 		}
 		
 		if (tx.hasContent()) {
-			return ResponseEntity.ok().body(tx);
+			return tx;
 		}
 		
 		throw new NoContentException("No transactions found.");
 	}
 	
-	private ResponseEntity<Page<TransactionLedgerRecord>> getGeneralDatedTransactionRecords(String accountNum,
+	@Cacheable(value="transaction_records_dated", key="#accountNum + '_' + #type + '_' + #from + '_' + #to + '_' + #pageable.pageNumber + '_' + #pageable.pageSize", unless="#result == null || !#result.hasContent()")
+	protected Page<TransactionLedgerRecord> cachedGetGeneralDatedTransactionRecords(String accountNum,
 			String type, LocalDateTime from, LocalDateTime to, Pageable pageable) {
 		Page<TransactionLedgerRecord> tx; 
 		if (TransactionType.CREDIT.toString().equals(type) || TransactionType.DEBIT.toString().equals(type)) {
@@ -178,15 +185,20 @@ public class TransactionService {
 		}
 		
 		if (tx.hasContent()) {
-			return ResponseEntity.ok().body(tx);
+			return tx;
 		}
 		
 		throw new NoContentException("No transactions found.");
 	}
 
-	public ResponseEntity<byte[]> getStatement(String accountNumber, LocalDateTime from, LocalDateTime to) {
-		if (!isOwner(accountNumber)) {return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);}
+	public byte[] getStatement(String accountNumber, LocalDateTime from, LocalDateTime to) {
+		if (!isOwner(accountNumber)) {throw new ForbiddenException("You do not have permission to use this account.");}
 		
+		return cachedGetStatement(accountNumber, from, to);
+	}
+	
+	@Cacheable(value="statement_pdf", key="#accountNumber + '_' + #from + '_' + #to", unless="#result == null")
+	protected byte[] cachedGetStatement(String accountNumber, LocalDateTime from, LocalDateTime to) {
 		List<TransactionLedgerRecord> tx;
 		
 		if (from == null && to == null) {
@@ -203,39 +215,31 @@ public class TransactionService {
 		
 		try {
 			byte[] data = statementGenerator.generatePdfStatement(accountNumber, from, to, tx);
-			
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_PDF);
-			
-			DateTimeFormatter ftr = DateTimeFormatter.ofPattern("ddMMMyyyyHHmm");
-			
-			headers.set(HttpHeaders.CONTENT_DISPOSITION,
-					"attachment, filename=statement_"+accountNumber+""+LocalDateTime.now().format(ftr)+".pdf");
-			
-			return ResponseEntity.ok().headers(headers).body(data);
+			return data;
 		} catch (Exception e) {
 			throw new GeneralServerException();
 		}
 	}
 
-	//Admin-only section
-	//For admin to get all ledger records
-	public ResponseEntity<List<Transaction>> getAllTransfers() {
+	@Cacheable(value="all_transfers", unless="#result == null || #result.isEmpty()")
+	public List<Transaction> getAllTransfers() {
+		if (!isOwner("")) {throw new ForbiddenException("You do not have permission to access this resource.");}
 		List<Transaction> tx = repo.findAll();
 		
 		if (!tx.isEmpty()) {
-			return new ResponseEntity<>(tx, HttpStatus.OK);
+			return tx;
 		}
 		
 		throw new NoContentException("No transactions found.");
 	}
 	
-	//For admin to get all ledger records
-	public ResponseEntity<List<TransactionLedgerRecord>> getAllLedgerTransaction() {
+	@Cacheable(value="all_ledger_transactions", unless="#result == null || #result.isEmpty()")
+	public List<TransactionLedgerRecord> getAllLedgerTransaction() {
+		if (!isOwner("")) {throw new ForbiddenException("You do not have permission to access this resource.");}
 		List<TransactionLedgerRecord> tx = ledgerRepo.findAll();
 		
 		if (!tx.isEmpty()) {
-			return new ResponseEntity<>(tx, HttpStatus.OK);
+			return tx;
 		}
 		throw new NoContentException("No transactions found.");
 	}

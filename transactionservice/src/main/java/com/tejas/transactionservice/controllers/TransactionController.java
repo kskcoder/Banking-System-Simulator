@@ -1,6 +1,7 @@
 package com.tejas.transactionservice.controllers;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,25 +35,23 @@ public class TransactionController {
 	TransactionService trService;
 
 	@GetMapping("/all")
-	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<List<Transaction>> getAllTransfers() {
-		return trService.getAllTransfers();
+		return ResponseEntity.ok().body(trService.getAllTransfers());
 	}
 	
 	@GetMapping("/ledger/all")
-	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<List<TransactionLedgerRecord>> getAllLedgerTransactions() {
-		return trService.getAllLedgerTransaction();
+		return ResponseEntity.ok().body(trService.getAllLedgerTransaction());
 	}
 		
 	@PostMapping("/transfer")
 	public ResponseEntity<Transaction> transfer(@Valid @RequestBody TransferRequest request) {
-		return trService.transfer(request);
+		return ResponseEntity.ok().body(trService.transfer(request));
 	}
 	
 	@GetMapping("/transaction/{txnId}")
 	public ResponseEntity<Transaction> getTransaction(@PathVariable int txnId) {
-		return trService.getTransaction(txnId);
+		return ResponseEntity.ok().body(trService.getTransaction(txnId));
 	}
 	
 	@GetMapping("/ledger/debit/{accountNumber}")
@@ -60,7 +60,7 @@ public class TransactionController {
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to, 
 			@PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
-		return trService.getDebitTransaction(accountNumber, from, to, pageable);
+		return ResponseEntity.ok().body(trService.getDebitTransaction(accountNumber, from, to, pageable));
 	}
 	
 	@GetMapping("/ledger/credit/{accountNumber}")
@@ -69,7 +69,7 @@ public class TransactionController {
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to, 
 			@PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
-		return trService.getCreditTransaction(accountNumber, from, to, pageable);
+		return ResponseEntity.ok().body(trService.getCreditTransaction(accountNumber, from, to, pageable));
 	}
 	
 	@GetMapping("/ledger/all/{accountNumber}")	
@@ -78,7 +78,7 @@ public class TransactionController {
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
 			@PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
-		return trService.getAllTransaction(accountNumber, from, to, pageable);
+		return ResponseEntity.ok().body(trService.getAllTransaction(accountNumber, from, to, pageable));
 	}
 	
 	@GetMapping("/ledger/statement/{accountNumber}")	
@@ -86,6 +86,16 @@ public class TransactionController {
 			@PathVariable String accountNumber,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-		return trService.getStatement(accountNumber, from, to);
+		byte[] data = trService.getStatement(accountNumber, from, to);
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_PDF);
+		
+		DateTimeFormatter ftr = DateTimeFormatter.ofPattern("ddMMMyyyyHHmm");
+		String currentTime = LocalDateTime.now().format(ftr);
+		
+		headers.set(HttpHeaders.CONTENT_DISPOSITION,
+				"attachment, filename=statement_"+accountNumber+currentTime);
+		
+		return ResponseEntity.ok().headers(headers).body(data);
 	}
 }
