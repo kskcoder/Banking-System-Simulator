@@ -15,6 +15,7 @@ import com.tejas.authservice.models.User;
 import com.tejas.authservice.repositories.AuthRepo;
 import com.tejas.authservice.services.AuthUserDetailsService;
 import com.tejas.authservice.services.JWTService;
+import com.tejas.bankingcommon.exceptions.NotFoundException;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -46,7 +47,11 @@ public class JWTFilter extends OncePerRequestFilter {
 		}
 		
 		if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			User user = repo.getById(Long.parseLong(userId));
+			User user = repo.getById(Long.parseLong(userId))
+				.orElseThrow(() -> 
+					new NotFoundException("User not found")
+				);
+			
 			UserDetails userDetails = context.getBean(AuthUserDetailsService.class).loadUserByUsername(user.getUsername());
 			
 			if (jwtService.validateToken(token, userDetails)) {

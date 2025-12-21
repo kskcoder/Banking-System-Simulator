@@ -13,5 +13,5 @@ public interface AuthRepo extends JpaRepository<User, Long>{
 
 	public Optional<User> getByEmail(String email);
 
-	public Optional<User> getByUserId(long userId);
+	public Optional<User> getById(long userId);
 }

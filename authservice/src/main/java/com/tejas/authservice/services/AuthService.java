@@ -99,8 +99,11 @@ public class AuthService {
 		}
 	}
 	
-	public String changePassword(Long userId, ChangePasswordRequest request) {
-		User user = repo.getByUserId(userId).orElse(null);
+	public String changePassword(long userId, ChangePasswordRequest request) {
+		User user = repo.getById(userId)
+			.orElseThrow(() -> 
+				new NotFoundException("User not found")
+			);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
 		String id = AuthUtils.getUserId();
@@ -126,8 +129,11 @@ public class AuthService {
 		return "User deleted successfully.";
 	}	
 
-	public String makeAdmin(Long userId) {
-		User user = repo.getByUserId(userId).orElse(null);
+	public String makeAdmin(long userId) {
+		User user = repo.getById(userId)
+			.orElseThrow(() -> 
+				new NotFoundException("User not found")
+			);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
 		
@@ -142,8 +148,11 @@ public class AuthService {
 		return "Changed role to admin successfully.";
 	}
 
-	public String deleteUser(Long userId) {
-		User user = repo.getByUserId(userId).orElse(null);
+	public String deleteUser(long userId) {
+		User user = repo.getById(userId)
+			.orElseThrow(() -> 
+				new NotFoundException("User not found")
+			);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
 		String id = AuthUtils.getUserId();
@@ -167,10 +176,11 @@ public class AuthService {
 	}
 	
 	@Cacheable(value="contact_details", key="userId", unless="#result == null")
-	protected ContactDetails cachedGetContact(Long userId) {
-		User user = repo.getByUserId(userId).orElse(null);
-		
-		if (user == null) {throw new NotFoundException("User not found");}
+	protected ContactDetails cachedGetContact(long userId) {
+		User user = repo.getById(userId)
+			.orElseThrow(() -> 
+				new NotFoundException("User not found")
+			);
 		
 		ContactDetails details = ContactDetails.builder()
 				.email(user.getEmail())
@@ -181,9 +191,10 @@ public class AuthService {
 	}
 
 	public Boolean sendOtp(OtpRequestDTO request) {
-		User user = repo.getByUserId(request.getUserId()).orElse(null);
-		
-		if (user == null) {throw new NotFoundException("User not found");}
+		User user = repo.getById(request.getUserId())
+			.orElseThrow(() -> 
+				new NotFoundException("User not found")
+			);
 		
 		String rawOtp = OtpUtils.otpGenerator();
 		
