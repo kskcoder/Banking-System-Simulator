@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.tejas.bankingcommon.enums.AccountType;
 
-@FeignClient("account-service")
+@FeignClient("bankaccountservice")
 public interface AccountInterface {
 	@GetMapping("accounts/accountid/{accountId}/is-owner")
 	public ResponseEntity<Boolean> isOwnerOfAccountId(@PathVariable long accountId);
