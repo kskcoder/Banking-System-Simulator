@@ -10,7 +10,7 @@ import com.tejas.bankingcommon.dto.TransferRequest;
 
 import jakarta.validation.Valid;
 
-@FeignClient("transaction-service")
+@FeignClient("banktransactionservice")
 public interface TransactionInterface {
 	
 	@PostMapping("transactions/transfer")
