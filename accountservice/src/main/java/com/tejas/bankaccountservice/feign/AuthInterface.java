@@ -9,7 +9,7 @@ import com.tejas.bankingcommon.dto.ContactDetails;
 
 import jakarta.validation.Valid;
 
-@FeignClient("auth-service")
+@FeignClient("bankauthservice")
 public interface AuthInterface {
 	@GetMapping("auth/getcontact/{userId}")
 	public abstract ResponseEntity<ContactDetails> getContact(@Valid @PathVariable Long userId);
