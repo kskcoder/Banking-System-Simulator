@@ -7,11 +7,20 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableFeignClients
 @EnableScheduling
 @EnableCaching
+@SecurityScheme(
+	    name = "bearerAuth",
+	    type = SecuritySchemeType.HTTP,
+	    scheme = "bearer",
+	    bearerFormat = "JWT"
+	)
 public class BankcardserviceApplication {
 
 	public static void main(String[] args) {
