@@ -1,4 +1,4 @@
-package com.tejas.transactionservice.services;
+package com.tejas.banktransactionservice.services;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,13 +20,13 @@ import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
-import com.tejas.transactionservice.feign.AccountInterface;
-import com.tejas.transactionservice.models.Transaction;
-import com.tejas.transactionservice.models.TransactionLedgerRecord;
-import com.tejas.transactionservice.repositories.TransactionLedgerRepo;
-import com.tejas.transactionservice.repositories.TransactionRepo;
-import com.tejas.transactionservice.utils.AuthUtils;
-import com.tejas.transactionservice.utils.PdfStatementGenerator;
+import com.tejas.banktransactionservice.feign.AccountInterface;
+import com.tejas.banktransactionservice.models.Transaction;
+import com.tejas.banktransactionservice.models.TransactionLedgerRecord;
+import com.tejas.banktransactionservice.repositories.TransactionLedgerRepo;
+import com.tejas.banktransactionservice.repositories.TransactionRepo;
+import com.tejas.banktransactionservice.utils.AuthUtils;
+import com.tejas.banktransactionservice.utils.PdfStatementGenerator;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;

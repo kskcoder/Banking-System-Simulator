@@ -1,4 +1,4 @@
-package com.tejas.transactionservice.models;
+package com.tejas.banktransactionservice.models;
 
 import java.time.LocalDateTime;
 

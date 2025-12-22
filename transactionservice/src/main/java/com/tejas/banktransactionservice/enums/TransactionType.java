@@ -1,4 +1,4 @@
-package com.tejas.transactionservice.enums;
+package com.tejas.banktransactionservice.enums;
 
 public enum TransactionType {
 	DEBIT,

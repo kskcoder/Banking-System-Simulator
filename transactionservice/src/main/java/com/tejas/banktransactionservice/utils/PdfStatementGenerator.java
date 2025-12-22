@@ -1,4 +1,4 @@
-package com.tejas.transactionservice.utils;
+package com.tejas.banktransactionservice.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
@@ -14,7 +14,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.tejas.transactionservice.models.TransactionLedgerRecord;
+import com.tejas.banktransactionservice.models.TransactionLedgerRecord;
 
 @Service
 public class PdfStatementGenerator {

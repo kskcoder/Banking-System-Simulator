@@ -1,4 +1,4 @@
-package com.tejas.transactionservice.controllers;
+package com.tejas.banktransactionservice.controllers;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -22,9 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tejas.bankingcommon.dto.TransferRequest;
-import com.tejas.transactionservice.models.Transaction;
-import com.tejas.transactionservice.models.TransactionLedgerRecord;
-import com.tejas.transactionservice.services.TransactionService;
+import com.tejas.banktransactionservice.models.Transaction;
+import com.tejas.banktransactionservice.models.TransactionLedgerRecord;
+import com.tejas.banktransactionservice.services.TransactionService;
 
 import jakarta.validation.Valid;
 

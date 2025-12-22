@@ -1,4 +1,4 @@
-package com.tejas.transactionservice.services;
+package com.tejas.banktransactionservice.services;
 
 import java.util.Date;
 import java.util.function.Function;

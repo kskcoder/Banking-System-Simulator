@@ -1,4 +1,4 @@
-package com.tejas.transactionservice.repositories;
+package com.tejas.banktransactionservice.repositories;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.tejas.transactionservice.models.TransactionLedgerRecord;
+import com.tejas.banktransactionservice.models.TransactionLedgerRecord;
 
 public interface TransactionLedgerRepo extends JpaRepository<TransactionLedgerRecord, Long> {
 	public abstract TransactionLedgerRecord getByParentTransactionIdAndAccountNumber(long transactionId, String accountNumber);

@@ -1,4 +1,4 @@
-package com.tejas.transactionservice.feign;
+package com.tejas.banktransactionservice.feign;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;

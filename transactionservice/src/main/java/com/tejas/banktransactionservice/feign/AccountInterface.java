@@ -1,4 +1,4 @@
-package com.tejas.transactionservice.feign;
+package com.tejas.banktransactionservice.feign;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;

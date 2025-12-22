@@ -1,4 +1,4 @@
-package com.tejas.transactionservice.exceptions;
+package com.tejas.banktransactionservice.exceptions;
 
 import java.time.LocalDateTime;
 

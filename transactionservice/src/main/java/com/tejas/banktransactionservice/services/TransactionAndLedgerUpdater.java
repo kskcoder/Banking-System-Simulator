@@ -1,4 +1,4 @@
-package com.tejas.transactionservice.services;
+package com.tejas.banktransactionservice.services;
 
 import java.time.LocalDateTime;
 
@@ -6,10 +6,10 @@ import org.springframework.stereotype.Service;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.TransactionType;
-import com.tejas.transactionservice.models.Transaction;
-import com.tejas.transactionservice.models.TransactionLedgerRecord;
-import com.tejas.transactionservice.repositories.TransactionLedgerRepo;
-import com.tejas.transactionservice.repositories.TransactionRepo;
+import com.tejas.banktransactionservice.models.Transaction;
+import com.tejas.banktransactionservice.models.TransactionLedgerRecord;
+import com.tejas.banktransactionservice.repositories.TransactionLedgerRepo;
+import com.tejas.banktransactionservice.repositories.TransactionRepo;
 
 import lombok.RequiredArgsConstructor;
 
