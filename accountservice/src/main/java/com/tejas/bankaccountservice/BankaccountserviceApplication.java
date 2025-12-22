@@ -1,4 +1,4 @@
-package com.tejas.accountservice;
+package com.tejas.bankaccountservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,10 +10,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableDiscoveryClient
 @EnableScheduling
 @EnableCaching
-public class AccountserviceApplication {
+public class BankaccountserviceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AccountserviceApplication.class, args);
+		SpringApplication.run(BankaccountserviceApplication.class, args);
 	}
 
 }

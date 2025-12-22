@@ -1,12 +1,12 @@
-package com.tejas.accountservice.services;
+package com.tejas.bankaccountservice.services;
 
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import com.tejas.accountservice.feign.AuthInterface;
-import com.tejas.accountservice.models.Account;
-import com.tejas.accountservice.repositories.AccountRepo;
-import com.tejas.accountservice.utils.AccountRules;
+import com.tejas.bankaccountservice.feign.AuthInterface;
+import com.tejas.bankaccountservice.models.Account;
+import com.tejas.bankaccountservice.repositories.AccountRepo;
+import com.tejas.bankaccountservice.utils.AccountRules;
 import com.tejas.bankingcommon.dto.ContactDetails;
 import com.tejas.bankingcommon.dto.MessageEvent;
 import com.tejas.bankingcommon.dto.MessageType;

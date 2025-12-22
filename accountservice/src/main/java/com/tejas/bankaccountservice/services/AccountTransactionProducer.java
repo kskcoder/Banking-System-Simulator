@@ -1,4 +1,4 @@
-package com.tejas.accountservice.services;
+package com.tejas.bankaccountservice.services;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;

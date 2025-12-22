@@ -1,4 +1,4 @@
-package com.tejas.accountservice.services;
+package com.tejas.bankaccountservice.services;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,11 +9,11 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import com.tejas.accountservice.models.Account;
-import com.tejas.accountservice.models.CreateAccountDTO;
-import com.tejas.accountservice.repositories.AccountRepo;
-import com.tejas.accountservice.utils.AccountUtils;
-import com.tejas.accountservice.utils.AuthUtils;
+import com.tejas.bankaccountservice.models.Account;
+import com.tejas.bankaccountservice.models.CreateAccountDTO;
+import com.tejas.bankaccountservice.repositories.AccountRepo;
+import com.tejas.bankaccountservice.utils.AccountUtils;
+import com.tejas.bankaccountservice.utils.AuthUtils;
 import com.tejas.bankingcommon.enums.AccountType;
 import com.tejas.bankingcommon.enums.UserType;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
