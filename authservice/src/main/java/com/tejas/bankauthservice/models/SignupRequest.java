@@ -1,4 +1,4 @@
-package com.tejas.authservice.models;
+package com.tejas.bankauthservice.models;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.tejas.authservice.controllers;
+package com.tejas.bankauthservice.controllers;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tejas.authservice.models.ChangePasswordRequest;
-import com.tejas.authservice.models.LoginRequest;
-import com.tejas.authservice.models.SignupRequest;
-import com.tejas.authservice.models.User;
-import com.tejas.authservice.services.AuthService;
+import com.tejas.bankauthservice.models.ChangePasswordRequest;
+import com.tejas.bankauthservice.models.LoginRequest;
+import com.tejas.bankauthservice.models.SignupRequest;
+import com.tejas.bankauthservice.models.User;
+import com.tejas.bankauthservice.services.AuthService;
 import com.tejas.bankingcommon.dto.ContactDetails;
 import com.tejas.bankingcommon.dto.OtpRequestDTO;
 import com.tejas.bankingcommon.dto.OtpValidateRequest;

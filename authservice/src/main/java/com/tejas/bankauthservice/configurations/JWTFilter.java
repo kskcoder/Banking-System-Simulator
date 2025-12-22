@@ -1,4 +1,4 @@
-package com.tejas.authservice.configurations;
+package com.tejas.bankauthservice.configurations;
 
 import java.io.IOException;
 
@@ -11,10 +11,10 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.tejas.authservice.models.User;
-import com.tejas.authservice.repositories.AuthRepo;
-import com.tejas.authservice.services.AuthUserDetailsService;
-import com.tejas.authservice.services.JWTService;
+import com.tejas.bankauthservice.models.User;
+import com.tejas.bankauthservice.repositories.AuthRepo;
+import com.tejas.bankauthservice.services.AuthUserDetailsService;
+import com.tejas.bankauthservice.services.JWTService;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
 
 import jakarta.servlet.FilterChain;

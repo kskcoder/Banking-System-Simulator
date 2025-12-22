@@ -1,4 +1,4 @@
-package com.tejas.authservice.services;
+package com.tejas.bankauthservice.services;
 
 import java.time.LocalDateTime;
 
@@ -10,16 +10,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.tejas.authservice.exceptions.AlreadyUsedException;
-import com.tejas.authservice.models.ChangePasswordRequest;
-import com.tejas.authservice.models.LoginRequest;
-import com.tejas.authservice.models.Otp;
-import com.tejas.authservice.models.SignupRequest;
-import com.tejas.authservice.models.User;
-import com.tejas.authservice.repositories.AuthRepo;
-import com.tejas.authservice.repositories.OtpRepo;
-import com.tejas.authservice.utils.AuthUtils;
-import com.tejas.authservice.utils.OtpUtils;
+import com.tejas.bankauthservice.exceptions.AlreadyUsedException;
+import com.tejas.bankauthservice.models.ChangePasswordRequest;
+import com.tejas.bankauthservice.models.LoginRequest;
+import com.tejas.bankauthservice.models.Otp;
+import com.tejas.bankauthservice.models.SignupRequest;
+import com.tejas.bankauthservice.models.User;
+import com.tejas.bankauthservice.repositories.AuthRepo;
+import com.tejas.bankauthservice.repositories.OtpRepo;
+import com.tejas.bankauthservice.utils.AuthUtils;
+import com.tejas.bankauthservice.utils.OtpUtils;
 import com.tejas.bankingcommon.dto.ContactDetails;
 import com.tejas.bankingcommon.dto.MessageEvent;
 import com.tejas.bankingcommon.dto.OtpRequestDTO;

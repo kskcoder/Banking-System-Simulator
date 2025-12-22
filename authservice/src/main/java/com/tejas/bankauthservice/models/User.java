@@ -1,4 +1,4 @@
-package com.tejas.authservice.models;
+package com.tejas.bankauthservice.models;
 
 import java.time.LocalDateTime;
 

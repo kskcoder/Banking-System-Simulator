@@ -1,4 +1,4 @@
-package com.tejas.authservice.utils;
+package com.tejas.bankauthservice.utils;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.security.core.Authentication;

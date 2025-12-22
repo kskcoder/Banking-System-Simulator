@@ -1,11 +1,11 @@
-package com.tejas.authservice.repositories;
+package com.tejas.bankauthservice.repositories;
 
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.tejas.authservice.models.User;
+import com.tejas.bankauthservice.models.User;
 
 @Repository
 public interface AuthRepo extends JpaRepository<User, Long>{

@@ -1,4 +1,4 @@
-package com.tejas.authservice.services;
+package com.tejas.bankauthservice.services;
 
 import java.util.Date;
 import java.util.HashMap;

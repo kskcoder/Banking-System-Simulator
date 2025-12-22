@@ -1,4 +1,4 @@
-package com.tejas.authservice.implementations;
+package com.tejas.bankauthservice.implementations;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -7,7 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.tejas.authservice.models.User;
+import com.tejas.bankauthservice.models.User;
 
 public class UserPrincipal implements UserDetails{
 	User user;

@@ -1,4 +1,4 @@
-package com.tejas.authservice.utils;
+package com.tejas.bankauthservice.utils;
 
 import java.util.Random;
 

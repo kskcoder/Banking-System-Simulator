@@ -1,4 +1,4 @@
-package com.tejas.authservice.services;
+package com.tejas.bankauthservice.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -7,9 +7,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.tejas.authservice.implementations.UserPrincipal;
-import com.tejas.authservice.models.User;
-import com.tejas.authservice.repositories.AuthRepo;
+import com.tejas.bankauthservice.implementations.UserPrincipal;
+import com.tejas.bankauthservice.models.User;
+import com.tejas.bankauthservice.repositories.AuthRepo;
 
 
 @Service
