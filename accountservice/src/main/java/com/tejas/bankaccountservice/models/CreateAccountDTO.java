@@ -1,4 +1,4 @@
-package com.tejas.accountservice.models;
+package com.tejas.bankaccountservice.models;
 
 
 import com.tejas.bankingcommon.enums.AccountType;

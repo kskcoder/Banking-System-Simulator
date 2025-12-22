@@ -1,4 +1,4 @@
-package com.tejas.accountservice.configurations;
+package com.tejas.bankaccountservice.configurations;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,7 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.tejas.accountservice.services.JWTService;
+import com.tejas.bankaccountservice.services.JWTService;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;

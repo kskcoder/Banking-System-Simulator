@@ -1,4 +1,4 @@
-package com.tejas.accountservice.configurations;
+package com.tejas.bankaccountservice.configurations;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

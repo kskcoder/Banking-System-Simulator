@@ -1,4 +1,4 @@
-package com.tejas.accountservice.utils;
+package com.tejas.bankaccountservice.utils;
 
 import org.springframework.stereotype.Component;
 

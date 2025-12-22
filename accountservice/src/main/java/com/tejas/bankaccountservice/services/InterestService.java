@@ -1,4 +1,4 @@
-package com.tejas.accountservice.services;
+package com.tejas.bankaccountservice.services;
 
 import java.util.Collections;
 import java.util.List;
@@ -6,9 +6,9 @@ import java.util.List;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.tejas.accountservice.models.Account;
-import com.tejas.accountservice.repositories.AccountRepo;
-import com.tejas.accountservice.utils.AccountRules;
+import com.tejas.bankaccountservice.models.Account;
+import com.tejas.bankaccountservice.repositories.AccountRepo;
+import com.tejas.bankaccountservice.utils.AccountRules;
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.enums.AccountType;
 import com.tejas.bankingcommon.enums.TransactionStatus;

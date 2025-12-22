@@ -1,11 +1,11 @@
-package com.tejas.accountservice.repositories;
+package com.tejas.bankaccountservice.repositories;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.tejas.accountservice.models.Account;
+import com.tejas.bankaccountservice.models.Account;
 import com.tejas.bankingcommon.enums.AccountType;
 
 public interface AccountRepo extends JpaRepository<Account, Integer>{

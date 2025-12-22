@@ -1,4 +1,4 @@
-package com.tejas.accountservice.controllers;
+package com.tejas.bankaccountservice.controllers;
 
 import java.util.List;
 
@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tejas.accountservice.models.Account;
-import com.tejas.accountservice.models.CreateAccountDTO;
-import com.tejas.accountservice.services.AccountService;
+import com.tejas.bankaccountservice.models.Account;
+import com.tejas.bankaccountservice.models.CreateAccountDTO;
+import com.tejas.bankaccountservice.services.AccountService;
 import com.tejas.bankingcommon.enums.AccountType;
 
 import jakarta.validation.Valid;
