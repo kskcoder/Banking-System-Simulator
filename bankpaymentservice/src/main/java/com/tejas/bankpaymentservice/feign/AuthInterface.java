@@ -11,7 +11,7 @@ import com.tejas.bankingcommon.dto.OtpValidateResponse;
 
 import jakarta.validation.Valid;
 
-@FeignClient("auth-service")
+@FeignClient("bankauthservice")
 public interface AuthInterface {
 	@GetMapping("auth/sendotp/{userId}")
 	public ResponseEntity<Boolean> sendPaymentOtp(@Valid @RequestBody OtpRequestDTO request); 
