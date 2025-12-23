@@ -20,6 +20,18 @@ public class RequestBodyCachingFilter implements WebFilter, Ordered{
 
 	@Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+		if (exchange.getRequest().getMethod().name().equals("GET")) {
+			return chain.filter(exchange);
+		}
+		
+		String path = exchange.getRequest().getURI().getPath();
+		// Explicitly skip Swagger endpoints (extra safety)
+		if (path.startsWith("/swagger-ui") || 
+		    path.startsWith("/v3/api-docs") || 
+		    path.startsWith("/webjars")) {
+			return chain.filter(exchange);
+		}
+		
         return DataBufferUtils.join(exchange.getRequest().getBody())
                 .flatMap(dataBuffer -> {
 

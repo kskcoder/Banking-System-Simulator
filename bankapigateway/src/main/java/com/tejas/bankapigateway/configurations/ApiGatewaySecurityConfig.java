@@ -14,16 +14,19 @@ public class ApiGatewaySecurityConfig {
     SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http, JWTFilter jwtFilter) {
         return http
             .csrf(csrf -> csrf.disable())
+            .httpBasic(httpBasic -> httpBasic.disable())
+            .formLogin(formLogin -> formLogin.disable())
             .authorizeExchange(exchange -> exchange
-                .pathMatchers("/auth-service/auth/**").permitAll() 
                 .pathMatchers(
-                        "/swagger-ui.html",
                         "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/webjars/**",
-                        "/favicon.ico"
+                        "/bankauthservice/v3/api-docs/**",
+                        "/bankaccountservice/v3/api-docs/**",
+                        "/bankcardservice/v3/api-docs/**",
+                        "/banktransactionservice/v3/api-docs/**",
+                        "/bankpaymentservice/v3/api-docs/**",
+                        "/webjars/**"
                     ).permitAll()
-
+                .pathMatchers("/auth-service/auth/**").permitAll()
                 .anyExchange().authenticated()
             )
             .addFilterBefore(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)

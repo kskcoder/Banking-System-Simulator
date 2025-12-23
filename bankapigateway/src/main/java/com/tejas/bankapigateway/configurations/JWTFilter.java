@@ -34,6 +34,13 @@ public class JWTFilter implements WebFilter, Ordered{
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 		ServerHttpRequest request = exchange.getRequest();
 		String path = request.getURI().getPath();
+		
+		if (path.startsWith("/swagger-ui") || 
+		    path.startsWith("/v3/api-docs") || 
+		    path.startsWith("/webjars")) {
+			return chain.filter(exchange);
+		}
+		
 		String trimmedPath = path.startsWith("/") ? path.substring(1) : path;
 		String serviceName = trimmedPath.split("/")[0];
 		
