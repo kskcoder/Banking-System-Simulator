@@ -18,13 +18,18 @@ public class ApiGatewaySecurityConfig {
             .formLogin(formLogin -> formLogin.disable())
             .authorizeExchange(exchange -> exchange
                 .pathMatchers(
+                        "/swagger-ui.html",
                         "/swagger-ui/**",
+                        "/v3/api-docs/**",
                         "/bankauthservice/v3/api-docs/**",
                         "/bankaccountservice/v3/api-docs/**",
                         "/bankcardservice/v3/api-docs/**",
                         "/banktransactionservice/v3/api-docs/**",
                         "/bankpaymentservice/v3/api-docs/**",
-                        "/webjars/**"
+                        "/webjars/**",
+                        "/swagger-config",
+                        "/swagger-resources/**",
+                        "/favicon.ico"
                     ).permitAll()
                 .pathMatchers("/auth-service/auth/**").permitAll()
                 .anyExchange().authenticated()

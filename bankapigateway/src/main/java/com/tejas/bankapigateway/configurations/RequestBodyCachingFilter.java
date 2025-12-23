@@ -25,7 +25,6 @@ public class RequestBodyCachingFilter implements WebFilter, Ordered{
 		}
 		
 		String path = exchange.getRequest().getURI().getPath();
-		// Explicitly skip Swagger endpoints (extra safety)
 		if (path.startsWith("/swagger-ui") || 
 		    path.startsWith("/v3/api-docs") || 
 		    path.startsWith("/webjars")) {
