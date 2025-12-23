@@ -16,6 +16,14 @@ public class ApiGatewaySecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeExchange(exchange -> exchange
                 .pathMatchers("/auth-service/auth/**").permitAll() 
+                .pathMatchers(
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/webjars/**",
+                        "/favicon.ico"
+                    ).permitAll()
+
                 .anyExchange().authenticated()
             )
             .addFilterBefore(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)

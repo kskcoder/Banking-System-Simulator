@@ -41,7 +41,7 @@ public class JWTFilter implements WebFilter, Ordered{
 		
 		String external = request.getHeaders().getFirst("X-External");
 		
-		if (external.equals("1")) {
+		if (external != null && external.equals("1")) {
 			String vendorId = request.getHeaders().getFirst("X-Vendor-Id");
 			String vendorSecret = request.getHeaders().getFirst("X-Vendor-Secret");
 			String timestamp = request.getHeaders().getFirst("X-Timestamp");
