@@ -47,19 +47,19 @@ public class AuthService {
 	private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
 	public User signupUser(SignupRequest req) {
-		User user = new User();
+		User user1 = new User();
 		
-		user = repo.getByUsername(req.getUsername()).orElse(null);
-		if (user != null) {
+		user1 = repo.getByUsername(req.getUsername()).orElse(null);
+		if (user1 != null) {
 			throw new AlreadyUsedException("Username: "+req.getUsername());
 		} 
 		
-		user = repo.getByEmail(req.getEmail()).orElse(null);
-		if (user != null) {
+		user1 = repo.getByEmail(req.getEmail()).orElse(null);
+		if (user1 != null) {
 			throw new AlreadyUsedException("Email: "+req.getEmail());
 		}
 		
-		user = repo.getByEmail(req.getEmail()).orElse(null);
+		User user = new User();
 		user.setUsername(req.getUsername());
 		user.setEmail(req.getEmail());
 		user.setPassword(encoder.encode(AuthUtils.hash(req.getPassword())));
