@@ -17,8 +17,8 @@ public class ApiGatewaySecurityConfig {
         return http
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
-            .httpBasic(httpBasic -> httpBasic.disable())
-            .formLogin(formLogin -> formLogin.disable())
+            .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable) 
+            .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
             .authorizeExchange(exchange -> exchange
                 .pathMatchers(
                         "/swagger-ui.html",
@@ -35,7 +35,7 @@ public class ApiGatewaySecurityConfig {
                         "/favicon.ico"
                     ).permitAll()
                 .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .pathMatchers("/auth-service/auth/**").permitAll()
+                .pathMatchers("/bankauthservice/auth/**").permitAll()
                 .anyExchange().authenticated()
             )
             .addFilterBefore(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
