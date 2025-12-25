@@ -2,6 +2,8 @@ package com.tejas.bankapigateway.configurations;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -14,6 +16,7 @@ public class ApiGatewaySecurityConfig {
     SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http, JWTFilter jwtFilter) {
         return http
             .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
             .httpBasic(httpBasic -> httpBasic.disable())
             .formLogin(formLogin -> formLogin.disable())
             .authorizeExchange(exchange -> exchange
@@ -31,6 +34,7 @@ public class ApiGatewaySecurityConfig {
                         "/swagger-resources/**",
                         "/favicon.ico"
                     ).permitAll()
+                .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .pathMatchers("/auth-service/auth/**").permitAll()
                 .anyExchange().authenticated()
             )
