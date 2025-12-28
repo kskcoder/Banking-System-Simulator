@@ -10,50 +10,52 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.tejas.bankauthservice.models.User;
 
 public class UserPrincipal implements UserDetails{
-	User user;
+	// Store only serializable fields, not the entire JPA entity
+	private String username;
+	private String password;
+	private String role;
 
 	public UserPrincipal(User user) {
 		super();
-		this.user = user;
+		// Extract only the necessary fields to avoid serialization issues
+		this.username = user.getUsername();
+		this.password = user.getPassword();
+		this.role = user.getRole() != null ? user.getRole().toString() : "USER";
 	}
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return Collections.singleton(new SimpleGrantedAuthority(user.getRole().toString()));
+		return Collections.singleton(new SimpleGrantedAuthority(role));
 	}
 
 	@Override
 	public String getPassword() {	
-		return user.getPassword();
+		return password;
 	}
 
 	@Override
 	public String getUsername() {
-		return user.getUsername();
+		return username;
 	}
 
 	@Override
 	public boolean isAccountNonExpired() {
-		// TODO Auto-generated method stub
-		return UserDetails.super.isAccountNonExpired();
+		return true;
 	}
 
 	@Override
 	public boolean isAccountNonLocked() {
-		// TODO Auto-generated method stub
-		return UserDetails.super.isAccountNonLocked();
+		return true;
 	}
 
 	@Override
 	public boolean isCredentialsNonExpired() {
-		// TODO Auto-generated method stub
-		return UserDetails.super.isCredentialsNonExpired();
+		return true;
 	}
 
 	@Override
 	public boolean isEnabled() {
-		// TODO Auto-generated method stub
-		return UserDetails.super.isEnabled();
+		return true;
 	}
 
 }

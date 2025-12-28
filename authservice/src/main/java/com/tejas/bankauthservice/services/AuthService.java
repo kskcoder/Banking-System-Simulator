@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -43,8 +45,7 @@ public class AuthService {
 	private final JWTService jwtService;
 	private final AuthUserDetailsService userDetailsService;
 	private final AuthOtpProducer otpProducer;
-	
-	private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+	private final BCryptPasswordEncoder encoder;
 
 	public User signupUser(SignupRequest req) {
 		User user1 = new User();
@@ -62,7 +63,7 @@ public class AuthService {
 		User user = new User();
 		user.setUsername(req.getUsername());
 		user.setEmail(req.getEmail());
-		user.setPassword(encoder.encode(AuthUtils.hash(req.getPassword())));
+		user.setPassword(encoder.encode(req.getPassword()));  // Encode password with BCrypt
 		user.setPhone(req.getPhone());
 		user.setRole(UserType.USER);
 		user.setCreatedAt(LocalDateTime.now());
@@ -79,14 +80,13 @@ public class AuthService {
 	public String verifyUser(LoginRequest req) {
 		String username = req.getUsername();
 		String password = req.getPassword();
-		String hashedPassword = AuthUtils.hash(password);
 		
 		User user = repo.getByUsername(username).orElse(null);
 		
 		if (user == null) {throw new NotFoundException("User not found");}
 		
 		try {
-			Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, hashedPassword));
+			Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 			
 			if (authentication.isAuthenticated()) {
 				UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -94,8 +94,19 @@ public class AuthService {
 			} else {
 				throw new UnauthorizedException("Incorrect Password");
 			}
-		} catch (Exception e) {
+		} catch (BadCredentialsException e) {
 			throw new UnauthorizedException("Incorrect Password");
+		} catch (IllegalArgumentException e) {
+			System.out.println("IllegalArgumentException: " + e.getMessage());
+			throw new UnauthorizedException("Authentication configuration error");
+		} catch (InternalAuthenticationServiceException e) {
+			System.out.println("InternalAuthenticationServiceException: " + e.getMessage());
+			throw new UnauthorizedException("Authentication failed");
+		} catch (Exception e) {
+			System.out.println("Exception type: " + e.getClass().getName());
+			System.out.println("Exception message: " + (e.getMessage() != null ? e.getMessage() : "null"));
+			e.printStackTrace();
+			throw new UnauthorizedException("Authentication failed");
 		}
 	}
 	
@@ -109,14 +120,12 @@ public class AuthService {
 		String id = AuthUtils.getUserId();
 		
 		if (String.valueOf(userId).equals(id) || AuthUtils.isAdmin()) {
-			String hashedOldPassword = user.getPassword();
-			String hashedSentOldPassword = AuthUtils.hash(request.getOldPassword());
-			String hashedSentNewPassword = AuthUtils.hash(request.getNewPassword());
-			if (hashedOldPassword.equals(hashedSentOldPassword)) {
-				if (hashedOldPassword.equals(hashedSentNewPassword)) {
-					throw new BadRequestException("Incorrect old password.");
+			String encodedOldPassword = user.getPassword();
+			if (encoder.matches(request.getOldPassword(), encodedOldPassword)) {
+				if (encoder.matches(request.getNewPassword(), encodedOldPassword)) {
+					throw new BadRequestException("Old and new passwords cannot be same.");
 				} else {
-					user.setPassword(hashedSentNewPassword);
+					user.setPassword(encoder.encode(request.getNewPassword()));
 					repo.save(user);
 				}				
 			} else {
