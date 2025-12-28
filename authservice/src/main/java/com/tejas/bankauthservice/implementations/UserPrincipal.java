@@ -10,14 +10,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.tejas.bankauthservice.models.User;
 
 public class UserPrincipal implements UserDetails{
-	// Store only serializable fields, not the entire JPA entity
 	private String username;
 	private String password;
 	private String role;
 
 	public UserPrincipal(User user) {
 		super();
-		// Extract only the necessary fields to avoid serialization issues
 		this.username = user.getUsername();
 		this.password = user.getPassword();
 		this.role = user.getRole() != null ? user.getRole().toString() : "USER";
