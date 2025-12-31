@@ -40,11 +40,6 @@ public class AuthController {
 		return ResponseEntity.ok().body(service.verifyUser(req));
 	}
 	
-	@GetMapping("/getcontact/{userId}")
-	public ResponseEntity<ContactDetails> getContact(@Valid @PathVariable Long userId) {
-		return ResponseEntity.ok().body(service.getContact(userId));
-	}
-	
 	@PutMapping("/changepassword/{userId}")
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<String> changePassword(@Valid @PathVariable Long userId, @Valid @RequestBody ChangePasswordRequest request) {
@@ -63,8 +58,14 @@ public class AuthController {
 		return ResponseEntity.ok().body(service.deleteUser(userId));
 	}	
 	
+	//INTERNAL METHODS
+	@GetMapping("/getcontact/{userId}")
+	public ResponseEntity<ContactDetails> getContact(@Valid @PathVariable Long userId) {
+		return ResponseEntity.ok().body(service.getContact(userId));
+	}
+	
 	@PostMapping("/sendotp/{userId}")
-	public ResponseEntity<Boolean> sendOtp(@Valid @RequestBody OtpRequestDTO request) {
+	public ResponseEntity<Boolean> sendPaymentOtp(@Valid @RequestBody OtpRequestDTO request) {
 		return ResponseEntity.ok().body(service.sendOtp(request));
 	}
 	
