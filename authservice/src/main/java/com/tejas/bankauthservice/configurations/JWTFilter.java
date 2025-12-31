@@ -54,15 +54,17 @@ public class JWTFilter extends OncePerRequestFilter {
 		}
 		
 		if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			User user = repo.getById(Long.parseLong(userId))
+			User user = repo.findById(Long.parseLong(userId))
 				.orElseThrow(() -> 
 					new NotFoundException("User not found")
 				);
 			
-			UserDetails userDetails = context.getBean(AuthUserDetailsService.class).loadUserByUsername(user.getUsername());
+			String username = user.getUsername();
+			
+			UserDetails userDetails = context.getBean(AuthUserDetailsService.class).loadUserByUsername(username);
 			
 			if (jwtService.validateToken(token, userDetails)) {
-				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userId, null, userDetails.getAuthorities());
 				authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 				SecurityContextHolder.getContext().setAuthentication(authToken);
 			}

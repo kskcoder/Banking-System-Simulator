@@ -10,15 +10,23 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.tejas.bankauthservice.models.User;
 
 public class UserPrincipal implements UserDetails{
+	private static final long serialVersionUID = 1L;
+	
+	private Long userId;
 	private String username;
 	private String password;
 	private String role;
 
 	public UserPrincipal(User user) {
 		super();
+		this.userId = user.getId();
 		this.username = user.getUsername();
 		this.password = user.getPassword();
 		this.role = user.getRole() != null ? user.getRole().toString() : "USER";
+	}
+	
+	public Long getUserId() {
+		return userId;
 	}
 
 	@Override

@@ -20,6 +20,7 @@ import com.tejas.bankingcommon.dto.OtpRequestDTO;
 import com.tejas.bankingcommon.dto.OtpValidateRequest;
 import com.tejas.bankingcommon.dto.OtpValidateResponse;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -45,16 +46,19 @@ public class AuthController {
 	}
 	
 	@PutMapping("/changepassword/{userId}")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<String> changePassword(@Valid @PathVariable Long userId, @Valid @RequestBody ChangePasswordRequest request) {
 		return ResponseEntity.ok().body(service.changePassword(userId, request));
 	}	
 	
 	@PutMapping("/makeadmin/{userId}")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<String> makeAdmin(@Valid @PathVariable Long userId) {
 		return ResponseEntity.ok().body(service.makeAdmin(userId));
 	}
 	
 	@DeleteMapping("/deleteuser/{userId}")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<String> deleteUser(@Valid @PathVariable Long userId) {
 		return ResponseEntity.ok().body(service.deleteUser(userId));
 	}	

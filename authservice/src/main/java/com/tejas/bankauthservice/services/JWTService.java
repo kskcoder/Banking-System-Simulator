@@ -12,6 +12,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.tejas.bankauthservice.implementations.UserPrincipal;
 import com.tejas.bankingcommon.enums.UserType;
 
 import io.jsonwebtoken.Claims;
@@ -68,8 +69,12 @@ public class JWTService {
     }
 	
 	public boolean validateToken(String token, UserDetails userDetails) {
-    	final String userName = extractUserId(token);
-        return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    	final String tokenUserId = extractUserId(token);
+    	if (userDetails instanceof UserPrincipal) {
+    		UserPrincipal principal = (UserPrincipal) userDetails;
+    		return (tokenUserId.equals(String.valueOf(principal.getUserId())) && !isTokenExpired(token));
+    	}
+    	return false;
 	}
 	
     private boolean isTokenExpired(String token) {

@@ -2,6 +2,8 @@ package com.tejas.bankauthservice.services;
 
 import java.time.LocalDateTime;
 
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -45,7 +47,15 @@ public class AuthService {
 	private final JWTService jwtService;
 	private final AuthUserDetailsService userDetailsService;
 	private final AuthOtpProducer otpProducer;
-	private final BCryptPasswordEncoder encoder;
+	private final BCryptPasswordEncoder passwordEncoder;
+	private final CacheManager cacheManager;
+	
+	private void evictUserCache(String username) {
+		Cache cache = cacheManager.getCache("user_details");
+		if (cache != null && username != null) {
+			cache.evict(username);
+		}
+	}
 
 	public User signupUser(SignupRequest req) {
 		User user1 = new User();
@@ -63,18 +73,18 @@ public class AuthService {
 		User user = new User();
 		user.setUsername(req.getUsername());
 		user.setEmail(req.getEmail());
-		user.setPassword(encoder.encode(req.getPassword()));  // Encode password with BCrypt
+		user.setPassword(passwordEncoder.encode(req.getPassword()));
 		user.setPhone(req.getPhone());
 		user.setRole(UserType.USER);
 		user.setCreatedAt(LocalDateTime.now());
 		user.setUpdatedAt(LocalDateTime.now());
 		try {
-			repo.save(user);
+			User savedUser = repo.save(user);
+			evictUserCache(savedUser.getUsername());
+			return savedUser;
 		} catch (Exception e) {
 			throw new GeneralServerException();
-		}
-		
-		return user;		
+		}		
 	}
 
 	public String verifyUser(LoginRequest req) {
@@ -111,7 +121,7 @@ public class AuthService {
 	}
 	
 	public String changePassword(long userId, ChangePasswordRequest request) {
-		User user = repo.getById(userId)
+		User user = repo.findById(userId)
 			.orElseThrow(() -> 
 				new NotFoundException("User not found")
 			);
@@ -121,12 +131,14 @@ public class AuthService {
 		
 		if (String.valueOf(userId).equals(id) || AuthUtils.isAdmin()) {
 			String encodedOldPassword = user.getPassword();
-			if (encoder.matches(request.getOldPassword(), encodedOldPassword)) {
-				if (encoder.matches(request.getNewPassword(), encodedOldPassword)) {
+			String username = user.getUsername();
+			if (passwordEncoder.matches(request.getOldPassword(), encodedOldPassword)) {
+				if (passwordEncoder.matches(request.getNewPassword(), encodedOldPassword)) {
 					throw new BadRequestException("Old and new passwords cannot be same.");
 				} else {
-					user.setPassword(encoder.encode(request.getNewPassword()));
+					user.setPassword(passwordEncoder.encode(request.getNewPassword()));
 					repo.save(user);
+					evictUserCache(username);
 				}				
 			} else {
 				throw new BadRequestException("Incorrect old password.");
@@ -135,7 +147,7 @@ public class AuthService {
 			throw new UnauthorizedException("You do not have access to this account.");
 		}
 		
-		return "User deleted successfully.";
+		return "Password changed successfully.";
 	}	
 
 	public String makeAdmin(long userId) {
@@ -150,8 +162,10 @@ public class AuthService {
 			if (user.getRole().equals(UserType.ADMIN)) {
 				throw new BadRequestException("User is already an admin.");
 			} else {
+				String username = user.getUsername();
 				user.setRole(UserType.ADMIN);
 				repo.save(user);
+				evictUserCache(username);
 			}
 		}
 		return "Changed role to admin successfully.";
@@ -167,7 +181,9 @@ public class AuthService {
 		String id = AuthUtils.getUserId();
 		
 		if (String.valueOf(userId).equals(id) || AuthUtils.isAdmin()) {
+			String username = user.getUsername();
 			repo.delete(user);
+			evictUserCache(username);
 		} else {
 			throw new UnauthorizedException("You do not have access to this account.");
 		}
