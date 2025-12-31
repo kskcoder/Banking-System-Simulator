@@ -17,6 +17,7 @@ import com.tejas.bankaccountservice.models.CreateAccountDTO;
 import com.tejas.bankaccountservice.services.AccountService;
 import com.tejas.bankingcommon.enums.AccountType;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 @RestController
@@ -26,43 +27,49 @@ public class AccountController {
 	AccountService accountService;
 	
 	@GetMapping
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<List<Account>> getAllAccounts() {
 		return ResponseEntity.ok().body(accountService.getAllAccounts());
 	}
 	
 	@PostMapping("/create")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<Account> createAccount(@Valid @RequestBody CreateAccountDTO accountReq) {
 		return ResponseEntity.ok().body(accountService.createAccount(accountReq));
 	}
 	
 	@GetMapping("/{account}")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<Account> getAccountByAccountNumber(@PathVariable String account) {
 		return ResponseEntity.ok().body(accountService.getAccountByAccountNumber(account));
 	}
 	
 	@GetMapping("/user/{userId}")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<List<Account>> getAccountByUserId(@PathVariable int userId) {
 		return ResponseEntity.ok().body(accountService.getAccountsByUserId(userId));
 	}
 	
-	@GetMapping("/accountIds")
-	public ResponseEntity<List<Long>> getAccountIdsByUserId() {
-		return ResponseEntity.ok().body(accountService.getAccountIdsByUserId());
-	}
-	
 	@DeleteMapping("/close/{account}")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<String> closeAccount(@PathVariable String account) {
 		return ResponseEntity.ok().body(accountService.closeAccount(account));
 	}
 	
+	//INTERNAL METHODS
 	@GetMapping("/accountnumber/{accountNumber}/is-owner")
-	public ResponseEntity<Boolean> isOwnerOfAccount(@PathVariable String accountNumber) {
+	public ResponseEntity<Boolean> isOwnerOfAccountNumber(@PathVariable String accountNumber) {
 		return ResponseEntity.ok().body(accountService.isOwnerOfAccountNumber(accountNumber));
 	}
 	
 	@GetMapping("/accountid/{accountId}/is-owner")
 	public ResponseEntity<Boolean> isOwnerOfAccount(@PathVariable long accountId) {
 		return ResponseEntity.ok().body(accountService.isOwnerOfAccountId(accountId));
+	}
+	
+	@GetMapping("/accountIds")
+	public ResponseEntity<List<Long>> getAccountIdsByUserId() {
+		return ResponseEntity.ok().body(accountService.getAccountIdsByUserId());
 	}
 	
 	@GetMapping("/accountid/{accountId}/type")

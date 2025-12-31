@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -26,11 +28,56 @@ public class AccountService {
 	@Autowired
 	private AccountRepo repo;
 	
+	@Autowired
+	private CacheManager cacheManager;
+	
+	public void evictAccountCache(Long accountId) {
+		Cache accountDetailsCache = cacheManager.getCache("account_details");
+		if (accountDetailsCache != null && accountId != null) {
+			accountDetailsCache.evict(accountId);
+		}
+		
+		Cache balanceCache = cacheManager.getCache("balance");
+		if (balanceCache != null && accountId != null) {
+			balanceCache.evict(accountId);
+		}
+		
+		Cache accountTypeCache = cacheManager.getCache("account_type");
+		if (accountTypeCache != null && accountId != null) {
+			accountTypeCache.evict(accountId);
+		}
+		
+		Cache userIdCache = cacheManager.getCache("userId");
+		if (userIdCache != null && accountId != null) {
+			userIdCache.evict(accountId);
+		}
+	}
+	
+	private void evictUserAccountsCache(Long userId) {
+		Cache userAccountsCache = cacheManager.getCache("all_accounts_of_userid");
+		if (userAccountsCache != null && userId != null) {
+			userAccountsCache.evict(userId);
+		}
+	}
+	
+	private void evictAllAccountIdsCache() {
+		Cache allAccountIdsCache = cacheManager.getCache("all_account_ids");
+		if (allAccountIdsCache != null) {
+			allAccountIdsCache.clear();
+		}
+	}
+	
     public String generateAccountNumber(int userId) {
         return "AC" + userId + System.currentTimeMillis() + (int)(Math.random() * 1000);
     }
 	
 	public Account createAccount(CreateAccountDTO accountReq) {
+		String userId = AccountUtils.getUserId();
+		
+		if (!(String.valueOf(accountReq.getUserId()).equals(userId) || AccountUtils.isAdmin())) {
+			throw new GeneralServerException();
+		}
+		
 		Account account = new Account();
 		account.setUserid(accountReq.getUserId());
 		account.setAccountnumber(generateAccountNumber(accountReq.getUserId()));
@@ -38,12 +85,13 @@ public class AccountService {
 		account.setBalance(accountReq.getInitialAmount());
 		
 		try {
-			repo.save(account);
+			Account savedAccount = repo.save(account);
+			evictUserAccountsCache(Long.valueOf(savedAccount.getUserid()));
+			evictAllAccountIdsCache();
+			return savedAccount;
 		} catch (Exception e) {
 			throw new GeneralServerException();
 		}
-		
-		return account;
 	}
 
 	public Account getAccountByAccountNumber(String accountNumber) {
@@ -106,7 +154,12 @@ public class AccountService {
 		
 		if (account != null) {
 			if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
+				Long accountId = account.getId();
+				Long accountUserId = Long.valueOf(account.getUserid());
 				repo.delete(account);
+				evictAccountCache(accountId);
+				evictUserAccountsCache(accountUserId);
+				evictAllAccountIdsCache();
 				return "Successful";
 			} else {
 				throw new ForbiddenException("You do not have permission to access this resource.");
