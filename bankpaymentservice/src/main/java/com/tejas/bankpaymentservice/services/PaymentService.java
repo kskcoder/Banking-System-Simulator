@@ -2,6 +2,10 @@ package com.tejas.bankpaymentservice.services;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,6 +33,23 @@ public class PaymentService {
 	private final AuthInterface authInt;
 	private final TransactionInterface trInt;
 	
+	@Autowired
+	private CacheManager cacheManager;
+	
+	public void evictPaymentCache(Long paymentId) {
+		Cache paymentCache = cacheManager.getCache("payment_details");
+		if (paymentCache != null && paymentId != null) {
+			paymentCache.evict(paymentId);
+		}
+	}
+	
+	private void evictAllPaymentsCache() {
+		Cache allPaymentsCache = cacheManager.getCache("all_payments");
+		if (allPaymentsCache != null) {
+			allPaymentsCache.clear();
+		}
+	}
+	
 	public ResponseEntity<PaymentResponse> initiateRequest(InitiatePaymentDTO initiateReq) {
 		
 		Payment payment = Payment.builder()
@@ -40,16 +61,15 @@ public class PaymentService {
 				.status(PaymentStatus.INITIATED)
 				.build();
 		try {
-			repo.save(payment);
+			Payment savedPayment = repo.save(payment);
+			evictAllPaymentsCache();
+			return processInitialPayment(initiateReq, savedPayment);
 		} catch(Exception e) {
 			throw new GeneralServerException();
 		}
-		
-		return processInitialPayment(initiateReq, payment);
 	}
 	
 	//Admin related functions
-
 	public ResponseEntity<List<Payment>> getAllPayments() {
 		String role = ((ServletRequestAttributes) RequestContextHolder
 		        .getRequestAttributes())
@@ -58,13 +78,18 @@ public class PaymentService {
 		
 		if (!role.equals("ADMIN")) {throw new ForbiddenException("You do not have permission to access this resource.");}
 		
-		List<Payment> payments = repo.findAll();
+		List<Payment> payments = cachedGetAllPayments();
 		
 		if (!payments.isEmpty()) {
 			return ResponseEntity.ok().body(payments);
 		}
 		
 		throw new NoContentException("No payments found.");
+	}
+	
+	@Cacheable(value="all_payments", unless="#result == null || #result.isEmpty()")
+	protected List<Payment> cachedGetAllPayments() {
+		return repo.findAll();
 	}
 	
 	//Helper functions
@@ -89,6 +114,8 @@ public class PaymentService {
 				
 				payment.setStatus(PaymentStatus.FAILED);
 				repo.save(payment);
+				evictPaymentCache(payment.getId());
+				evictAllPaymentsCache();
 				
 				return ResponseEntity.ok().body(paymentRes);
 			}
@@ -130,6 +157,8 @@ public class PaymentService {
 				
 				payment.setStatus(PaymentStatus.FAILED);
 				repo.save(payment);
+				evictPaymentCache(payment.getId());
+				evictAllPaymentsCache();
 				
 				return ResponseEntity.ok().body(paymentRes);
 			}
@@ -139,7 +168,7 @@ public class PaymentService {
 	}
 
 	public ResponseEntity<OtpValidateResponse> submitOtp(SubmitPaymentOtp otpRequest) {
-		Payment payment = repo.getById(otpRequest.getPaymentId());
+		Payment payment = getCachedPayment(otpRequest.getPaymentId());
 		
 		if (payment != null) {
 			if (payment.getStatus().equals(PaymentStatus.FAILED)) {
@@ -171,6 +200,8 @@ public class PaymentService {
 				
 				payment.setStatus(PaymentStatus.INCORRECT_OTP);
 				repo.save(payment);
+				evictPaymentCache(payment.getId());
+				evictAllPaymentsCache();
 				
 				return new ResponseEntity<>(submitResponse, HttpStatus.UNAUTHORIZED);
 			}
@@ -209,7 +240,18 @@ public class PaymentService {
 		
 		payment.setStatus(PaymentStatus.OTP_VERIFIED);
 		repo.save(payment);
+		evictPaymentCache(payment.getId());
+		evictAllPaymentsCache();
 		
 		return ResponseEntity.ok().body(submitResponse);
+	}
+	
+	@Cacheable(value="payment_details", key="#paymentId", unless="#result == null")
+	protected Payment getCachedPayment(Long paymentId) {
+		Payment payment = repo.getById(paymentId);
+		if (payment == null) {
+			throw new NotFoundException("Incorrect Payment Id");
+		}
+		return payment;
 	}
 }

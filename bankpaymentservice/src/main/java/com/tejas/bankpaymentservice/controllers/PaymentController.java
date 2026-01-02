@@ -17,6 +17,7 @@ import com.tejas.bankpaymentservice.models.Payment;
 import com.tejas.bankpaymentservice.models.PaymentResponse;
 import com.tejas.bankpaymentservice.services.PaymentService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 @RestController
@@ -25,7 +26,8 @@ public class PaymentController {
 	@Autowired
 	PaymentService paymentService;
 	
-	@GetMapping
+	@GetMapping("/all")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<List<Payment>> getAllPayments() {
 		return paymentService.getAllPayments();
 	}
