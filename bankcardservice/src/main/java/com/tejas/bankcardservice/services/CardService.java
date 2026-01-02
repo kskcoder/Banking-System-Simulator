@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -39,6 +42,30 @@ public class CardService {
 	private final CardGenerals generals;	
 	private final AccountInterface accInterface;
 	
+	@Autowired
+	private CacheManager cacheManager;
+	
+	public void evictCardCache(Long accountId) {
+		Cache cardCache = cacheManager.getCache("card_of_accountid");
+		if (cardCache != null && accountId != null) {
+			cardCache.evict(accountId);
+		}
+	}
+	
+	private void evictUserCardsCache(Long userId) {
+		Cache userCardsCache = cacheManager.getCache("all_cards_of_userid");
+		if (userCardsCache != null && userId != null) {
+			userCardsCache.evict(userId);
+		}
+	}
+	
+	private void evictAllCardsCache() {
+		Cache allCardsCache = cacheManager.getCache("all_cards");
+		if (allCardsCache != null) {
+			allCardsCache.clear();
+		}
+	}
+	
 	public FirstCardResponse createCard(long accountId) {
 		if (!isOwner(accountId)) {throw new ForbiddenException("You do not have permission to use this card.");}
 		if (repo.existsByAccountId(accountId)) {throw new AlreadyExistsException(String.valueOf(accountId));}
@@ -68,6 +95,9 @@ public class CardService {
 				.build();
 		
 		repo.save(card);
+		long userId = Long.parseLong(GeneralUtils.getUserId());
+		evictUserCardsCache(userId);
+		evictAllCardsCache();
 		
 		FirstCardResponse cardNew = FirstCardResponse.builder()
 				.cardNumber(CardMask.formatCardNumber(rawCardNumber))
@@ -144,6 +174,10 @@ public class CardService {
 		
 		card.setStatus(AccountCardStatus.BLOCKED);
 		repo.save(card);
+		long userId = Long.parseLong(GeneralUtils.getUserId());
+		evictCardCache(accountId);
+		evictUserCardsCache(userId);
+		evictAllCardsCache();
 		
 		GeneralCardResponse cardNew = new GeneralCardResponse();
 		cardNew = generals.createGeneralCardResponse(card);
@@ -161,6 +195,10 @@ public class CardService {
 		
 		card.setStatus(AccountCardStatus.ACTIVE);
 		repo.save(card);
+		long userId = Long.parseLong(GeneralUtils.getUserId());
+		evictCardCache(accountId);
+		evictUserCardsCache(userId);
+		evictAllCardsCache();
 		
 		GeneralCardResponse cardNew = new GeneralCardResponse();
 		cardNew = generals.createGeneralCardResponse(card);
@@ -175,7 +213,11 @@ public class CardService {
 		
 		if (!isOwner(card.getAccountId())) {throw new ForbiddenException("You do not have permission to use this card.");}
 		
+		long userId = Long.parseLong(GeneralUtils.getUserId());
 		repo.delete(card);
+		evictCardCache(accountId);
+		evictUserCardsCache(userId);
+		evictAllCardsCache();
 		
 		GeneralCardResponse cardNew = new GeneralCardResponse();
 		cardNew = generals.createGeneralCardResponse(card);
@@ -219,7 +261,6 @@ public class CardService {
 			return reponse;
 		}
 	}
-	
 
 	private boolean isOwner(long pathAccId) {
 		String role = ((ServletRequestAttributes) RequestContextHolder
