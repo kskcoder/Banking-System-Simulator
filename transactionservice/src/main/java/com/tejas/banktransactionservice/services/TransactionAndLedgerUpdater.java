@@ -2,6 +2,9 @@ package com.tejas.banktransactionservice.services;
 
 import java.time.LocalDateTime;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import com.tejas.bankingcommon.dto.TransactionEvent;
@@ -20,6 +23,42 @@ public class TransactionAndLedgerUpdater {
 	
 	private final TransactionLedgerRepo ledgerRepo;
 	
+	@Autowired
+	private CacheManager cacheManager;
+	
+	private void evictTransactionCache(Long transactionId) {
+		Cache transactionCache = cacheManager.getCache("transaction_details");
+		if (transactionCache != null && transactionId != null) {
+			transactionCache.evict(transactionId);
+		}
+	}
+	
+	private void evictTransactionRecordsCache(String accountNumber) {
+		Cache transactionRecordsCache = cacheManager.getCache("transaction_records");
+		if (transactionRecordsCache != null) {
+			transactionRecordsCache.clear();
+		}
+		
+		Cache transactionRecordsDatedCache = cacheManager.getCache("transaction_records_dated");
+		if (transactionRecordsDatedCache != null) {
+			transactionRecordsDatedCache.clear();
+		}
+	}
+	
+	private void evictStatementCache(String accountNumber) {
+		Cache statementCache = cacheManager.getCache("statement_pdf");
+		if (statementCache != null) {
+			statementCache.clear();
+		}
+	}
+	
+	private void evictAllLedgerTransactionsCache() {
+		Cache allLedgerCache = cacheManager.getCache("all_ledger_transactions");
+		if (allLedgerCache != null) {
+			allLedgerCache.clear();
+		}
+	}
+	
 	public void saveTransaction(TransactionEvent trEvent) {
 		if (trEvent.getTransactionId() == null) {
 			return;
@@ -27,7 +66,12 @@ public class TransactionAndLedgerUpdater {
 		Transaction tx = repo.findById(trEvent.getTransactionId());
 		tx.setStatus(trEvent.getStatus());
 		tx.setUpdatedAt(LocalDateTime.now());
-		repo.save(tx);		
+		Transaction savedTx = repo.save(tx);
+		evictTransactionCache(savedTx.getId());
+		evictTransactionRecordsCache(savedTx.getFromAccount());
+		evictTransactionRecordsCache(savedTx.getToAccount());
+		evictStatementCache(savedTx.getFromAccount());
+		evictStatementCache(savedTx.getToAccount());
 	}
 	
 	public void saveTransactionRecord(TransactionEvent trEvent, boolean isRepayOrCredit) {
@@ -42,6 +86,10 @@ public class TransactionAndLedgerUpdater {
 		}
 		
 		ledgerRepo.save(rec);
+		String accountNumber = isRepayOrCredit ? trEvent.getToAccountNumber() : trEvent.getFromAccountNumber();
+		evictTransactionRecordsCache(accountNumber);
+		evictStatementCache(accountNumber);
+		evictAllLedgerTransactionsCache();
 	}
 	
 	public TransactionLedgerRecord createNewLedgerRecord(TransactionEvent trEvent, boolean isRepayOrCredit) {
@@ -71,6 +119,9 @@ public class TransactionAndLedgerUpdater {
 		rec.setCreatedAt(LocalDateTime.now()); 
 		
 		ledgerRepo.save(rec);
+		evictTransactionRecordsCache(trEvent.getToAccountNumber());
+		evictStatementCache(trEvent.getToAccountNumber());
+		evictAllLedgerTransactionsCache();
 	}
 
 	

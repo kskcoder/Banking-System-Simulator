@@ -3,6 +3,9 @@ package com.tejas.banktransactionservice.services;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +44,49 @@ public class TransactionService {
     private final TransactionProducer trProducer;
 	private final AccountInterface accInterface;
 	private final PdfStatementGenerator statementGenerator;
+	
+	@Autowired
+	private CacheManager cacheManager;
+	
+	public void evictTransactionCache(Long l) {
+		Cache transactionCache = cacheManager.getCache("transaction_details");
+		if (transactionCache != null && l != null) {
+			transactionCache.evict(l);
+		}
+	}
+	
+	public void evictTransactionRecordsCache(String accountNumber) {
+		Cache transactionRecordsCache = cacheManager.getCache("transaction_records");
+		if (transactionRecordsCache != null) {
+			transactionRecordsCache.clear();
+		}
+		
+		Cache transactionRecordsDatedCache = cacheManager.getCache("transaction_records_dated");
+		if (transactionRecordsDatedCache != null) {
+			transactionRecordsDatedCache.clear();
+		}
+	}
+	
+	public void evictStatementCache(String accountNumber) {
+		Cache statementCache = cacheManager.getCache("statement_pdf");
+		if (statementCache != null) {
+			statementCache.clear();
+		}
+	}
+	
+	private void evictAllTransfersCache() {
+		Cache allTransfersCache = cacheManager.getCache("all_transfers");
+		if (allTransfersCache != null) {
+			allTransfersCache.clear();
+		}
+	}
+	
+	private void evictAllLedgerTransactionsCache() {
+		Cache allLedgerCache = cacheManager.getCache("all_ledger_transactions");
+		if (allLedgerCache != null) {
+			allLedgerCache.clear();
+		}
+	}
 
     @Transactional
     public Transaction transfer(TransferRequest request) {
@@ -60,27 +106,34 @@ public class TransactionService {
         	throw new BadRequestException("Sender and receiver must be different");
         }
         
-        repo.save(txn);
+        Transaction savedTxn = repo.save(txn);
         
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         
         Long paymentId = AuthUtils.getRole().equals(UserType.INTERNAL_SERVICE.toString()) ? request.getPaymentId() : null;
         
         TransactionEvent event = new TransactionEvent(); 
-    	event.setTransactionId(txn.getId());
+    	event.setTransactionId(savedTxn.getId());
     	event.setUserId(Integer.parseInt(userId));
     	event.setPaymentId(paymentId);
-    	event.setFromAccountNumber(txn.getFromAccount());
-    	event.setToAccountNumber(txn.getToAccount());
-    	event.setAmount(txn.getAmount());
+    	event.setFromAccountNumber(savedTxn.getFromAccount());
+    	event.setToAccountNumber(savedTxn.getToAccount());
+    	event.setAmount(savedTxn.getAmount());
     	event.setType(TransactionType.DEBIT);
     	event.setStatus(TransactionStatus.PENDING);  
     	
     	trUpdater.saveTransaction(event);
+    	evictTransactionCache(savedTxn.getId());
+    	evictTransactionRecordsCache(savedTxn.getFromAccount());
+    	evictTransactionRecordsCache(savedTxn.getToAccount());
+    	evictStatementCache(savedTxn.getFromAccount());
+    	evictStatementCache(savedTxn.getToAccount());
+    	evictAllTransfersCache();
+    	evictAllLedgerTransactionsCache();
         
         trProducer.dispatchDebitWithRetry(event);
         
-        return txn;
+        return savedTxn;
     }
 
     @Transactional
@@ -88,7 +141,14 @@ public class TransactionService {
 		Transaction tx = repo.findById(trEvent.getTransactionId());
 		tx.setStatus(trEvent.getStatus());
 		tx.setUpdatedAt(LocalDateTime.now());
-		repo.save(tx);
+		Transaction savedTx = repo.save(tx);
+		evictTransactionCache(savedTx.getId());
+		evictTransactionRecordsCache(savedTx.getFromAccount());
+		evictTransactionRecordsCache(savedTx.getToAccount());
+		evictStatementCache(savedTx.getFromAccount());
+		evictStatementCache(savedTx.getToAccount());
+		evictAllTransfersCache();
+		evictAllLedgerTransactionsCache();
 	}
 
 	public Transaction getTransaction(int txnId) {

@@ -26,6 +26,7 @@ import com.tejas.banktransactionservice.models.Transaction;
 import com.tejas.banktransactionservice.models.TransactionLedgerRecord;
 import com.tejas.banktransactionservice.services.TransactionService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 @RestController
@@ -35,26 +36,31 @@ public class TransactionController {
 	TransactionService trService;
 
 	@GetMapping("/all")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<List<Transaction>> getAllTransfers() {
 		return ResponseEntity.ok().body(trService.getAllTransfers());
 	}
 	
 	@GetMapping("/ledger/all")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<List<TransactionLedgerRecord>> getAllLedgerTransactions() {
 		return ResponseEntity.ok().body(trService.getAllLedgerTransaction());
 	}
 		
 	@PostMapping("/transfer")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<Transaction> transfer(@Valid @RequestBody TransferRequest request) {
 		return ResponseEntity.ok().body(trService.transfer(request));
 	}
 	
 	@GetMapping("/transaction/{txnId}")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<Transaction> getTransaction(@PathVariable int txnId) {
 		return ResponseEntity.ok().body(trService.getTransaction(txnId));
 	}
 	
 	@GetMapping("/ledger/debit/{accountNumber}")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<Page<TransactionLedgerRecord>> getDebitLedgerTransaction(
 			@PathVariable String accountNumber,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
@@ -64,6 +70,7 @@ public class TransactionController {
 	}
 	
 	@GetMapping("/ledger/credit/{accountNumber}")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<Page<TransactionLedgerRecord>> getCreditLedgerTransaction(
 			@PathVariable String accountNumber,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
@@ -72,7 +79,8 @@ public class TransactionController {
 		return ResponseEntity.ok().body(trService.getCreditTransaction(accountNumber, from, to, pageable));
 	}
 	
-	@GetMapping("/ledger/all/{accountNumber}")	
+	@GetMapping("/ledger/all/{accountNumber}")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<Page<TransactionLedgerRecord>> getAllLedgerTransactions(
 			@PathVariable String accountNumber,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
@@ -81,7 +89,8 @@ public class TransactionController {
 		return ResponseEntity.ok().body(trService.getAllTransaction(accountNumber, from, to, pageable));
 	}
 	
-	@GetMapping("/ledger/statement/{accountNumber}")	
+	@GetMapping("/ledger/statement/{accountNumber}")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<byte[]> getStatement(
 			@PathVariable String accountNumber,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
