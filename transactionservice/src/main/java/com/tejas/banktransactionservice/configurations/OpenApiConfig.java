@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
         servers = {
                 @Server(
                 		url = "/bankpaymentservice", 
-                		description = "API Gateway")
+                		description = "Transaction Service")
         }
 )
 public class OpenApiConfig {
