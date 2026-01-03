@@ -70,7 +70,7 @@ public class PaymentService {
 	}
 	
 	//Admin related functions
-	public ResponseEntity<List<Payment>> getAllPayments() {
+	public List<Payment> getAllPayments() {
 		String role = ((ServletRequestAttributes) RequestContextHolder
 		        .getRequestAttributes())
 		        .getRequest()
@@ -81,7 +81,7 @@ public class PaymentService {
 		List<Payment> payments = cachedGetAllPayments();
 		
 		if (!payments.isEmpty()) {
-			return ResponseEntity.ok().body(payments);
+			return payments;
 		}
 		
 		throw new NoContentException("No payments found.");
