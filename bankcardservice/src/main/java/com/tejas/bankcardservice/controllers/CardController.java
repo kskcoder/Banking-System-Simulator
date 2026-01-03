@@ -18,6 +18,7 @@ import com.tejas.bankcardservice.services.CardService;
 import com.tejas.bankingcommon.dto.CardVerificationRequest;
 import com.tejas.bankingcommon.dto.CardVerificationResponse;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
@@ -70,6 +71,7 @@ public class CardController {
 	}
 	
 	//INTERNAL METHODS
+	@Hidden
 	@PostMapping("/verify")
 	public ResponseEntity<CardVerificationResponse> verifyCard(@RequestBody CardVerificationRequest request) {
 		return ResponseEntity.ok().body(cardService.verifyCard(request));
