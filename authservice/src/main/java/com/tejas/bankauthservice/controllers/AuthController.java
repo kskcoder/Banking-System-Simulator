@@ -20,6 +20,7 @@ import com.tejas.bankingcommon.dto.OtpRequestDTO;
 import com.tejas.bankingcommon.dto.OtpValidateRequest;
 import com.tejas.bankingcommon.dto.OtpValidateResponse;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -59,16 +60,19 @@ public class AuthController {
 	}	
 	
 	//INTERNAL METHODS
+	@Hidden
 	@GetMapping("/getcontact/{userId}")
 	public ResponseEntity<ContactDetails> getContact(@Valid @PathVariable Long userId) {
 		return ResponseEntity.ok().body(service.getContact(userId));
 	}
 	
+	@Hidden
 	@PostMapping("/sendotp/{userId}")
 	public ResponseEntity<Boolean> sendPaymentOtp(@Valid @RequestBody OtpRequestDTO request) {
 		return ResponseEntity.ok().body(service.sendOtp(request));
 	}
 	
+	@Hidden
 	@PostMapping("/submitotp")
 	public ResponseEntity<OtpValidateResponse> validateOtp(@Valid @RequestBody OtpValidateRequest request) {
 		return ResponseEntity.ok().body(service.validateOtp(request));
