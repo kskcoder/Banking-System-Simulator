@@ -11,10 +11,10 @@ public class AuthUtils {
 
         if (auth == null)
             return false;
-
+        
         boolean isAdmin = auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(role -> role.equals("ROLE_ADMIN"));
+                .anyMatch(role -> role.equals("ADMIN"));
         return isAdmin;
     }
     

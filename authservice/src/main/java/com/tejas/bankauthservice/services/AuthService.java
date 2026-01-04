@@ -151,14 +151,12 @@ public class AuthService {
 	}	
 
 	public String makeAdmin(long userId) {
-		User user = repo.getById(userId)
-			.orElseThrow(() -> 
-				new NotFoundException("User not found")
-			);
-		
-		if (user == null) {throw new NotFoundException("User not found");}
-		
 		if (AuthUtils.isAdmin()) {
+			User user = repo.getById(userId)
+					.orElseThrow(() -> 
+						new NotFoundException("User not found")
+					);
+			
 			if (user.getRole().equals(UserType.ADMIN)) {
 				throw new BadRequestException("User is already an admin.");
 			} else {
@@ -166,9 +164,11 @@ public class AuthService {
 				user.setRole(UserType.ADMIN);
 				repo.save(user);
 				evictUserCache(username);
+				return "Changed role to admin successfully.";
 			}
-		}
-		return "Changed role to admin successfully.";
+		} else {
+			throw new UnauthorizedException("You do not have access to this account.");
+		}		
 	}
 
 	public String deleteUser(long userId) {
