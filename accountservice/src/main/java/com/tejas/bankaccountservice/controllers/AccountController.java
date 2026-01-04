@@ -115,7 +115,7 @@ public class AccountController {
 		example = "1",
 		schema = @Schema(type = "integer", format = "int64")
 	)
-	public ResponseEntity<Boolean> isOwnerOfAccount(@PathVariable long accountId) {
+	public ResponseEntity<Boolean> isOwnerOfAccountId(@PathVariable long accountId) {
 		return ResponseEntity.ok().body(accountService.isOwnerOfAccountId(accountId));
 	}
 	
@@ -151,5 +151,19 @@ public class AccountController {
 	)
 	public ResponseEntity<Long> getuserIdByAccountId(@PathVariable long accountId) {
 		return ResponseEntity.ok().body(accountService.getuserIdByAccountId(accountId));
+	}
+	
+	@Hidden
+	@GetMapping("/exists/{accountId}")
+	@Parameter(
+		name = "accountId",
+		in = ParameterIn.PATH,
+		required = true,
+		description = "Account ID to check existence",
+		example = "1",
+		schema = @Schema(type = "integer", format = "int64")
+	)
+	public ResponseEntity<Boolean> accountExists(@Valid @PathVariable Long accountId) {
+		return ResponseEntity.ok().body(accountService.accountExists(accountId));
 	}
 }

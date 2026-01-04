@@ -9,7 +9,6 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.tejas.bankaccountservice.feign.AuthInterface;
@@ -24,6 +23,8 @@ import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
+
+import feign.FeignException;
 
 @Service
 public class AccountService {
@@ -77,8 +78,14 @@ public class AccountService {
     }
 	
 	public Account createAccount(CreateAccountDTO accountReq) {
-		ResponseEntity<Boolean> userExistsResponse = authInterface.userExists(Long.valueOf(accountReq.getUserId()));
-		if (userExistsResponse.getBody() == null || !userExistsResponse.getBody()) {
+		boolean userExistsResponse = false;
+		try {
+			userExistsResponse = authInterface.userExists(Long.valueOf(accountReq.getUserId())).getBody();
+		} catch (FeignException e) {
+			throw new GeneralServerException();
+		}
+		
+		if (!userExistsResponse) {
 			throw new GeneralServerException();
 		}
 		
@@ -123,7 +130,7 @@ public class AccountService {
 	public List<Account> getAccountsByUserId(int userId) {
 		List<Account> accounts = repo.getByUserid(userId).get();
 		
-		if (accounts != null) {
+		if (!accounts.isEmpty()) {
 			if (isOwnerOfAccountId(accounts.stream().findFirst().get().getId())) {
 				return accounts;
 			} else {
@@ -227,7 +234,7 @@ public class AccountService {
 		String userId = AccountUtils.getUserId();
 		List<Account> accounts = repo.getByUserid(Long.parseLong(userId)).get();
 		
-		if (accounts != null) {
+		if (!accounts.isEmpty()) {
 			if (String.valueOf(accounts.stream().findFirst().get().getUserid()).equals(userId) || AccountUtils.isAdmin()) {
 				List<Long> accountIds = accounts.stream().map(Account::getId).collect(Collectors.toList());
 				return accountIds;
@@ -247,6 +254,19 @@ public class AccountService {
 		}
 			
 		throw new NotFoundException("Requested account not found.");
+	}
+	
+	public Boolean accountExists(Long accountId) {
+		String requestingUserId = AccountUtils.getUserId();
+		Account account = repo.getById(accountId).get();
+		
+		long userId = account.getUserid();
+		
+		if (AccountUtils.isAdmin() || String.valueOf(userId).equals(requestingUserId)) {
+			return repo.getById(accountId).isPresent();
+		} else {
+			throw new ForbiddenException("You do not have permission to access this resource.");
+		}
 	}
 	
 	//Admin related functions
