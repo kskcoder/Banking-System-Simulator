@@ -9,8 +9,10 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.tejas.bankaccountservice.feign.AuthInterface;
 import com.tejas.bankaccountservice.models.Account;
 import com.tejas.bankaccountservice.models.CreateAccountDTO;
 import com.tejas.bankaccountservice.repositories.AccountRepo;
@@ -30,6 +32,9 @@ public class AccountService {
 	
 	@Autowired
 	private CacheManager cacheManager;
+	
+	@Autowired
+	private AuthInterface authInterface;
 	
 	public void evictAccountCache(Long accountId) {
 		Cache accountDetailsCache = cacheManager.getCache("account_details");
@@ -72,6 +77,11 @@ public class AccountService {
     }
 	
 	public Account createAccount(CreateAccountDTO accountReq) {
+		ResponseEntity<Boolean> userExistsResponse = authInterface.userExists(Long.valueOf(accountReq.getUserId()));
+		if (userExistsResponse.getBody() == null || !userExistsResponse.getBody()) {
+			throw new GeneralServerException();
+		}
+		
 		String userId = AccountUtils.getUserId();
 		
 		if (!(String.valueOf(accountReq.getUserId()).equals(userId) || AccountUtils.isAdmin())) {
