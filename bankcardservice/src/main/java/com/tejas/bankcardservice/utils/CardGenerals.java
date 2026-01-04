@@ -56,7 +56,7 @@ public class CardGenerals {
 	
 	public GeneralCardResponse createGeneralCardResponse(Card card) {
 		return GeneralCardResponse.builder()
-				.expiry(card.getLastDigits())
+				.expiry(card.getExpiryDate())
 				.maskedCardNumber(CardMask.maskCardNumber(card.getLastDigits(), true))
 				.status(card.getStatus())
 				.limit(card.getCardLimit())

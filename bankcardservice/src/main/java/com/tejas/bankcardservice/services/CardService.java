@@ -28,6 +28,7 @@ import com.tejas.bankingcommon.enums.AccountType;
 import com.tejas.bankingcommon.enums.UserType;
 import com.tejas.bankingcommon.exceptions.BadRequestException;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
+import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
 
@@ -67,6 +68,17 @@ public class CardService {
 	}
 	
 	public FirstCardResponse createCard(long accountId) {
+		boolean accountExistsResponse = false;
+		try {
+			accountExistsResponse = accInterface.accountExists(accountId).getBody();
+		} catch (FeignException e) {
+			throw new GeneralServerException();
+		}
+		
+		if (!accountExistsResponse) {
+			throw new GeneralServerException();
+		}
+		
 		if (!isOwner(accountId)) {throw new ForbiddenException("You do not have permission to use this card.");}
 		if (repo.existsByAccountId(accountId)) {throw new AlreadyExistsException(String.valueOf(accountId));}
 		String rawCardNumber;
@@ -137,7 +149,12 @@ public class CardService {
 	
 	@Cacheable(value="all_cards_of_userid", key="#userId")
 	protected List<GeneralCardResponse> cachedGetUsersAllCards(long userId) {
-		List<Long> accountIds = accInterface.getAccountIdsByUserId().getBody();
+		List<Long> accountIds = new ArrayList<>();
+		try {
+			accountIds = accInterface.getAccountIdsByUserId().getBody();
+		} catch (FeignException e) {
+			throw new NotFoundException("Unauthorised or no accounts associated with User ID: "+userId);
+		}
 		
 		if (!accountIds.isEmpty()) {
 			List<Card> cards = new ArrayList<>();
@@ -193,7 +210,7 @@ public class CardService {
 		
 		if (!isOwner(card.getAccountId())) {throw new ForbiddenException("You do not have permission to use this card.");}
 		
-		card.setStatus(AccountCardStatus.ACTIVE);
+		card.setStatus(AccountCardStatus.INACTIVE);
 		repo.save(card);
 		long userId = Long.parseLong(GeneralUtils.getUserId());
 		evictCardCache(accountId);

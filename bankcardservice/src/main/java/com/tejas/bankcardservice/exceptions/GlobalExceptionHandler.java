@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler
-	public ResponseEntity<ApiError> handleAccountNotFound(NotFoundException e, HttpServletRequest req) {
+	public ResponseEntity<ApiError> handleCardNotFound(NotFoundException e, HttpServletRequest req) {
 		ApiError error = new ApiError(
 				LocalDateTime.now(),
 				HttpStatus.NOT_FOUND.value(),

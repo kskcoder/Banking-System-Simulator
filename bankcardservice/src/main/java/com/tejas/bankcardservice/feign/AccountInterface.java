@@ -19,4 +19,7 @@ public interface AccountInterface {
 	
 	@GetMapping("accounts/accountIds")
 	public ResponseEntity<List<Long>> getAccountIdsByUserId();
+	
+	@GetMapping("accounts/exists/{accountId}")
+	public ResponseEntity<Boolean> accountExists(@PathVariable Long accountId);
 }
