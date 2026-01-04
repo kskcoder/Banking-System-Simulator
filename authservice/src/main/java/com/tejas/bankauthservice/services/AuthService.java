@@ -214,6 +214,16 @@ public class AuthService {
 		
 			return details;
 	}
+	
+	public Boolean userExists(Long userId) {
+		String requestingUserId = AuthUtils.getUserId();
+		
+		if (AuthUtils.isAdmin() || String.valueOf(userId).equals(requestingUserId)) {
+			return repo.findById(userId).isPresent();
+		} else {
+			throw new UnauthorizedException("You do not have access to this account.");
+		}
+	}
 
 	public Boolean sendOtp(OtpRequestDTO request) {
 		User user = repo.getById(request.getUserId())

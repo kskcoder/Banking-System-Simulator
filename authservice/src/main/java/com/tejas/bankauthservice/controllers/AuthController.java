@@ -106,6 +106,20 @@ public class AuthController {
 	}
 	
 	@Hidden
+	@GetMapping("/exists/{userId}")
+	@Parameter(
+		name = "userId",
+		in = ParameterIn.PATH,
+		required = true,
+		description = "User ID to check existence",
+		example = "1",
+		schema = @Schema(type = "integer", format = "int64")
+	)
+	public ResponseEntity<Boolean> userExists(@Valid @PathVariable Long userId) {
+		return ResponseEntity.ok().body(service.userExists(userId));
+	}
+	
+	@Hidden
 	@PostMapping("/sendotp/{userId}")
 	@Parameter(
 		name = "userId",
