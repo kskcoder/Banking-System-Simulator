@@ -75,7 +75,7 @@ public class AccountService {
 		String userId = AccountUtils.getUserId();
 		
 		if (!(String.valueOf(accountReq.getUserId()).equals(userId) || AccountUtils.isAdmin())) {
-			throw new GeneralServerException();
+			throw new ForbiddenException("You do not have permission to access this resource.");
 		}
 		
 		Account account = new Account();
@@ -160,7 +160,7 @@ public class AccountService {
 				evictAccountCache(accountId);
 				evictUserAccountsCache(accountUserId);
 				evictAllAccountIdsCache();
-				return "Successful";
+				return "Account Closed Successfully!";
 			} else {
 				throw new ForbiddenException("You do not have permission to access this resource.");
 			}
