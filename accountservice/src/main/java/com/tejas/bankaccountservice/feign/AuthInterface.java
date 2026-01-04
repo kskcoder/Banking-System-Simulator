@@ -13,4 +13,7 @@ import jakarta.validation.Valid;
 public interface AuthInterface {
 	@GetMapping("auth/getcontact/{userId}")
 	public abstract ResponseEntity<ContactDetails> getContact(@Valid @PathVariable Long userId);
+	
+	@GetMapping("auth/exists/{userId}")
+	public abstract ResponseEntity<Boolean> userExists(@Valid @PathVariable Long userId);
 }
