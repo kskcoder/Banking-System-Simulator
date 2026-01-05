@@ -28,6 +28,9 @@ public class JWTFilter extends OncePerRequestFilter{
 	@Value("${paymentInternalSecretKey}")
 	private String paymentInternalSecretKey;
 	
+	@Value("${interServiceSecretKey}")
+	private String interServiceSecretKey;
+	
 	@Autowired
 	JWTService jwtService;
 
@@ -46,7 +49,10 @@ public class JWTFilter extends OncePerRequestFilter{
 		String role = null;
 		String internalAuthKey = request.getHeader("X-Internal-Auth");
 		
-		if (transactionSecretKey.equals(internalAuthKey) || paymentInternalSecretKey.equals(internalAuthKey)) {
+		if (internalAuthKey != null && 
+		    (transactionSecretKey.equals(internalAuthKey) || 
+		     paymentInternalSecretKey.equals(internalAuthKey) || 
+		     interServiceSecretKey.equals(internalAuthKey))) {
 			role = request.getHeader("X-User-Role");
 			userId = request.getHeader("X-User-Id");
 			
