@@ -1,10 +1,13 @@
 package com.tejas.bankauthservice.configurations;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -33,6 +36,9 @@ public class JWTFilter extends OncePerRequestFilter {
 	
 	@Autowired
 	ApplicationContext context;
+	
+	@Value("${interServiceSecretKey}")
+	private String interServiceSecretKey;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -44,29 +50,46 @@ public class JWTFilter extends OncePerRequestFilter {
 			return;
 		}
 		
-		String authHeader = request.getHeader("Authorization");
 		String token = null;
 		String userId = null;
+		String role = null;
+		String internalAuthKey = request.getHeader("X-Internal-Auth");
 		
-		if (authHeader != null && authHeader.startsWith ("Bearer ")) {
-			token = authHeader.substring(7);
-			userId = jwtService.extractUserId(token);
-		}
-		
-		if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			User user = repo.findById(Long.parseLong(userId))
-				.orElseThrow(() -> 
-					new NotFoundException("User not found")
-				);
+		// Handle inter-service authentication
+		if (internalAuthKey != null && interServiceSecretKey.equals(internalAuthKey)) {
+			role = request.getHeader("X-User-Role");
+			userId = request.getHeader("X-User-Id");
 			
-			String username = user.getUsername();
-			
-			UserDetails userDetails = context.getBean(AuthUserDetailsService.class).loadUserByUsername(username);
-			
-			if (jwtService.validateToken(token, userDetails)) {
-				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userId, null, userDetails.getAuthorities());
-				authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+			if (role != null && userId != null) {
+				UsernamePasswordAuthenticationToken authToken =
+				        new UsernamePasswordAuthenticationToken(userId, null,
+				            List.of(new SimpleGrantedAuthority("ROLE_" + role)));
 				SecurityContextHolder.getContext().setAuthentication(authToken);
+			}
+		} else {
+			// Handle JWT token authentication
+			String authHeader = request.getHeader("Authorization");
+			
+			if (authHeader != null && authHeader.startsWith ("Bearer ")) {
+				token = authHeader.substring(7);
+				userId = jwtService.extractUserId(token);
+			}
+			
+			if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+				User user = repo.findById(Long.parseLong(userId))
+					.orElseThrow(() -> 
+						new NotFoundException("User not found")
+					);
+				
+				String username = user.getUsername();
+				
+				UserDetails userDetails = context.getBean(AuthUserDetailsService.class).loadUserByUsername(username);
+				
+				if (jwtService.validateToken(token, userDetails)) {
+					UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userId, null, userDetails.getAuthorities());
+					authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+					SecurityContextHolder.getContext().setAuthentication(authToken);
+				}
 			}
 		}
 		
