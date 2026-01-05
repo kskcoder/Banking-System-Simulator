@@ -31,9 +31,12 @@ public class TransactionConsumer {
 		trUpdater.saveTransactionRecord(trEvent, false);
 		
 		if (TransactionStatus.DEBIT_SUCCESS.equals(trEvent.getStatus())) {
-			TransactionEvent credEvent = createCreditEvent(trEvent);
-			
-			dispatchCreditWithRetry(credEvent);
+			if (!"CASH_WITHDRAWAL".equals(trEvent.getToAccountNumber())) {
+				TransactionEvent credEvent = createCreditEvent(trEvent);
+				dispatchCreditWithRetry(credEvent);
+			} else {
+				trProducer.dispatchMessageWithRetry(trEvent);
+			}
 		} else if (trEvent.getPaymentId() != null) {
 			trProducer.dispatchMessageWithRetry(trEvent);
 		}
@@ -62,8 +65,10 @@ public class TransactionConsumer {
 			trUpdater.saveTransactionRecord(trEvent, true);
 		} else {
 			trProducer.dispatchMessageWithRetry(trEvent);
-			TransactionEvent repayEvent = createRepayEvent(trEvent);
-			dispatchCreditWithRetry(repayEvent);
+			if (!"CASH_DEPOSIT".equals(trEvent.getFromAccountNumber())) {
+				TransactionEvent repayEvent = createRepayEvent(trEvent);
+				dispatchCreditWithRetry(repayEvent);
+			}
 		}
 	}
 	
