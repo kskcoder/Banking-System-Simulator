@@ -214,7 +214,7 @@ public class AuthService {
 		
 			return details;
 	}
-	
+
 	public Boolean userExists(Long userId) {
 		String requestingUserId = AuthUtils.getUserId();
 		
