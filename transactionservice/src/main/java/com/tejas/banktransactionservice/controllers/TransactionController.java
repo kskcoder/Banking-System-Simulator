@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tejas.bankingcommon.dto.DepositRequest;
 import com.tejas.bankingcommon.dto.TransferRequest;
+import com.tejas.bankingcommon.dto.WithdrawRequest;
 import com.tejas.banktransactionservice.models.Transaction;
 import com.tejas.banktransactionservice.models.TransactionLedgerRecord;
 import com.tejas.banktransactionservice.services.TransactionService;
@@ -64,6 +66,30 @@ public class TransactionController {
 	)
 	public ResponseEntity<Transaction> transfer(@Valid @RequestBody TransferRequest request) {
 		return ResponseEntity.ok().body(trService.transfer(request));
+	}
+	
+	@PostMapping("/deposit")
+	@Operation(summary = "Cash deposit", description = "Deposit cash into an account (Admin only)")
+	@SecurityRequirement(name = "bearerAuth")
+	@io.swagger.v3.oas.annotations.parameters.RequestBody(
+		description = "Deposit request details",
+		required = true,
+		content = @Content(schema = @Schema(implementation = DepositRequest.class))
+	)
+	public ResponseEntity<Transaction> deposit(@Valid @RequestBody DepositRequest request) {
+		return ResponseEntity.ok().body(trService.deposit(request));
+	}
+	
+	@PostMapping("/withdraw")
+	@Operation(summary = "Cash withdrawal", description = "Withdraw cash from an account (Admin only)")
+	@SecurityRequirement(name = "bearerAuth")
+	@io.swagger.v3.oas.annotations.parameters.RequestBody(
+		description = "Withdrawal request details",
+		required = true,
+		content = @Content(schema = @Schema(implementation = WithdrawRequest.class))
+	)
+	public ResponseEntity<Transaction> withdraw(@Valid @RequestBody WithdrawRequest request) {
+		return ResponseEntity.ok().body(trService.withdraw(request));
 	}
 	
 	@GetMapping("/transaction/{txnId}")

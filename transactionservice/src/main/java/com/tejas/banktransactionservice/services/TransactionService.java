@@ -13,8 +13,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tejas.bankingcommon.dto.DepositRequest;
 import com.tejas.bankingcommon.dto.TransactionEvent;
 import com.tejas.bankingcommon.dto.TransferRequest;
+import com.tejas.bankingcommon.dto.WithdrawRequest;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 import com.tejas.bankingcommon.enums.TransactionType;
 import com.tejas.bankingcommon.enums.UserType;
@@ -134,6 +136,94 @@ public class TransactionService {
         trProducer.dispatchDebitWithRetry(event);
         
         return savedTxn;
+    }
+
+    @Transactional
+    public Transaction deposit(DepositRequest request) {
+    	if (!AuthUtils.isAdmin()) {
+    		throw new ForbiddenException("You do not have permission to access this resource.");
+    	}
+    	
+    	if (request.getAmount() <= 0.0) {
+    		throw new BadRequestException("Amount must be greater than zero");
+    	}
+    	
+    	Transaction txn = new Transaction();
+    	txn.setFromAccount("CASH_DEPOSIT");
+    	txn.setToAccount(request.getAccountNumber());
+    	txn.setAmount(request.getAmount());
+    	txn.setStatus(TransactionStatus.PENDING);
+    	txn.setCreatedAt(LocalDateTime.now());
+    	txn.setUpdatedAt(LocalDateTime.now());
+    	
+    	Transaction savedTxn = repo.save(txn);
+    	
+    	String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+    	
+    	TransactionEvent event = new TransactionEvent();
+    	event.setTransactionId(savedTxn.getId());
+    	event.setUserId(Integer.parseInt(userId));
+    	event.setPaymentId(null);
+    	event.setFromAccountNumber("CASH_DEPOSIT");
+    	event.setToAccountNumber(request.getAccountNumber());
+    	event.setAmount(request.getAmount());
+    	event.setType(TransactionType.CREDIT);
+    	event.setStatus(TransactionStatus.PENDING);
+    	
+    	trUpdater.saveTransaction(event);
+    	evictTransactionCache(savedTxn.getId());
+    	evictTransactionRecordsCache(request.getAccountNumber());
+    	evictStatementCache(request.getAccountNumber());
+    	evictAllTransfersCache();
+    	evictAllLedgerTransactionsCache();
+    	
+    	trProducer.dispatchCreditWithRetry(event);
+    	
+    	return savedTxn;
+    }
+
+    @Transactional
+    public Transaction withdraw(WithdrawRequest request) {
+    	if (!AuthUtils.isAdmin()) {
+    		throw new ForbiddenException("You do not have permission to access this resource.");
+    	}
+    	
+    	if (request.getAmount() <= 0.0) {
+    		throw new BadRequestException("Amount must be greater than zero");
+    	}
+    	
+    	Transaction txn = new Transaction();
+    	txn.setFromAccount(request.getAccountNumber());
+    	txn.setToAccount("CASH_WITHDRAWAL");
+    	txn.setAmount(request.getAmount());
+    	txn.setStatus(TransactionStatus.PENDING);
+    	txn.setCreatedAt(LocalDateTime.now());
+    	txn.setUpdatedAt(LocalDateTime.now());
+    	
+    	Transaction savedTxn = repo.save(txn);
+    	
+    	String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+    	
+    	TransactionEvent event = new TransactionEvent();
+    	event.setTransactionId(savedTxn.getId());
+    	event.setUserId(Integer.parseInt(userId));
+    	event.setPaymentId(null);
+    	event.setFromAccountNumber(request.getAccountNumber());
+    	event.setToAccountNumber("CASH_WITHDRAWAL");
+    	event.setAmount(request.getAmount());
+    	event.setType(TransactionType.DEBIT);
+    	event.setStatus(TransactionStatus.PENDING);
+    	
+    	trUpdater.saveTransaction(event);
+    	evictTransactionCache(savedTxn.getId());
+    	evictTransactionRecordsCache(request.getAccountNumber());
+    	evictStatementCache(request.getAccountNumber());
+    	evictAllTransfersCache();
+    	evictAllLedgerTransactionsCache();
+    	
+    	trProducer.dispatchDebitWithRetry(event);
+    	
+    	return savedTxn;
     }
 
     @Transactional

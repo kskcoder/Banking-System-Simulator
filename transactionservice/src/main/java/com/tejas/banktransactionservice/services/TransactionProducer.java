@@ -75,7 +75,26 @@ public class TransactionProducer {
 			});					
 	}
 	
-	
+	public void dispatchCreditWithRetry(TransactionEvent trEvent) {
+		attemptCreditDispatch(trEvent, 1, INITIAL_BACKOFF);
+	}
+
+	private void attemptCreditDispatch(TransactionEvent trEvent, int attempt, Duration backoff) {
+		creditRequest(trEvent).whenComplete((result, ex) -> {
+			if (ex != null) {
+				if (attempt >= MAX_CREDIT_RETRY_ATTEMPTS) {
+					trEvent.setStatus(TransactionStatus.CREDIT_FAILED);
+					trUpdater.saveTransaction(trEvent);
+				} else {
+					trEvent.setStatus(TransactionStatus.RETRY);
+					trUpdater.saveTransaction(trEvent);
+					Duration nextBackoff = backoff.multipliedBy(2);
+					RETRY_EXECUTOR.schedule(() -> attemptCreditDispatch(trEvent, attempt + 1, nextBackoff),
+							nextBackoff.toMillis(), TimeUnit.MILLISECONDS);
+				}
+			}
+		});					
+	}
 	
 	
 }
