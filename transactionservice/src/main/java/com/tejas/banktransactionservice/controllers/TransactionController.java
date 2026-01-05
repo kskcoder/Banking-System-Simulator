@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
@@ -132,11 +133,32 @@ public class TransactionController {
 		description = "End date/time (ISO format)",
 		schema = @Schema(type = "string", format = "date-time")
 	)
+	@Parameter(
+		name = "page",
+		in = ParameterIn.QUERY,
+		required = false,
+		description = "Page number (0-indexed)",
+		schema = @Schema(type = "integer", defaultValue = "0")
+	)
+	@Parameter(
+		name = "size",
+		in = ParameterIn.QUERY,
+		required = false,
+		description = "Page size",
+		schema = @Schema(type = "integer", defaultValue = "10")
+	)
+	@Parameter(
+		name = "sort",
+		in = ParameterIn.QUERY,
+		required = false,
+		description = "Sort field(s) (e.g., createdAt,desc)",
+		schema = @Schema(type = "string", defaultValue = "createdAt,desc")
+	)
 	public ResponseEntity<Page<TransactionLedgerRecord>> getDebitLedgerTransaction(
 			@PathVariable String accountNumber,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to, 
-			@PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
+			@Parameter(hidden = true) @PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
 		return ResponseEntity.ok().body(trService.getDebitTransaction(accountNumber, from, to, pageable));
 	}
 	
@@ -165,11 +187,32 @@ public class TransactionController {
 		description = "End date/time (ISO format)",
 		schema = @Schema(type = "string", format = "date-time")
 	)
+	@Parameter(
+		name = "page",
+		in = ParameterIn.QUERY,
+		required = false,
+		description = "Page number (0-indexed)",
+		schema = @Schema(type = "integer", defaultValue = "0")
+	)
+	@Parameter(
+		name = "size",
+		in = ParameterIn.QUERY,
+		required = false,
+		description = "Page size",
+		schema = @Schema(type = "integer", defaultValue = "10")
+	)
+	@Parameter(
+		name = "sort",
+		in = ParameterIn.QUERY,
+		required = false,
+		description = "Sort field(s) (e.g., createdAt,desc)",
+		schema = @Schema(type = "string", defaultValue = "createdAt,desc")
+	)
 	public ResponseEntity<Page<TransactionLedgerRecord>> getCreditLedgerTransaction(
 			@PathVariable String accountNumber,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to, 
-			@PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
+			@Parameter(hidden = true) @PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
 		return ResponseEntity.ok().body(trService.getCreditTransaction(accountNumber, from, to, pageable));
 	}
 	
@@ -198,17 +241,46 @@ public class TransactionController {
 		description = "End date/time (ISO format)",
 		schema = @Schema(type = "string", format = "date-time")
 	)
+	@Parameter(
+		name = "page",
+		in = ParameterIn.QUERY,
+		required = false,
+		description = "Page number (0-indexed)",
+		schema = @Schema(type = "integer", defaultValue = "0")
+	)
+	@Parameter(
+		name = "size",
+		in = ParameterIn.QUERY,
+		required = false,
+		description = "Page size",
+		schema = @Schema(type = "integer", defaultValue = "10")
+	)
+	@Parameter(
+		name = "sort",
+		in = ParameterIn.QUERY,
+		required = false,
+		description = "Sort field(s) (e.g., createdAt,desc)",
+		schema = @Schema(type = "string", defaultValue = "createdAt,desc")
+	)
 	public ResponseEntity<Page<TransactionLedgerRecord>> getAllLedgerTransactions(
 			@PathVariable String accountNumber,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
-			@PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
+			@Parameter(hidden = true) @PageableDefault(size=10, sort="createdAt", direction=Sort.Direction.DESC) Pageable pageable) {
 		return ResponseEntity.ok().body(trService.getAllTransaction(accountNumber, from, to, pageable));
 	}
 	
 	@GetMapping("/ledger/statement/{accountNumber}")
 	@Operation(summary = "Get account statement", description = "Download account statement as PDF for an account")
 	@SecurityRequirement(name = "bearerAuth")
+	@ApiResponse(
+		responseCode = "200",
+		description = "PDF file download",
+		content = @Content(
+			mediaType = "application/pdf",
+			schema = @Schema(type = "string", format = "binary")
+		)
+	)
 	@Parameter(
 		name = "accountNumber",
 		in = ParameterIn.PATH,
@@ -243,7 +315,7 @@ public class TransactionController {
 		String currentTime = LocalDateTime.now().format(ftr);
 		
 		headers.set(HttpHeaders.CONTENT_DISPOSITION,
-				"attachment, filename=statement_"+accountNumber+currentTime);
+				"attachment; filename=statement_"+accountNumber+"_"+currentTime+".pdf");
 		
 		return ResponseEntity.ok().headers(headers).body(data);
 	}

@@ -312,7 +312,8 @@ public class TransactionService {
 	protected Page<TransactionLedgerRecord> cachedGetGeneralTransactionRecords(String accountNum, String type, Pageable pageable) {
 		Page<TransactionLedgerRecord> tx; 
 		if (TransactionType.CREDIT.toString().equals(type) || TransactionType.DEBIT.toString().equals(type)) {
-			tx = ledgerRepo.getByAccountNumberAndType(accountNum, type, pageable);
+			TransactionType transactionType = TransactionType.valueOf(type);
+			tx = ledgerRepo.getByAccountNumberAndType(accountNum, transactionType, pageable);
 		} else {
 			tx = ledgerRepo.getByAccountNumber(accountNum, pageable);
 		}
@@ -329,7 +330,8 @@ public class TransactionService {
 			String type, LocalDateTime from, LocalDateTime to, Pageable pageable) {
 		Page<TransactionLedgerRecord> tx; 
 		if (TransactionType.CREDIT.toString().equals(type) || TransactionType.DEBIT.toString().equals(type)) {
-			tx = ledgerRepo.getByAccountNumberAndTypeAndCreatedAtBetween(accountNum, type, from, to, pageable);
+			TransactionType transactionType = TransactionType.valueOf(type);
+			tx = ledgerRepo.getByAccountNumberAndTypeAndCreatedAtBetween(accountNum, transactionType, from, to, pageable);
 		} else {
 			tx = ledgerRepo.getByAccountNumberAndCreatedAtBetween(accountNum, from, to, pageable);
 		}
