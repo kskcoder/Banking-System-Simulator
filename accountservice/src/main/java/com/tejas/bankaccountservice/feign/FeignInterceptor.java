@@ -14,8 +14,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @Component
 public class FeignInterceptor implements RequestInterceptor {
 	
-	@Value("${accountSecretKey}")
-	private String accountSecretKey;
+	@Value("${interServiceSecretKey}")
+	private String interServiceSecretKey;
 
 	@Override
 	public void apply(RequestTemplate template) {
@@ -26,10 +26,15 @@ public class FeignInterceptor implements RequestInterceptor {
         	String authorization = request.getHeader("Authorization");
         	if (authorization != null) {
         		template.header("Authorization", authorization);
+        	} else {
+        		// No Authorization header available - use inter-service key
+        		template.header("X-Internal-Auth", interServiceSecretKey);
+        		template.header("X-User-Role", UserType.INTERNAL_SERVICE.toString());
+        		template.header("X-User-Id", "INTERNAL_ACCOUNT_SERVICE");
         	}
         } else {
         	// Called from Kafka listener or other non-HTTP context
-        	template.header("X-Internal-Auth", accountSecretKey);
+        	template.header("X-Internal-Auth", interServiceSecretKey);
         	template.header("X-User-Role", UserType.INTERNAL_SERVICE.toString());
         	template.header("X-User-Id", "INTERNAL_ACCOUNT_SERVICE");
         }
