@@ -192,12 +192,21 @@ public class AuthService {
 	}
 	
 	public ContactDetails getContact(Long userId) {
-		String id = AuthUtils.getUserId();
-		if (id.equals("INTERNAL_PAYMENT_SERVICE") || AuthUtils.isAdmin()) {
+		if (AuthUtils.isAdmin()) {
 			return cachedGetContact(userId);
-		} else {
-			throw new UnauthorizedException("You do not have access to this account.");
 		}
+		
+		String role = AuthUtils.getRole();
+		if (role != null && role.equals(UserType.INTERNAL_SERVICE.toString())) {
+			return cachedGetContact(userId);
+		}
+		
+		String id = AuthUtils.getUserId();
+		if (id != null && id.equals("INTERNAL_PAYMENT_SERVICE")) {
+			return cachedGetContact(userId);
+		}
+		
+		throw new UnauthorizedException("You do not have access to this account.");
 	}
 	
 	@Cacheable(value="contact_details", key="userId", unless="#result == null")

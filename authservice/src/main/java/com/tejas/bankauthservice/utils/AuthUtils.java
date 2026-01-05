@@ -14,12 +14,35 @@ public class AuthUtils {
         
         boolean isAdmin = auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(role -> role.equals("ADMIN"));
+                .anyMatch(role -> role.equals("ADMIN") || role.equals("ROLE_ADMIN"));
         return isAdmin;
     }
     
     public static String getUserId() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
+    	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    	if (auth == null) {
+    		return null;
+    	}
+        return auth.getName();
+    }
+    
+    public static String getRole() {
+    	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    	
+    	if (auth == null || auth.getAuthorities().isEmpty()) {
+    		return null;
+    	}
+    	
+    	String authority = auth.getAuthorities().stream()
+    			.findFirst()
+    			.map(GrantedAuthority::getAuthority)
+    			.orElse(null);
+    	
+    	if (authority != null && authority.startsWith("ROLE_")) {
+    		return authority.substring(5);
+    	}
+    	
+    	return authority;
     }
     
 	public static String hash(String data) {
