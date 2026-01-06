@@ -60,6 +60,13 @@ public class AccountController {
 		return ResponseEntity.ok().body(accountService.getAccountByAccountNumber(account));
 	}
 	
+	@GetMapping("/my-accounts")
+	@Operation(summary = "Get my accounts", description = "Retrieve all accounts for the authenticated user")
+	@SecurityRequirement(name = "bearerAuth")
+	public ResponseEntity<List<Account>> getMyAccounts() {
+		return ResponseEntity.ok().body(accountService.getMyAccounts());
+	}
+	
 	@GetMapping("/user/{userId}")
 	@Operation(summary = "Get accounts by user ID", description = "Retrieve all accounts for a specific user")
 	@SecurityRequirement(name = "bearerAuth")

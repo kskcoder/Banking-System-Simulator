@@ -246,6 +246,18 @@ public class AccountService {
 		throw new NoContentException("No accounts found.");
 	}
 	
+	@Cacheable(value = "all_accounts_of_userid", key = "T(com.tejas.bankaccountservice.utils.AccountUtils).getUserId()", unless="#result == null || #result.isEmpty()")
+	public List<Account> getMyAccounts() {
+		String userId = AccountUtils.getUserId();
+		List<Account> accounts = repo.getByUserid(Long.parseLong(userId)).get();
+		
+		if (!accounts.isEmpty()) {
+			return accounts;
+		}
+		
+		throw new NoContentException("No accounts found.");
+	}
+	
 	@Cacheable(value = "userId", key = "#accountId", unless="#result == null")
 	public Long getuserIdByAccountId(long accountId) {
 		Account account = repo.getById(accountId).get();

@@ -1,5 +1,7 @@
 package com.tejas.bankaccountservice.models;
 
+import java.io.Serializable;
+
 import com.tejas.bankingcommon.enums.AccountType;
 
 import jakarta.persistence.Column;
@@ -15,7 +17,9 @@ import lombok.Data;
 @Entity
 @Table(name="accounts")
 @Data
-public class Account {
+public class Account implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private long id;
