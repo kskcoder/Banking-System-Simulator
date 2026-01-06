@@ -99,7 +99,7 @@ public class CardService {
 		Card card = Card.builder()
 				.cardNumber(hashedCardNumber)
 				.cvv(hashedCvvNumber)
-				.lastDigits(rawCardNumber.substring(11,16))
+				.lastDigits(rawCardNumber.substring(12,16))
 				.expiryDate(expiryDate)
 				.cardLimit(generals.getDailyLimit(AccountType.SAVINGS))
 				.status(AccountCardStatus.INACTIVE)
@@ -160,7 +160,7 @@ public class CardService {
 			List<Card> cards = new ArrayList<>();
 			
 			for (Long id: accountIds) {
-				cards.add(repo.getByAccountId(id).orElse(null));
+				repo.getByAccountId(id).ifPresent(cards::add);
 			}
 			
 			if (!cards.isEmpty()) {
