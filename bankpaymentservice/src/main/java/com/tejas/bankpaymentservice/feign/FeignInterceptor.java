@@ -13,9 +13,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @Component
 public class FeignInterceptor implements RequestInterceptor {
-	@Value("${paymentInternalSecretKey}")
-	private String paymentInternalSecretKey;
-	
 	@Value("${interServiceSecretKey}")
 	private String interServiceSecretKey;
 
@@ -26,24 +23,15 @@ public class FeignInterceptor implements RequestInterceptor {
         if (attributes != null) {
         	HttpServletRequest request = attributes.getRequest();
         	
-        	String external = request.getHeader("X-External");
-        	
-        	if (external != null && external.equals("1")) {
-        		// External payment - use paymentInternalSecretKey
-        		template.header("X-Internal-Auth", paymentInternalSecretKey);
+        	String authorization = request.getHeader("Authorization");
+        	if (authorization != null) {
+        		template.header("Authorization", authorization);
         	} else {
-        		String authorization = request.getHeader("Authorization");
-        		if (authorization != null) {
-        			template.header("Authorization", authorization);
-        		} else {
-        			// No Authorization header available - use inter-service key
-        			template.header("X-Internal-Auth", interServiceSecretKey);
-        			template.header("X-User-Role", UserType.INTERNAL_SERVICE.toString());
-        			template.header("X-User-Id", "INTERNAL_PAYMENT_SERVICE");
-        		}
+        		template.header("X-Internal-Auth", interServiceSecretKey);
+        		template.header("X-User-Role", UserType.INTERNAL_SERVICE.toString());
+        		template.header("X-User-Id", "INTERNAL_PAYMENT_SERVICE");
         	}
         } else {
-        	// Called from Kafka listener or other non-HTTP context
         	template.header("X-Internal-Auth", interServiceSecretKey);
         	template.header("X-User-Role", UserType.INTERNAL_SERVICE.toString());
         	template.header("X-User-Id", "INTERNAL_PAYMENT_SERVICE");
