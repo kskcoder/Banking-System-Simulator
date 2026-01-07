@@ -10,7 +10,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableMethodSecurity
-public class AccountSecurityConfig {
+public class CardSecurityConfig {
 	@Autowired
 	JWTFilter jwtFilter;
 	
