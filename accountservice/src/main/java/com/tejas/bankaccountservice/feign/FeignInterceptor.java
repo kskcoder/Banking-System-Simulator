@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.tejas.bankingcommon.enums.InternalServiceType;
 import com.tejas.bankingcommon.enums.UserType;
 
 import feign.RequestInterceptor;
@@ -27,16 +28,14 @@ public class FeignInterceptor implements RequestInterceptor {
         	if (authorization != null) {
         		template.header("Authorization", authorization);
         	} else {
-        		// No Authorization header available - use inter-service key
         		template.header("X-Internal-Auth", interServiceSecretKey);
         		template.header("X-User-Role", UserType.INTERNAL_SERVICE.toString());
-        		template.header("X-User-Id", "INTERNAL_ACCOUNT_SERVICE");
+        		template.header("X-User-Id", InternalServiceType.ACCOUNT.toString());
         	}
         } else {
-        	// Called from Kafka listener or other non-HTTP context
         	template.header("X-Internal-Auth", interServiceSecretKey);
         	template.header("X-User-Role", UserType.INTERNAL_SERVICE.toString());
-        	template.header("X-User-Id", "INTERNAL_ACCOUNT_SERVICE");
+        	template.header("X-User-Id", InternalServiceType.ACCOUNT.toString());
         }
 	}
 

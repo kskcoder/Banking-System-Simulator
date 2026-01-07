@@ -11,6 +11,7 @@ import com.tejas.bankingcommon.dto.ContactDetails;
 import com.tejas.bankingcommon.dto.MessageEvent;
 import com.tejas.bankingcommon.dto.MessageType;
 import com.tejas.bankingcommon.dto.TransactionEvent;
+import com.tejas.bankingcommon.enums.InternalServiceType;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class AccountTransactionConsumer {
 		
 		if (account == null) {
 			trEvent.setStatus(TransactionStatus.DEBIT_FAILED);			
-		} else if (String.valueOf(account.getUserid()).equals(userId)) {
+		} else if (String.valueOf(account.getUserid()).equals(userId) || trEvent.getPaymentId() != null) {
 			double newBalance = account.getBalance() - amount;
 			if (newBalance < rules.getMinimumBalance(account.getAccountType())) {
 				trEvent.setStatus(TransactionStatus.INSUFFICIENT_BALANCE);
