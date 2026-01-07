@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.tejas.bankingcommon.enums.InternalServiceType;
 import com.tejas.bankingcommon.enums.UserType;
 
 import feign.RequestInterceptor;
@@ -29,12 +30,12 @@ public class FeignInterceptor implements RequestInterceptor {
         	} else {
         		template.header("X-Internal-Auth", interServiceSecretKey);
         		template.header("X-User-Role", UserType.INTERNAL_SERVICE.toString());
-        		template.header("X-User-Id", "INTERNAL_PAYMENT_SERVICE");
+        		template.header("X-User-Id", InternalServiceType.PAYMENT.toString());
         	}
         } else {
         	template.header("X-Internal-Auth", interServiceSecretKey);
         	template.header("X-User-Role", UserType.INTERNAL_SERVICE.toString());
-        	template.header("X-User-Id", "INTERNAL_PAYMENT_SERVICE");
+        	template.header("X-User-Id", InternalServiceType.PAYMENT.toString());
         }
 	}
 

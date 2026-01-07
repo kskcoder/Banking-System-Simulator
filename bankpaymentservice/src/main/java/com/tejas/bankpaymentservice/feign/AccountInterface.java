@@ -12,4 +12,7 @@ public interface AccountInterface {
 	
 	@GetMapping("accounts/accountid/{accountId}/userid")
 	public ResponseEntity<Long> getuserIdByAccountId(@PathVariable long accountId);
+	
+	@GetMapping("accounts/accountid/{accountId}/accountnumber")
+	public ResponseEntity<String> getAccountNumberByAccountId(@PathVariable long accountId);
 }

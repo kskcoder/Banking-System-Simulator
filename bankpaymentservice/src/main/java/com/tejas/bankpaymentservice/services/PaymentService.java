@@ -11,15 +11,29 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import com.tejas.bankingcommon.dto.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tejas.bankingcommon.dto.CardVerificationRequest;
+import com.tejas.bankingcommon.dto.CardVerificationResponse;
+import com.tejas.bankingcommon.dto.MessageType;
+import com.tejas.bankingcommon.dto.OtpRequestDTO;
+import com.tejas.bankingcommon.dto.OtpValidateRequest;
+import com.tejas.bankingcommon.dto.OtpValidateResponse;
+import com.tejas.bankingcommon.dto.SubmitPaymentOtp;
+import com.tejas.bankingcommon.dto.TransferRequest;
 import com.tejas.bankingcommon.enums.PaymentStatus;
+import com.tejas.bankingcommon.enums.PaymentType;
 import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tejas.bankpaymentservice.feign.*;
-import com.tejas.bankpaymentservice.models.*;
+import com.tejas.bankpaymentservice.feign.AccountInterface;
+import com.tejas.bankpaymentservice.feign.AuthInterface;
+import com.tejas.bankpaymentservice.feign.CardInterface;
+import com.tejas.bankpaymentservice.feign.TransactionInterface;
+import com.tejas.bankpaymentservice.models.InitiatePaymentDTO;
+import com.tejas.bankpaymentservice.models.Payment;
+import com.tejas.bankpaymentservice.models.PaymentResponse;
 import com.tejas.bankpaymentservice.repositories.PaymentRepo;
 import com.tejas.bankpaymentservice.utils.HmacUtil;
 
@@ -58,10 +72,14 @@ public class PaymentService {
 	}
 	
 	public ResponseEntity<PaymentResponse> initiateRequest(InitiatePaymentDTO initiateReq) {
+		String vendorId = ((ServletRequestAttributes) RequestContextHolder
+		        .getRequestAttributes())
+		        .getRequest()
+		        .getHeader("X-Vendor-Id");
 		
 		Payment payment = Payment.builder()
-				.vendorId(initiateReq.getVendorId())
-				.fromAccountNumber(initiateReq.getFromAccountNumber())
+				.vendorId(vendorId)
+				.fromAccountNumber(null)
 				.toAccountNumber(initiateReq.getToAccountNumber())
 				.amount(initiateReq.getAmount())
 				.type(initiateReq.getType())
@@ -101,10 +119,10 @@ public class PaymentService {
 	
 	//Helper functions
 	public ResponseEntity<PaymentResponse> processInitialPayment(InitiatePaymentDTO initiateReq, Payment payment) {
-		if (initiateReq.getType() == 1) {
+		if (initiateReq.getType() == PaymentType.CARD) {
 			CardVerificationRequest verifyReq = CardVerificationRequest.builder()
 					.cardNumber(initiateReq.getCardNumber())			
-					.cvv(String.valueOf(initiateReq.getCvv()))
+					.cvv(initiateReq.getCvv())
 					.expiryDate(initiateReq.getExpiry())
 					.build();
 			
@@ -125,13 +143,20 @@ public class PaymentService {
 				
 				return ResponseEntity.ok().body(paymentRes);
 			}
-		}		
+		} else if (initiateReq.getType() == PaymentType.UPI) {
+			return ResponseEntity.ok().body(null);
+		}
 		return ResponseEntity.ok().body(null);
 	}
 	
 	public ResponseEntity<PaymentResponse> postCardValidation(InitiatePaymentDTO initiateReq, Payment payment, CardVerificationResponse cardVerifyResponse) {
 		if (cardVerifyResponse.isValidated()) {
 			try {
+				String accountNumber = accInt.getAccountNumberByAccountId(cardVerifyResponse.getAccountId()).getBody();
+				payment.setFromAccountNumber(accountNumber);
+				repo.save(payment);
+				evictPaymentCache(payment.getId());
+				
 				long userId = accInt.getuserIdByAccountId(cardVerifyResponse.getAccountId()).getBody();
 				OtpRequestDTO otpReq = OtpRequestDTO.builder()
 						.referenceId(payment.getId())
@@ -174,10 +199,15 @@ public class PaymentService {
 	}
 
 	public ResponseEntity<OtpValidateResponse> submitOtp(SubmitPaymentOtp otpRequest) {
+		System.out.println("Payment Service - submitOtp called for paymentId: " + otpRequest.getPaymentId() + ", OTP: " + otpRequest.getOtp());
+		
 		Payment payment = getCachedPayment(otpRequest.getPaymentId());
 		
 		if (payment != null) {
+			System.out.println("Payment Service - Payment found, status: " + payment.getStatus());
+			
 			if (payment.getStatus().equals(PaymentStatus.FAILED)) {
+				System.out.println("Payment Service - Payment has failed status, returning FORBIDDEN");
 				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
 						.referenceId(String.valueOf(otpRequest.getPaymentId()))
 						.validated(false)
@@ -193,37 +223,47 @@ public class PaymentService {
 					.otpValue(otpRequest.getOtp())
 					.build();
 			
+			System.out.println("Payment Service - Calling auth service to validate OTP for paymentId: " + otpRequest.getPaymentId());
+			
+			OtpValidateResponse otpResponse = new OtpValidateResponse(); 
 			boolean isValidated = false;
 			
 			try {
-				isValidated = authInt.validateOtp(submitRequest).getBody().isValidated();				
+				otpResponse = authInt.validateOtp(submitRequest).getBody();
+				isValidated = otpResponse.isValidated();
+				System.out.println("Payment Service - OTP validation result from auth service: " + isValidated);
 			} catch (FeignException e) {
-				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
-						.referenceId(String.valueOf(otpRequest.getPaymentId()))
-						.validated(isValidated)
-						.message(e.contentUTF8())
-						.build();
-				
+				System.out.println("Payment Service - Error validating OTP: status=" + e.status() + ", message=" + e.contentUTF8());
+
 				payment.setStatus(PaymentStatus.INCORRECT_OTP);
 				repo.save(payment);
 				evictPaymentCache(payment.getId());
 				evictAllPaymentsCache();
 				
-				return new ResponseEntity<>(submitResponse, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(otpResponse, HttpStatus.UNAUTHORIZED);
 			}
 			
-			if (isValidated) {			
+			if (isValidated) {
+				System.out.println("Payment Service - OTP is valid, proceeding with payment processing");
 				return validOtp(payment);
+			} else {
+				payment.setStatus(PaymentStatus.INCORRECT_OTP);
+				repo.save(payment);
+				evictPaymentCache(payment.getId());
+				evictAllPaymentsCache();
+				
+				return new ResponseEntity<>(otpResponse, HttpStatus.UNAUTHORIZED);
 			}
 			
 		} else {
+			System.out.println("Payment Service - Payment not found for paymentId: " + otpRequest.getPaymentId());
 			throw new NotFoundException("Incorrect Payment Id");
 		}
-		
-		throw new GeneralServerException();
 	}
 	
 	public ResponseEntity<OtpValidateResponse> validOtp(Payment payment) {
+		System.out.println("Payment Service - validOtp called for paymentId: " + payment.getId());
+		
 		TransferRequest req = TransferRequest.builder()
 				.fromAccount(payment.getFromAccountNumber())
 				.toAccount(payment.getToAccountNumber())
@@ -231,11 +271,16 @@ public class PaymentService {
 				.paymentId(payment.getId())
 				.build();
 		
+		System.out.println("Payment Service - Calling transaction service to transfer: from=" + req.getFromAccount() + ", to=" + req.getToAccount() + ", amount=" + req.getAmount());
+		
 		try {
 			trInt.transfer(req).getBody();
+			System.out.println("Payment Service - Transfer completed successfully");
 			
 			//Not needed to check if transaction call has succeeded as failure is caught as exception. 
 		} catch (FeignException e) {
+			System.out.println("Payment Service - Error calling transaction service: status=" + e.status() + ", message=" + e.contentUTF8());
+			e.printStackTrace();
 			throw new GeneralServerException();
 		}
 		OtpValidateResponse submitResponse = OtpValidateResponse.builder()
@@ -261,19 +306,10 @@ public class PaymentService {
 		return payment;
 	}
 	
-	public SignatureDemoResponse calculateSignatureDemo(InitiatePaymentDTO requestBody, String vendorSecret, String timestamp) {
+	public String calculateSignatureDemo(String requestBody, String vendorSecret, String timestamp) {
 		try {
-			String initialBodyString = objectMapper.writeValueAsString(requestBody);
-			String bodyString = normalizeJsonBody(initialBodyString);
-			String signature = HmacUtil.hmacSha256(vendorSecret, bodyString + timestamp);
-			
-			return SignatureDemoResponse.builder()
-					.signature(signature)
-					.timestamp(timestamp)
-					.body(bodyString)
-					.vendorId(requestBody.getVendorId())
-					.vendorSecret(vendorSecret)
-					.build();
+			String bodyString = normalizeJsonBody(requestBody);
+			return HmacUtil.hmacSha256(vendorSecret, bodyString + timestamp);
 		} catch (Exception e) {
 			log.error("Payment Service - Error calculating signature: {}", e.getMessage(), e);
 			throw new GeneralServerException();
@@ -283,7 +319,19 @@ public class PaymentService {
 	private String normalizeJsonBody(String body) {
 		try {
 			com.fasterxml.jackson.databind.JsonNode jsonNode = objectMapper.readTree(body);
-			return objectMapper.writeValueAsString(jsonNode);
+			String normalized = objectMapper.writeValueAsString(jsonNode);
+			
+			normalized = normalized.replaceAll("\\s*:\\s*", ":");
+			normalized = normalized.replaceAll("\\s*,\\s*", ",");
+			normalized = normalized.replaceAll("\\s*\\{\\s*", "{");
+			normalized = normalized.replaceAll("\\s*\\}\\s*", "}");
+			normalized = normalized.replaceAll("\\s*\\[\\s*", "[");
+			normalized = normalized.replaceAll("\\s*\\]\\s*", "]");
+			
+			normalized = normalized.replaceAll("\"amount\":(\\d+),", "\"amount\":$1.0,");
+			normalized = normalized.replaceAll("\"amount\":(\\d+)\\}", "\"amount\":$1.0}");
+			
+			return normalized;
 		} catch (Exception e) {
 			log.warn("Payment Service - Failed to normalize JSON body, using original: {}", e.getMessage());
 			return body;

@@ -3,6 +3,7 @@ package com.tejas.bankpaymentservice.models;
 import java.time.LocalDateTime;
 
 import com.tejas.bankingcommon.enums.PaymentStatus;
+import com.tejas.bankingcommon.enums.PaymentType;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -33,7 +34,9 @@ public class Payment {
 	private String fromAccountNumber;
 	private String toAccountNumber;
 	private double amount;
-	private int type;
+	
+	@Enumerated(EnumType.STRING)
+	private PaymentType type;
 	
 	@Enumerated(EnumType.STRING)
 	private PaymentStatus status;
