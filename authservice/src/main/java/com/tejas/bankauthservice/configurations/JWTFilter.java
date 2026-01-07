@@ -45,6 +45,8 @@ public class JWTFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		String path = request.getRequestURI();
 		
+		System.out.println("Auth Service JWTFilter - Path: " + path);
+		
 		if (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
 			filterChain.doFilter(request, response);
 			return;
@@ -55,18 +57,28 @@ public class JWTFilter extends OncePerRequestFilter {
 		String role = null;
 		String internalAuthKey = request.getHeader("X-Internal-Auth");
 		
+		System.out.println("Auth Service JWTFilter - X-Internal-Auth header: " + (internalAuthKey != null ? "present (length: " + internalAuthKey.length() + ")" : "null"));
+		System.out.println("Auth Service JWTFilter - interServiceSecretKey: " + (interServiceSecretKey != null ? "present (length: " + interServiceSecretKey.length() + ")" : "null"));
+		System.out.println("Auth Service JWTFilter - Keys match: " + (internalAuthKey != null && interServiceSecretKey != null && interServiceSecretKey.equals(internalAuthKey)));
+		
 		// Handle inter-service authentication
 		if (internalAuthKey != null && interServiceSecretKey.equals(internalAuthKey)) {
 			role = request.getHeader("X-User-Role");
 			userId = request.getHeader("X-User-Id");
+			
+			System.out.println("Auth Service JWTFilter - Internal auth matched. Role: " + role + ", UserId: " + userId);
 			
 			if (role != null && userId != null) {
 				UsernamePasswordAuthenticationToken authToken =
 				        new UsernamePasswordAuthenticationToken(userId, null,
 				            List.of(new SimpleGrantedAuthority("ROLE_" + role)));
 				SecurityContextHolder.getContext().setAuthentication(authToken);
+				System.out.println("Auth Service JWTFilter - Authentication set successfully");
+			} else {
+				System.out.println("Auth Service JWTFilter - Role or UserId is null, authentication not set");
 			}
 		} else {
+			System.out.println("Auth Service JWTFilter - Internal auth key mismatch or missing, trying JWT authentication");
 			// Handle JWT token authentication
 			String authHeader = request.getHeader("Authorization");
 			

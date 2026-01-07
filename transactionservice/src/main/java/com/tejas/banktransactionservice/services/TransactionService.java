@@ -110,13 +110,20 @@ public class TransactionService {
         
         Transaction savedTxn = repo.save(txn);
         
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        Integer userId;
+        
+        if (AuthUtils.getRole().equals(UserType.INTERNAL_SERVICE.toString())) {
+        	userId = 0;
+        } else {
+        	userId = Integer.parseInt(userIdString);
+        }
         
         Long paymentId = AuthUtils.getRole().equals(UserType.INTERNAL_SERVICE.toString()) ? request.getPaymentId() : null;
         
         TransactionEvent event = new TransactionEvent(); 
     	event.setTransactionId(savedTxn.getId());
-    	event.setUserId(Integer.parseInt(userId));
+    	event.setUserId(userId);
     	event.setPaymentId(paymentId);
     	event.setFromAccountNumber(savedTxn.getFromAccount());
     	event.setToAccountNumber(savedTxn.getToAccount());
@@ -158,11 +165,12 @@ public class TransactionService {
     	
     	Transaction savedTxn = repo.save(txn);
     	
-    	String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+    	String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+    	Integer userId = AuthUtils.getRole().equals(UserType.INTERNAL_SERVICE.toString()) ? 0 : Integer.parseInt(userIdString);
     	
     	TransactionEvent event = new TransactionEvent();
     	event.setTransactionId(savedTxn.getId());
-    	event.setUserId(Integer.parseInt(userId));
+    	event.setUserId(userId);
     	event.setPaymentId(null);
     	event.setFromAccountNumber("CASH_DEPOSIT");
     	event.setToAccountNumber(request.getAccountNumber());
@@ -202,11 +210,12 @@ public class TransactionService {
     	
     	Transaction savedTxn = repo.save(txn);
     	
-    	String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+    	String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+    	Integer userId = AuthUtils.getRole().equals(UserType.INTERNAL_SERVICE.toString()) ? 0 : Integer.parseInt(userIdString);
     	
     	TransactionEvent event = new TransactionEvent();
     	event.setTransactionId(savedTxn.getId());
-    	event.setUserId(Integer.parseInt(userId));
+    	event.setUserId(userId);
     	event.setPaymentId(null);
     	event.setFromAccountNumber(request.getAccountNumber());
     	event.setToAccountNumber("CASH_WITHDRAWAL");

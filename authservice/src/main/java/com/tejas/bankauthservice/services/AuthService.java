@@ -30,6 +30,7 @@ import com.tejas.bankingcommon.dto.OtpRequestDTO;
 import com.tejas.bankingcommon.dto.OtpStatus;
 import com.tejas.bankingcommon.dto.OtpValidateRequest;
 import com.tejas.bankingcommon.dto.OtpValidateResponse;
+import com.tejas.bankingcommon.enums.InternalServiceType;
 import com.tejas.bankingcommon.enums.UserType;
 import com.tejas.bankingcommon.exceptions.BadRequestException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
@@ -202,7 +203,7 @@ public class AuthService {
 		}
 		
 		String id = AuthUtils.getUserId();
-		if (id != null && id.equals("INTERNAL_PAYMENT_SERVICE")) {
+		if (id != null && id.equals(InternalServiceType.PAYMENT.toString())) {
 			return cachedGetContact(userId);
 		}
 		
@@ -282,7 +283,7 @@ public class AuthService {
 					int attempts = otp.getAttempts() + 1;
 					otp.setAttempts(attempts);
 					
-					String reqHashedOtp = OtpUtils.hash((String.valueOf(request.getOtpValue())));
+					String reqHashedOtp = OtpUtils.hash(request.getOtpValue());
 					
 					if (otp.getOtpHash().equals(reqHashedOtp)) {
 						otp.setStatus(OtpStatus.VERIFIED);

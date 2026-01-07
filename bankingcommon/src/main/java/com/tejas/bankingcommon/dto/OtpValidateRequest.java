@@ -4,11 +4,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "OTP validation request")
 public class OtpValidateRequest {
 	@NotNull
@@ -22,6 +26,6 @@ public class OtpValidateRequest {
 	
 	@NotNull
 	@Schema(description = "OTP value to validate", example = "123456", required = true)
-	private long otpValue;
+	private String otpValue;
 	
 }

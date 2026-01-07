@@ -8,5 +8,5 @@ public class SubmitPaymentOtp {
 	@NotNull
 	private long paymentId;
 	@NotNull
-	private int otp;
+	private String otp;
 }
