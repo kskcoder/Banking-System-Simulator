@@ -108,16 +108,15 @@ public class PaymentService {
 					.expiryDate(initiateReq.getExpiry())
 					.build();
 			
-			try {
-				CardVerificationResponse cardVerifyResponse = cardInt.verifyCard(verifyReq).getBody();
-				return postCardValidation(initiateReq, payment, cardVerifyResponse);
-				
-			} catch (FeignException e) {				
-				PaymentResponse paymentRes = PaymentResponse.builder()
-						.paymentId(payment.getId())
-						.status(PaymentStatus.FAILED)
-						.message(e.contentUTF8())
-						.build();
+		try {
+			CardVerificationResponse cardVerifyResponse = cardInt.verifyCard(verifyReq).getBody();
+			return postCardValidation(initiateReq, payment, cardVerifyResponse);
+		} catch (FeignException e) {		
+			PaymentResponse paymentRes = PaymentResponse.builder()
+					.paymentId(payment.getId())
+					.status(PaymentStatus.FAILED)
+					.message(e.contentUTF8())
+					.build();
 				
 				payment.setStatus(PaymentStatus.FAILED);
 				repo.save(payment);
@@ -141,7 +140,7 @@ public class PaymentService {
 						.build();
 				
 				try {
-					authInt.sendPaymentOtp(otpReq).getBody();
+					authInt.sendPaymentOtp(userId, otpReq).getBody();
 					
 					//Not needed to check if call has succeeded as failure is caught as exception.
 				} catch (FeignException e) {
@@ -155,7 +154,7 @@ public class PaymentService {
 						.build();
 				
 				return ResponseEntity.ok().body(paymentRes);
-			} catch (FeignException e) {				
+			} catch (FeignException e) {
 				PaymentResponse paymentRes = PaymentResponse.builder()
 						.paymentId(payment.getId())
 						.status(PaymentStatus.FAILED)
