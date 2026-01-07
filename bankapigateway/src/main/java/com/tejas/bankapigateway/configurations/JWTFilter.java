@@ -16,6 +16,7 @@ import org.springframework.core.Ordered;
 
 import com.tejas.bankapigateway.services.JWTService;
 import com.tejas.bankapigateway.configurations.GatewaySecretsConfig;
+import com.tejas.bankingcommon.enums.InternalServiceType;
 import com.tejas.bankingcommon.enums.UserType;
 
 import io.jsonwebtoken.Claims;
@@ -50,9 +51,13 @@ public class JWTFilter implements WebFilter, Ordered {
         String secret = secretsConfig.getSecrets().get(serviceName);
 
         String external = request.getHeaders().getFirst("X-External");
+        
+        System.out.println("Gateway JWTFilter - X-External: " + external);
+        System.out.println("Gateway JWTFilter - Path: " + path);
 
         if ("1".equals(external)) {
-            String userId = "INTERNAL_PAYMENT_SERVICE";
+            System.out.println("Gateway JWTFilter - External request detected, setting up authentication");
+            String userId = InternalServiceType.PAYMENT.toString();
             String role = UserType.INTERNAL_SERVICE.toString();
 
             UsernamePasswordAuthenticationToken auth =
@@ -68,8 +73,18 @@ public class JWTFilter implements WebFilter, Ordered {
                     .header("X-User-Role", role)
                     .build();
 
-            return chain.filter(exchange.mutate().request(modifiedRequest).build())
-                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
+            System.out.println("Gateway JWTFilter - Authentication set, proceeding with modified request");
+            System.out.println("Gateway JWTFilter - Auth principal: " + auth.getPrincipal() + ", authorities: " + auth.getAuthorities());
+            
+            ServerWebExchange modifiedExchange = exchange.mutate().request(modifiedRequest).build();
+            
+            return chain.filter(modifiedExchange)
+                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth))
+                    .doOnSuccess(v -> System.out.println("Gateway JWTFilter - Filter chain completed successfully"))
+                    .doOnError(e -> {
+                        System.out.println("Gateway JWTFilter - Filter chain error: " + e.getMessage());
+                        e.printStackTrace();
+                    });
         }
 
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
