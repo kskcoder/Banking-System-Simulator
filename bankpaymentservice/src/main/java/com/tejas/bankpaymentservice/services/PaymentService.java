@@ -17,13 +17,17 @@ import com.tejas.bankingcommon.exceptions.ForbiddenException;
 import com.tejas.bankingcommon.exceptions.GeneralServerException;
 import com.tejas.bankingcommon.exceptions.NoContentException;
 import com.tejas.bankingcommon.exceptions.NotFoundException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tejas.bankpaymentservice.feign.*;
 import com.tejas.bankpaymentservice.models.*;
 import com.tejas.bankpaymentservice.repositories.PaymentRepo;
+import com.tejas.bankpaymentservice.utils.HmacUtil;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -35,6 +39,9 @@ public class PaymentService {
 	
 	@Autowired
 	private CacheManager cacheManager;
+	
+	@Autowired
+	private ObjectMapper objectMapper;
 	
 	public void evictPaymentCache(Long paymentId) {
 		Cache paymentCache = cacheManager.getCache("payment_details");
@@ -253,5 +260,34 @@ public class PaymentService {
 			throw new NotFoundException("Incorrect Payment Id");
 		}
 		return payment;
+	}
+	
+	public SignatureDemoResponse calculateSignatureDemo(InitiatePaymentDTO requestBody, String vendorSecret, String timestamp) {
+		try {
+			String initialBodyString = objectMapper.writeValueAsString(requestBody);
+			String bodyString = normalizeJsonBody(initialBodyString);
+			String signature = HmacUtil.hmacSha256(vendorSecret, bodyString + timestamp);
+			
+			return SignatureDemoResponse.builder()
+					.signature(signature)
+					.timestamp(timestamp)
+					.body(bodyString)
+					.vendorId(requestBody.getVendorId())
+					.vendorSecret(vendorSecret)
+					.build();
+		} catch (Exception e) {
+			log.error("Payment Service - Error calculating signature: {}", e.getMessage(), e);
+			throw new GeneralServerException();
+		}
+	}
+	
+	private String normalizeJsonBody(String body) {
+		try {
+			com.fasterxml.jackson.databind.JsonNode jsonNode = objectMapper.readTree(body);
+			return objectMapper.writeValueAsString(jsonNode);
+		} catch (Exception e) {
+			log.warn("Payment Service - Failed to normalize JSON body, using original: {}", e.getMessage());
+			return body;
+		}
 	}
 }

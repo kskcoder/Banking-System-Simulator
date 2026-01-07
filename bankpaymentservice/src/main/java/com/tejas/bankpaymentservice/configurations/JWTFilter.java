@@ -33,7 +33,7 @@ public class JWTFilter extends OncePerRequestFilter{
 			throws ServletException, IOException {
 		String path = request.getRequestURI();
 		
-		if (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
+		if (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui") || path.startsWith("/payments/demo")) {
 			filterChain.doFilter(request, response);
 			return;
 		}
