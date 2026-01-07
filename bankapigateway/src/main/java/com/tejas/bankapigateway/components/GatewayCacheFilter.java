@@ -14,13 +14,12 @@ public class GatewayCacheFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-
         String path = exchange.getRequest().getURI().getPath();
 
         if (!path.startsWith("/bankpaymentservice")) {
             return chain.filter(exchange);
         }
-
+        
         return ServerWebExchangeUtils.cacheRequestBody(exchange, serverHttpRequest -> {
             return chain.filter(
                 exchange.mutate().request(serverHttpRequest).build()
@@ -30,6 +29,6 @@ public class GatewayCacheFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return -1;
+        return -100;
     }
 }

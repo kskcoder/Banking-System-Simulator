@@ -36,6 +36,7 @@ public class ApiGatewaySecurityConfig {
                     ).permitAll()
                 .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .pathMatchers("/bankauthservice/auth/**").permitAll()
+                .pathMatchers("/bankpaymentservice/payments/demo/**").permitAll()
                 .anyExchange().authenticated()
             )
             .addFilterBefore(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
