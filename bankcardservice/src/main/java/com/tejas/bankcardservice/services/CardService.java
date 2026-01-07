@@ -260,7 +260,7 @@ public class CardService {
 		
 		boolean hasExceededLimit = (card.getCardLimit() - request.getAmount()) < 0;
 		
-		if (isCvvCorrect && !isExpired) {
+		if (isCvvCorrect && isExpired) {
 			throw new BadRequestException("Card has expired.");
 		} else if (!isCvvCorrect && isExpired) {
 			throw new BadRequestException("Incorrect CVV number.");
@@ -271,6 +271,11 @@ public class CardService {
 		} else if (card.getStatus() == AccountCardStatus.BLOCKED) {
 			throw new BadRequestException("Card is blocked.");
 		} else {
+			if (card.getStatus().equals(AccountCardStatus.INACTIVE)) {
+				card.setStatus(AccountCardStatus.ACTIVE);
+				repo.save(card);
+			}
+			
 			CardVerificationResponse reponse = CardVerificationResponse.builder()
 					.accountId(card.getAccountId())
 					.validated(true)
