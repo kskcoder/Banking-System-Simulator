@@ -268,6 +268,15 @@ public class AccountService {
 		throw new NotFoundException("Requested account not found.");
 	}
 	
+	@Cacheable(value = "account_number", key = "#accountId", unless="#result == null")
+	public String getAccountNumberByAccountId(long accountId) {
+		Account account = repo.getById(accountId).get();
+		if (account != null) {
+			return account.getAccountnumber();
+		}
+		throw new NotFoundException("Requested account not found.");
+	}
+	
 	public Boolean accountExists(Long accountId) {
 		String requestingUserId = AccountUtils.getUserId();
 		Account account = repo.getById(accountId).get();

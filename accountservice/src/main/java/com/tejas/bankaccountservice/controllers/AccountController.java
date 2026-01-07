@@ -161,6 +161,20 @@ public class AccountController {
 	}
 	
 	@Hidden
+	@GetMapping("/accountid/{accountId}/accountnumber")
+	@Parameter(
+		name = "accountId",
+		in = ParameterIn.PATH,
+		required = true,
+		description = "Account ID to get account number",
+		example = "1",
+		schema = @Schema(type = "integer", format = "int64")
+	)
+	public ResponseEntity<String> getAccountNumberByAccountId(@PathVariable long accountId) {
+		return ResponseEntity.ok().body(accountService.getAccountNumberByAccountId(accountId));
+	}
+	
+	@Hidden
 	@GetMapping("/exists/{accountId}")
 	@Parameter(
 		name = "accountId",
