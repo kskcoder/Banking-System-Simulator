@@ -2,11 +2,15 @@ package com.tejas.bankingcommon.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 @Data
 @Builder
+@AllArgsConstructor
+@RequiredArgsConstructor
 @Schema(description = "Card verification request")
 public class CardVerificationRequest {
 	@NotNull
