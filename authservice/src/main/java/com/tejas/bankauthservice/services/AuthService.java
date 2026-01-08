@@ -271,10 +271,16 @@ public class AuthService {
 		
 		OtpValidateResponse otpResponse = OtpValidateResponse.builder()
 				.referenceId(request.getReferenceId())
+				.retried(false)
 				.build();
 		
 		if (otp != null) {
-			if (otp.getStatus() == OtpStatus.PENDING) {
+			if (otp.getStatus() == OtpStatus.VERIFIED) {
+				otpResponse.setRetried(true);
+				otpResponse.setMessage("OTP already verified.");
+				otpResponse.setValidated(true);
+				return otpResponse;
+			} else if (otp.getStatus() == OtpStatus.PENDING) {
 				if (otp.getExpiresAt().isBefore(LocalDateTime.now()) || otp.getExpiresAt().isEqual(LocalDateTime.now())) {
 					otp.setStatus(OtpStatus.EXPIRED);
 				} else if (otp.getAttempts() >= otp.getMaxAttempts()) {
@@ -287,6 +293,7 @@ public class AuthService {
 					
 					if (otp.getOtpHash().equals(reqHashedOtp)) {
 						otp.setStatus(OtpStatus.VERIFIED);
+						otpRepo.save(otp);
 						otpResponse.setValidated(true);
 						otpResponse.setMessage("OTP verfied successfully.");
 						return otpResponse;
