@@ -35,7 +35,7 @@ public class AccountTransactionConsumer {
 		
 		if (account == null) {
 			trEvent.setStatus(TransactionStatus.DEBIT_FAILED);			
-		} else if (String.valueOf(account.getUserid()).equals(userId) || trEvent.getPaymentId() != null) {
+		} else if (String.valueOf(account.getUserid()).equals(userId) || InternalServiceType.PAYMENT.toString().equals(userId)) {
 			double newBalance = account.getBalance() - amount;
 			if (newBalance < rules.getMinimumBalance(account.getAccountType())) {
 				trEvent.setStatus(TransactionStatus.INSUFFICIENT_BALANCE);
