@@ -72,10 +72,12 @@ public class PaymentService {
 	}
 	
 	public ResponseEntity<PaymentResponse> initiateRequest(InitiatePaymentDTO initiateReq) {
-		String vendorId = ((ServletRequestAttributes) RequestContextHolder
-		        .getRequestAttributes())
-		        .getRequest()
-		        .getHeader("X-Vendor-Id");
+		ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
+		        .getRequestAttributes();
+		if (attributes == null) {
+			throw new GeneralServerException();
+		}
+		String vendorId = attributes.getRequest().getHeader("X-Vendor-Id");
 		
 		Payment payment = Payment.builder()
 				.vendorId(vendorId)
@@ -96,12 +98,16 @@ public class PaymentService {
 	
 	//Admin related functions
 	public List<Payment> getAllPayments() {
-		String role = ((ServletRequestAttributes) RequestContextHolder
-		        .getRequestAttributes())
-		        .getRequest()
-		        .getHeader("X-User-Role");
+		ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
+		        .getRequestAttributes();
+		if (attributes == null) {
+			throw new ForbiddenException("You do not have permission to access this resource.");
+		}
+		String role = attributes.getRequest().getHeader("X-User-Role");
 		
-		if (!role.equals("ADMIN")) {throw new ForbiddenException("You do not have permission to access this resource.");}
+		if (role == null || !role.equals("ADMIN")) {
+			throw new ForbiddenException("You do not have permission to access this resource.");
+		}
 		
 		List<Payment> payments = cachedGetAllPayments();
 		
@@ -128,6 +134,9 @@ public class PaymentService {
 			
 		try {
 			CardVerificationResponse cardVerifyResponse = cardInt.verifyCard(verifyReq).getBody();
+			if (cardVerifyResponse == null) {
+				throw new GeneralServerException();
+			}
 			return postCardValidation(initiateReq, payment, cardVerifyResponse);
 		} catch (FeignException e) {		
 			PaymentResponse paymentRes = PaymentResponse.builder()
@@ -150,14 +159,21 @@ public class PaymentService {
 	}
 	
 	public ResponseEntity<PaymentResponse> postCardValidation(InitiatePaymentDTO initiateReq, Payment payment, CardVerificationResponse cardVerifyResponse) {
-		if (cardVerifyResponse.isValidated()) {
+		if (cardVerifyResponse != null && cardVerifyResponse.isValidated()) {
 			try {
 				String accountNumber = accInt.getAccountNumberByAccountId(cardVerifyResponse.getAccountId()).getBody();
+				if (accountNumber == null) {
+					throw new GeneralServerException();
+				}
 				payment.setFromAccountNumber(accountNumber);
 				repo.save(payment);
 				evictPaymentCache(payment.getId());
 				
-				long userId = accInt.getuserIdByAccountId(cardVerifyResponse.getAccountId()).getBody();
+				Long userIdLong = accInt.getuserIdByAccountId(cardVerifyResponse.getAccountId()).getBody();
+				if (userIdLong == null) {
+					throw new GeneralServerException();
+				}
+				long userId = userIdLong;
 				OtpRequestDTO otpReq = OtpRequestDTO.builder()
 						.referenceId(payment.getId())
 						.type(MessageType.PAYMENT_OTP)
@@ -211,7 +227,7 @@ public class PaymentService {
 				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
 						.referenceId(String.valueOf(otpRequest.getPaymentId()))
 						.validated(false)
-						.message("Payment has failed, inititate new payment")
+						.message("Payment has failed, initiate new payment")
 						.build();
 				
 				return new ResponseEntity<>(submitResponse, HttpStatus.FORBIDDEN);
@@ -230,6 +246,9 @@ public class PaymentService {
 			
 			try {
 				otpResponse = authInt.validateOtp(submitRequest).getBody();
+				if (otpResponse == null) {
+					throw new GeneralServerException();
+				}
 				isValidated = otpResponse.isValidated();
 				System.out.println("Payment Service - OTP validation result from auth service: " + isValidated);
 			} catch (FeignException e) {
@@ -240,7 +259,12 @@ public class PaymentService {
 				evictPaymentCache(payment.getId());
 				evictAllPaymentsCache();
 				
-				return new ResponseEntity<>(otpResponse, HttpStatus.UNAUTHORIZED);
+				OtpValidateResponse errorResponse = OtpValidateResponse.builder()
+						.referenceId(String.valueOf(otpRequest.getPaymentId()))
+						.validated(false)
+						.message("OTP validation failed")
+						.build();
+				return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
 			}
 			
 			if (isValidated) {
@@ -302,11 +326,8 @@ public class PaymentService {
 	
 	@Cacheable(value="payment_details", key="#paymentId", unless="#result == null")
 	protected Payment getCachedPayment(Long paymentId) {
-		Payment payment = repo.getById(paymentId);
-		if (payment == null) {
-			throw new NotFoundException("Incorrect Payment Id");
-		}
-		return payment;
+		return repo.findById(paymentId)
+			.orElseThrow(() -> new NotFoundException("Incorrect Payment Id"));
 	}
 	
 	public String calculateSignatureDemo(String requestBody, String vendorSecret, String timestamp) {
