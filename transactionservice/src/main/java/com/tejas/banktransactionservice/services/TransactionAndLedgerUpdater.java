@@ -100,7 +100,7 @@ public class TransactionAndLedgerUpdater {
 		rec.setCounterparty(isRepayOrCredit ? tr.getFromAccount() : tr.getToAccount());
 		rec.setType(isRepayOrCredit ? TransactionType.CREDIT : TransactionType.DEBIT);     
 		rec.setAmount(tr.getAmount());
-		rec.setBalanceAfter(isRepayOrCredit ? trEvent.getBalanceAfter() : 0.0);
+		rec.setBalanceAfter(trEvent.getBalanceAfter());
 		rec.setStatus(tr.getStatus());
 		rec.setCreatedAt(tr.getCreatedAt()); 
 		

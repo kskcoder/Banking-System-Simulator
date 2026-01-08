@@ -68,7 +68,7 @@ public class TransactionProducer {
 				if (ex != null) {
 					if (attempt < MAX_CREDIT_RETRY_ATTEMPTS) {
 						Duration nextBackoff = backoff.multipliedBy(2);
-						RETRY_EXECUTOR.schedule(() -> attemptDebitDispatch(trEvent, attempt + 1, nextBackoff),
+						RETRY_EXECUTOR.schedule(() -> attemptMessageDispatch(trEvent, attempt + 1, nextBackoff),
 								nextBackoff.toMillis(), TimeUnit.MILLISECONDS);
 					}
 				}
