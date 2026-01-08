@@ -2,6 +2,7 @@ package com.tejas.banktransactionservice.services;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -112,7 +113,8 @@ public class TransactionService {
         
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         
-        Long paymentId = AuthUtils.getRole().equals(UserType.INTERNAL_SERVICE.toString()) ? request.getPaymentId() : null;
+        String role = AuthUtils.getRole();
+        Long paymentId = (role != null && role.equals(UserType.INTERNAL_SERVICE.toString())) ? request.getPaymentId() : null;
         
         TransactionEvent event = new TransactionEvent(); 
     	event.setTransactionId(savedTxn.getId());
@@ -226,34 +228,16 @@ public class TransactionService {
     	return savedTxn;
     }
 
-    @Transactional
-	public void saveTransaction(TransactionEvent trEvent) {
-		Transaction tx = repo.findById(trEvent.getTransactionId());
-		tx.setStatus(trEvent.getStatus());
-		tx.setUpdatedAt(LocalDateTime.now());
-		Transaction savedTx = repo.save(tx);
-		evictTransactionCache(savedTx.getId());
-		evictTransactionRecordsCache(savedTx.getFromAccount());
-		evictTransactionRecordsCache(savedTx.getToAccount());
-		evictStatementCache(savedTx.getFromAccount());
-		evictStatementCache(savedTx.getToAccount());
-		evictAllTransfersCache();
-		evictAllLedgerTransactionsCache();
-	}
-
-	public Transaction getTransaction(int txnId) {
+	public Transaction getTransaction(long txnId) {
 		return cachedGetTransaction(txnId);
 	}
 	
 	@Cacheable(value="transaction_details", key="#txnId", unless="#result == null")
-	protected Transaction cachedGetTransaction(int txnId) {
-		Transaction tx = repo.findById(txnId);
+	protected Transaction cachedGetTransaction(long txnId) {
+		Transaction tx = repo.findById(txnId)
+			.orElseThrow(() -> new NotFoundException("Transaction not found"));
 		
-		if (tx != null) {
-			return tx;
-		}
-		
-		throw new NotFoundException("Transaction not found");
+		return tx;
 	}
 	
 	public Page<TransactionLedgerRecord> getDebitTransaction(String accountNum, LocalDateTime from, LocalDateTime to, Pageable pageable) {
@@ -288,11 +272,11 @@ public class TransactionService {
 	private boolean isOwner(String pathAccNo) {
 		String role = AuthUtils.getRole();
 		
-		if (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString())) {
+		if (role != null && (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString()))) {
 			return true;
 		}
 		
-		if (pathAccNo.equals("") || pathAccNo == null) {
+		if (pathAccNo == null || pathAccNo.equals("")) {
 			return false;
 		}
 		
