@@ -11,7 +11,6 @@ import com.tejas.bankingcommon.dto.ContactDetails;
 import com.tejas.bankingcommon.dto.MessageEvent;
 import com.tejas.bankingcommon.dto.MessageType;
 import com.tejas.bankingcommon.dto.TransactionEvent;
-import com.tejas.bankingcommon.enums.InternalServiceType;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 
 import lombok.RequiredArgsConstructor;
@@ -46,7 +45,7 @@ public class AccountTransactionConsumer {
 				
 				ContactDetails details = authInt.getContact(account.getUserid()).getBody();
 				
-				String message = account.getId() + "," + amount + "," +newBalance;
+				String message = account.getAccountnumber() + "," + amount + "," +newBalance;
 						
 				MessageEvent event = MessageEvent.builder()
 						.email(details.getEmail())
@@ -83,7 +82,7 @@ public class AccountTransactionConsumer {
 			
 			ContactDetails details = authInt.getContact(account.getUserid()).getBody();
 			
-			String message = account.getId() + "," + amount + "," +newBalance;
+			String message = account.getAccountnumber() + "," + amount + "," +newBalance;
 					
 			MessageEvent event = MessageEvent.builder()
 					.email(details.getEmail())

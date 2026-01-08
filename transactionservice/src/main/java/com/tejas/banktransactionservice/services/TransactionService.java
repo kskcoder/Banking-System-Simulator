@@ -110,14 +110,7 @@ public class TransactionService {
         
         Transaction savedTxn = repo.save(txn);
         
-        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-        Integer userId;
-        
-        if (AuthUtils.getRole().equals(UserType.INTERNAL_SERVICE.toString())) {
-        	userId = 0;
-        } else {
-        	userId = Integer.parseInt(userIdString);
-        }
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         
         Long paymentId = AuthUtils.getRole().equals(UserType.INTERNAL_SERVICE.toString()) ? request.getPaymentId() : null;
         
@@ -165,8 +158,7 @@ public class TransactionService {
     	
     	Transaction savedTxn = repo.save(txn);
     	
-    	String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-    	Integer userId = AuthUtils.getRole().equals(UserType.INTERNAL_SERVICE.toString()) ? 0 : Integer.parseInt(userIdString);
+    	String userId = SecurityContextHolder.getContext().getAuthentication().getName();
     	
     	TransactionEvent event = new TransactionEvent();
     	event.setTransactionId(savedTxn.getId());
@@ -210,8 +202,7 @@ public class TransactionService {
     	
     	Transaction savedTxn = repo.save(txn);
     	
-    	String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-    	Integer userId = AuthUtils.getRole().equals(UserType.INTERNAL_SERVICE.toString()) ? 0 : Integer.parseInt(userIdString);
+    	String userId = SecurityContextHolder.getContext().getAuthentication().getName();
     	
     	TransactionEvent event = new TransactionEvent();
     	event.setTransactionId(savedTxn.getId());

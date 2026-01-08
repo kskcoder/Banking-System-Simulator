@@ -34,7 +34,7 @@ public class TransactionConsumer {
 			if (!"CASH_WITHDRAWAL".equals(trEvent.getToAccountNumber())) {
 				TransactionEvent credEvent = createCreditEvent(trEvent);
 				dispatchCreditWithRetry(credEvent);
-			} else {
+			} else if (trEvent.getPaymentId() != null) {
 				trProducer.dispatchMessageWithRetry(trEvent);
 			}
 		} else if (trEvent.getPaymentId() != null) {
@@ -61,10 +61,14 @@ public class TransactionConsumer {
 		}
 		trUpdater.saveTransaction(trEvent);
 		if (TransactionStatus.CREDIT_SUCCESS.equals(trEvent.getStatus())) {
-			trProducer.dispatchMessageWithRetry(trEvent);
+			if (trEvent.getPaymentId() != null) {
+				trProducer.dispatchMessageWithRetry(trEvent);
+			}
 			trUpdater.saveTransactionRecord(trEvent, true);
 		} else {
-			trProducer.dispatchMessageWithRetry(trEvent);
+			if (trEvent.getPaymentId() != null) {
+				trProducer.dispatchMessageWithRetry(trEvent);
+			}
 			if (!"CASH_DEPOSIT".equals(trEvent.getFromAccountNumber())) {
 				TransactionEvent repayEvent = createRepayEvent(trEvent);
 				dispatchCreditWithRetry(repayEvent);
