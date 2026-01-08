@@ -1,6 +1,7 @@
 package com.tejas.banktransactionservice.services;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -59,11 +60,19 @@ public class TransactionAndLedgerUpdater {
 		}
 	}
 	
+	private void evictAllTransfersCache() {
+		Cache allTransfersCache = cacheManager.getCache("all_transfers");
+		if (allTransfersCache != null) {
+			allTransfersCache.clear();
+		}
+	}
+	
 	public void saveTransaction(TransactionEvent trEvent) {
 		if (trEvent.getTransactionId() == null) {
 			return;
 		}
-		Transaction tx = repo.findById(trEvent.getTransactionId());
+		Transaction tx = repo.findById(trEvent.getTransactionId())
+			.orElseThrow(() -> new com.tejas.bankingcommon.exceptions.NotFoundException("Transaction not found"));
 		tx.setStatus(trEvent.getStatus());
 		tx.setUpdatedAt(LocalDateTime.now());
 		Transaction savedTx = repo.save(tx);
@@ -72,6 +81,8 @@ public class TransactionAndLedgerUpdater {
 		evictTransactionRecordsCache(savedTx.getToAccount());
 		evictStatementCache(savedTx.getFromAccount());
 		evictStatementCache(savedTx.getToAccount());
+		evictAllTransfersCache();
+		evictAllLedgerTransactionsCache();
 	}
 	
 	public void saveTransactionRecord(TransactionEvent trEvent, boolean isRepayOrCredit) {
@@ -93,7 +104,8 @@ public class TransactionAndLedgerUpdater {
 	}
 	
 	public TransactionLedgerRecord createNewLedgerRecord(TransactionEvent trEvent, boolean isRepayOrCredit) {
-		Transaction tr = repo.findById(trEvent.getTransactionId());
+		Transaction tr = repo.findById(trEvent.getTransactionId())
+			.orElseThrow(() -> new com.tejas.bankingcommon.exceptions.NotFoundException("Transaction not found"));
 		TransactionLedgerRecord rec = new TransactionLedgerRecord();
 		rec.setParentTransactionId(tr.getId());
 		rec.setAccountNumber(isRepayOrCredit ? tr.getToAccount() : tr.getFromAccount());

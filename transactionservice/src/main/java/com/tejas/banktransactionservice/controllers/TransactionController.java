@@ -102,9 +102,9 @@ public class TransactionController {
 		required = true,
 		description = "Transaction ID",
 		example = "1",
-		schema = @Schema(type = "integer", format = "int32")
+		schema = @Schema(type = "integer", format = "int64")
 	)
-	public ResponseEntity<Transaction> getTransaction(@PathVariable int txnId) {
+	public ResponseEntity<Transaction> getTransaction(@PathVariable long txnId) {
 		return ResponseEntity.ok().body(trService.getTransaction(txnId));
 	}
 	
