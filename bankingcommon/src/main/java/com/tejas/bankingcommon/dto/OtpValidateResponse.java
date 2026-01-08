@@ -19,6 +19,9 @@ public class OtpValidateResponse {
 	private boolean validated;
 	
 	@NotNull
+	private boolean retried;
+	
+	@NotNull
 	private String message;
 	
 }
