@@ -91,6 +91,9 @@ public class CardService {
 		} while (repo.existsByCardNumber(hashedCardNumber));
 		
 		AccountType type = accInterface.getAccountTypeByAccountId(accountId).getBody();
+		if (type == null) {
+			throw new GeneralServerException();
+		}
 		String rawCvvNumber = generals.cvvGenerator();
 		String hashedCvvNumber = generals.hash(rawCvvNumber);
 		
@@ -101,13 +104,17 @@ public class CardService {
 				.cvv(hashedCvvNumber)
 				.lastDigits(rawCardNumber.substring(12,16))
 				.expiryDate(expiryDate)
-				.cardLimit(generals.getDailyLimit(AccountType.SAVINGS))
+				.cardLimit(generals.getDailyLimit(type))
 				.status(AccountCardStatus.INACTIVE)
 				.accountId(accountId)
 				.build();
 		
 		repo.save(card);
-		long userId = Long.parseLong(GeneralUtils.getUserId());
+		String userIdStr = GeneralUtils.getUserId();
+		if (userIdStr == null) {
+			throw new GeneralServerException();
+		}
+		long userId = Long.parseLong(userIdStr);
 		evictUserCardsCache(userId);
 		evictAllCardsCache();
 		
@@ -142,7 +149,11 @@ public class CardService {
 	}
 	
 	public List<GeneralCardResponse> getUsersAllCards() {
-		long userId = Long.parseLong(GeneralUtils.getUserId());
+		String userIdStr = GeneralUtils.getUserId();
+		if (userIdStr == null) {
+			throw new GeneralServerException();
+		}
+		long userId = Long.parseLong(userIdStr);
 		
 		return cachedGetUsersAllCards(userId);
 	}
@@ -152,6 +163,9 @@ public class CardService {
 		List<Long> accountIds = new ArrayList<>();
 		try {
 			accountIds = accInterface.getAccountIdsByUserId().getBody();
+			if (accountIds == null) {
+				throw new NotFoundException("Unauthorised or no accounts associated with User ID: "+userId);
+			}
 		} catch (FeignException e) {
 			throw new NotFoundException("Unauthorised or no accounts associated with User ID: "+userId);
 		}
@@ -191,7 +205,11 @@ public class CardService {
 		
 		card.setStatus(AccountCardStatus.BLOCKED);
 		repo.save(card);
-		long userId = Long.parseLong(GeneralUtils.getUserId());
+		String userIdStr = GeneralUtils.getUserId();
+		if (userIdStr == null) {
+			throw new GeneralServerException();
+		}
+		long userId = Long.parseLong(userIdStr);
 		evictCardCache(accountId);
 		evictUserCardsCache(userId);
 		evictAllCardsCache();
@@ -212,7 +230,11 @@ public class CardService {
 		
 		card.setStatus(AccountCardStatus.INACTIVE);
 		repo.save(card);
-		long userId = Long.parseLong(GeneralUtils.getUserId());
+		String userIdStr = GeneralUtils.getUserId();
+		if (userIdStr == null) {
+			throw new GeneralServerException();
+		}
+		long userId = Long.parseLong(userIdStr);
 		evictCardCache(accountId);
 		evictUserCardsCache(userId);
 		evictAllCardsCache();
@@ -230,7 +252,11 @@ public class CardService {
 		
 		if (!isOwner(card.getAccountId())) {throw new ForbiddenException("You do not have permission to use this card.");}
 		
-		long userId = Long.parseLong(GeneralUtils.getUserId());
+		String userIdStr = GeneralUtils.getUserId();
+		if (userIdStr == null) {
+			throw new GeneralServerException();
+		}
+		long userId = Long.parseLong(userIdStr);
 		repo.delete(card);
 		evictCardCache(accountId);
 		evictUserCardsCache(userId);
@@ -276,27 +302,29 @@ public class CardService {
 				repo.save(card);
 			}
 			
-			CardVerificationResponse reponse = CardVerificationResponse.builder()
+			CardVerificationResponse response = CardVerificationResponse.builder()
 					.accountId(card.getAccountId())
 					.validated(true)
 					.build();
-			return reponse;
+			return response;
 		}
 	}
 
 	private boolean isOwner(long pathAccId) {
-		String role = ((ServletRequestAttributes) RequestContextHolder
-		        .getRequestAttributes())
-		        .getRequest()
-		        .getHeader("X-User-Role");
+		ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
+		        .getRequestAttributes();
+		if (attributes == null) {
+			return false;
+		}
+		String role = attributes.getRequest().getHeader("X-User-Role");
 		
-		if (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString())) {
+		if (role != null && (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString()))) {
 			return true;
 		}
 		
 		try {
-			 boolean isOwner = accInterface.isOwnerOfAccountId(pathAccId).getBody();
-			 if (isOwner) {
+			 Boolean isOwner = accInterface.isOwnerOfAccountId(pathAccId).getBody();
+			 if (isOwner != null && isOwner) {
 				 return true;     				
 	    	 } else {
 	    		 return false;
@@ -308,12 +336,16 @@ public class CardService {
 	
 	//Admin related functions
 	public List<GeneralCardResponse> getAllCards() {
-		String role = ((ServletRequestAttributes) RequestContextHolder
-		        .getRequestAttributes())
-		        .getRequest()
-		        .getHeader("X-User-Role");
+		ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
+		        .getRequestAttributes();
+		if (attributes == null) {
+			throw new ForbiddenException("You do not have permission to access this resource.");
+		}
+		String role = attributes.getRequest().getHeader("X-User-Role");
 		
-		if (!role.equals("ADMIN")) {throw new ForbiddenException("You do not have permission to access this resource.");}
+		if (role == null || !role.equals("ADMIN")) {
+			throw new ForbiddenException("You do not have permission to access this resource.");
+		}
 		
 		List<GeneralCardResponse> cards = cachedGetAllCards();
 		
