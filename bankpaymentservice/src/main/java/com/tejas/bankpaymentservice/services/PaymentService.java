@@ -244,6 +244,9 @@ public class PaymentService {
 			}
 			
 			if (isValidated) {
+				if (otpResponse.isRetried()) {
+					return new ResponseEntity<>(otpResponse, HttpStatus.BAD_REQUEST);
+				}
 				System.out.println("Payment Service - OTP is valid, proceeding with payment processing");
 				return validOtp(payment);
 			} else {
