@@ -112,7 +112,7 @@ public class AccountService {
 	}
 
 	public Account getAccountByAccountNumber(String accountNumber) {
-		Account account = repo.getByAccountnumber(accountNumber).get();
+		Account account = repo.getByAccountnumber(accountNumber).orElseThrow(() -> new NotFoundException("Requested account not found."));
 		String userId = AccountUtils.getUserId();
 		
 		if (account != null && (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin())) {
@@ -128,7 +128,7 @@ public class AccountService {
 	}
 	
 	public List<Account> getAccountsByUserId(int userId) {
-		List<Account> accounts = repo.getByUserid(userId).get();
+		List<Account> accounts = repo.getByUserid(userId).orElseThrow(() -> new NotFoundException("Requested account not found."));
 		
 		if (!accounts.isEmpty()) {
 			if (isOwnerOfAccountId(accounts.stream().findFirst().get().getId())) {
@@ -146,7 +146,7 @@ public class AccountService {
 	}
 	
 	public Double getBalanceByAccountId(Long accountId) {
-		Account account = repo.getById(accountId).get();
+		Account account = repo.getById(accountId).orElseThrow(() -> new NotFoundException("Requested account not found."));
 		String userId = AccountUtils.getUserId();
 		
 		if (account != null) {
@@ -166,7 +166,7 @@ public class AccountService {
 	}
 	
 	public String closeAccount(String accountNumber) {
-		Account account = repo.getByAccountnumber(accountNumber).get();
+		Account account = repo.getByAccountnumber(accountNumber).orElseThrow(() -> new NotFoundException("Requested account not found."));
 		String userId = AccountUtils.getUserId();
 		
 		if (account != null) {
@@ -194,7 +194,7 @@ public class AccountService {
 		}
 		
 		String userId = AccountUtils.getUserId();
-		Account account = repo.getByAccountnumber(accountNumber).get();
+		Account account = repo.getByAccountnumber(accountNumber).orElseThrow(() -> new NotFoundException("Requested account not found."));
 		if (account != null) {
 			boolean isOwner = String.valueOf(account.getUserid()).equals(userId);
 			return isOwner;
@@ -211,7 +211,7 @@ public class AccountService {
 		}
 		
 		String userId = AccountUtils.getUserId();
-		Account account = repo.getById(accountId).get();
+		Account account = repo.getById(accountId).orElseThrow(() -> new NotFoundException("Requested account not found."));
 		if (account != null) {
 			boolean isOwner = String.valueOf(account.getUserid()).equals(userId);
 			return isOwner;
@@ -222,7 +222,7 @@ public class AccountService {
 	
 	@Cacheable(value = "account_type", key = "#accountId", unless="#result == null")
 	public AccountType getAccountTypeByAccountId(long accountId) {
-		Account account = repo.getById(accountId).get();
+		Account account = repo.getById(accountId).orElseThrow(() -> new NotFoundException("Requested account not found."));
 		if (account != null) {
 			return account.getAccountType();
 		}
@@ -232,7 +232,7 @@ public class AccountService {
 
 	public List<Long> getAccountIdsByUserId() {
 		String userId = AccountUtils.getUserId();
-		List<Account> accounts = repo.getByUserid(Long.parseLong(userId)).get();
+		List<Account> accounts = repo.getByUserid(Long.parseLong(userId)).orElseThrow(() -> new NoContentException("No accounts found."));
 		
 		if (!accounts.isEmpty()) {
 			if (String.valueOf(accounts.stream().findFirst().get().getUserid()).equals(userId) || AccountUtils.isAdmin()) {
@@ -249,7 +249,7 @@ public class AccountService {
 	@Cacheable(value = "all_accounts_of_userid", key = "T(com.tejas.bankaccountservice.utils.AccountUtils).getUserId()", unless="#result == null || #result.isEmpty()")
 	public List<Account> getMyAccounts() {
 		String userId = AccountUtils.getUserId();
-		List<Account> accounts = repo.getByUserid(Long.parseLong(userId)).get();
+		List<Account> accounts = repo.getByUserid(Long.parseLong(userId)).orElseThrow(() -> new NoContentException("No accounts found."));
 		
 		if (!accounts.isEmpty()) {
 			return accounts;
@@ -260,7 +260,7 @@ public class AccountService {
 	
 	@Cacheable(value = "userId", key = "#accountId", unless="#result == null")
 	public Long getuserIdByAccountId(long accountId) {
-		Account account = repo.getById(accountId).get();
+		Account account = repo.getById(accountId).orElseThrow(() -> new NotFoundException("Requested account not found."));
 		if (account != null) {
 			return account.getUserid();
 		}
@@ -270,7 +270,7 @@ public class AccountService {
 	
 	@Cacheable(value = "account_number", key = "#accountId", unless="#result == null")
 	public String getAccountNumberByAccountId(long accountId) {
-		Account account = repo.getById(accountId).get();
+		Account account = repo.getById(accountId).orElseThrow(() -> new NotFoundException("Requested account not found."));
 		if (account != null) {
 			return account.getAccountnumber();
 		}
@@ -279,7 +279,7 @@ public class AccountService {
 	
 	public Boolean accountExists(Long accountId) {
 		String requestingUserId = AccountUtils.getUserId();
-		Account account = repo.getById(accountId).get();
+		Account account = repo.getById(accountId).orElseThrow(() -> new NotFoundException("Requested account not found."));
 		
 		long userId = account.getUserid();
 		
