@@ -1,5 +1,11 @@
 package com.tejas.bankpaymentservice.services;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +47,8 @@ public class PaymentConsumer {
 			return;
 		}
 		
+		url = cleanUrl(url);
+		
 		PaymentResponse response = PaymentResponse.builder()
 				.paymentId(trEvent.getPaymentId())
 				.build();
@@ -66,8 +74,35 @@ public class PaymentConsumer {
 		repo.save(payment);
 		
 		try {
-			template.postForObject(url, response, String.class);
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<PaymentResponse> requestEntity = new HttpEntity<>(response, headers);
+			template.postForObject(url, requestEntity, String.class);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private String cleanUrl(String url) {
+		if (url == null) {
+			return null;
+		}
+		
+		try {
+			url = URLDecoder.decode(url, StandardCharsets.UTF_8);
 		} catch (Exception e) {
 		}
+		
+		url = url.trim();
+		
+		if (url.startsWith("\"") && url.endsWith("\"")) {
+			url = url.substring(1, url.length() - 1);
+		}
+		
+		if (url.startsWith("'") && url.endsWith("'")) {
+			url = url.substring(1, url.length() - 1);
+		}
+		
+		return url.trim();
 	}
 }
