@@ -137,6 +137,9 @@ public class AuthController {
 		)
 	)
 	public ResponseEntity<Boolean> sendPaymentOtp(@Valid @PathVariable Long userId, @Valid @RequestBody OtpRequestDTO request) {
+		if (!userId.equals(request.getUserId())) {
+			throw new com.tejas.bankingcommon.exceptions.BadRequestException("Path variable userId must match request body userId.");
+		}
 		return ResponseEntity.ok().body(service.sendOtp(request));
 	}
 	

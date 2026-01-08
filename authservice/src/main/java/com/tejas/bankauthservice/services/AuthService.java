@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tejas.bankauthservice.exceptions.AlreadyUsedException;
 import com.tejas.bankauthservice.models.ChangePasswordRequest;
@@ -59,15 +60,11 @@ public class AuthService {
 	}
 
 	public User signupUser(SignupRequest req) {
-		User user1 = new User();
-		
-		user1 = repo.getByUsername(req.getUsername()).orElse(null);
-		if (user1 != null) {
+		if (repo.getByUsername(req.getUsername()).isPresent()) {
 			throw new AlreadyUsedException("Username: "+req.getUsername());
 		} 
 		
-		user1 = repo.getByEmail(req.getEmail()).orElse(null);
-		if (user1 != null) {
+		if (repo.getByEmail(req.getEmail()).isPresent()) {
 			throw new AlreadyUsedException("Email: "+req.getEmail());
 		}
 		
@@ -80,9 +77,7 @@ public class AuthService {
 		user.setCreatedAt(LocalDateTime.now());
 		user.setUpdatedAt(LocalDateTime.now());
 		try {
-			User savedUser = repo.save(user);
-			evictUserCache(savedUser.getUsername());
-			return savedUser;
+			return repo.save(user);
 		} catch (Exception e) {
 			throw new GeneralServerException();
 		}		
@@ -127,7 +122,6 @@ public class AuthService {
 				new NotFoundException("User not found")
 			);
 		
-		if (user == null) {throw new NotFoundException("User not found");}
 		String id = AuthUtils.getUserId();
 		
 		if (String.valueOf(userId).equals(id) || AuthUtils.isAdmin()) {
@@ -178,7 +172,6 @@ public class AuthService {
 				new NotFoundException("User not found")
 			);
 		
-		if (user == null) {throw new NotFoundException("User not found");}
 		String id = AuthUtils.getUserId();
 		
 		if (String.valueOf(userId).equals(id) || AuthUtils.isAdmin()) {
@@ -210,7 +203,7 @@ public class AuthService {
 		throw new UnauthorizedException("You do not have access to this account.");
 	}
 	
-	@Cacheable(value="contact_details", key="userId", unless="#result == null")
+	@Cacheable(value="contact_details", key="#userId", unless="#result == null")
 	protected ContactDetails cachedGetContact(long userId) {
 		User user = repo.getById(userId)
 			.orElseThrow(() -> 
@@ -241,6 +234,11 @@ public class AuthService {
 				new NotFoundException("User not found")
 			);
 		
+		String requestingUserId = AuthUtils.getUserId();
+		if (requestingUserId != null && !AuthUtils.isAdmin() && !String.valueOf(request.getUserId()).equals(requestingUserId)) {
+			throw new UnauthorizedException("You do not have permission to send OTP for this user.");
+		}
+		
 		String rawOtp = OtpUtils.otpGenerator();
 		
 		Otp otp = Otp.builder()
@@ -254,6 +252,8 @@ public class AuthService {
 				.status(OtpStatus.PENDING)
 				.build();
 		
+		otpRepo.save(otp);
+		
 		MessageEvent event = MessageEvent.builder()
 				.otpNumber(rawOtp)
 				.email(user.getEmail())
@@ -261,11 +261,11 @@ public class AuthService {
 				.build();
 		
 		otpProducer.dispatchResponseWithRetry(event);
-		otpRepo.save(otp);
 		
 		return true;
 	}
 
+	@Transactional
 	public OtpValidateResponse validateOtp(OtpValidateRequest request) {
 		Otp otp = otpRepo.findByReferenceIdAndType(request.getReferenceId(), request.getType()).orElse(null);
 		
@@ -295,12 +295,10 @@ public class AuthService {
 						otp.setStatus(OtpStatus.VERIFIED);
 						otpRepo.save(otp);
 						otpResponse.setValidated(true);
-						otpResponse.setMessage("OTP verfied successfully.");
+						otpResponse.setMessage("OTP verified successfully.");
 						return otpResponse;
-					} else if (otp.getExpiresAt().isBefore(LocalDateTime.now()) || otp.getExpiresAt().isEqual(LocalDateTime.now())) {
-						otp.setStatus(OtpStatus.EXPIRED);
-					} else if (otp.getAttempts() >= otp.getMaxAttempts()) {
-						otp.setStatus(OtpStatus.MAX_ATTEMPTS);						
+					} else if (attempts >= otp.getMaxAttempts()) {
+						otp.setStatus(OtpStatus.MAX_ATTEMPTS);
 					}
 				}				
 			} 
