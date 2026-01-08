@@ -111,6 +111,7 @@ public class TransactionConsumer {
         copy.setToAccountNumber(e.getToAccountNumber());
         copy.setAmount(e.getAmount());
         copy.setUserId(e.getUserId());
+        copy.setPaymentId(e.getPaymentId());
         copy.setType(e.getType());
         copy.setStatus(e.getStatus());
         return copy;
