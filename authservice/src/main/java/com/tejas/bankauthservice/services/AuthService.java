@@ -60,11 +60,15 @@ public class AuthService {
 	}
 
 	public User signupUser(SignupRequest req) {
-		if (repo.getByUsername(req.getUsername()).isPresent()) {
+		User user1 = new User();
+		
+		user1 = repo.getByUsername(req.getUsername()).orElse(null);
+		if (user1 != null) {
 			throw new AlreadyUsedException("Username: "+req.getUsername());
 		} 
 		
-		if (repo.getByEmail(req.getEmail()).isPresent()) {
+		user1 = repo.getByEmail(req.getEmail()).orElse(null);
+		if (user1 != null) {
 			throw new AlreadyUsedException("Email: "+req.getEmail());
 		}
 		
@@ -77,7 +81,9 @@ public class AuthService {
 		user.setCreatedAt(LocalDateTime.now());
 		user.setUpdatedAt(LocalDateTime.now());
 		try {
-			return repo.save(user);
+			User savedUser = repo.save(user);
+			evictUserCache(savedUser.getUsername());
+			return savedUser;
 		} catch (Exception e) {
 			throw new GeneralServerException();
 		}		
@@ -234,11 +240,6 @@ public class AuthService {
 				new NotFoundException("User not found")
 			);
 		
-		String requestingUserId = AuthUtils.getUserId();
-		if (requestingUserId != null && !AuthUtils.isAdmin() && !String.valueOf(request.getUserId()).equals(requestingUserId)) {
-			throw new UnauthorizedException("You do not have permission to send OTP for this user.");
-		}
-		
 		String rawOtp = OtpUtils.otpGenerator();
 		
 		Otp otp = Otp.builder()
@@ -252,8 +253,6 @@ public class AuthService {
 				.status(OtpStatus.PENDING)
 				.build();
 		
-		otpRepo.save(otp);
-		
 		MessageEvent event = MessageEvent.builder()
 				.otpNumber(rawOtp)
 				.email(user.getEmail())
@@ -261,6 +260,7 @@ public class AuthService {
 				.build();
 		
 		otpProducer.dispatchResponseWithRetry(event);
+		otpRepo.save(otp);
 		
 		return true;
 	}
@@ -297,8 +297,6 @@ public class AuthService {
 						otpResponse.setValidated(true);
 						otpResponse.setMessage("OTP verified successfully.");
 						return otpResponse;
-					} else if (attempts >= otp.getMaxAttempts()) {
-						otp.setStatus(OtpStatus.MAX_ATTEMPTS);
 					}
 				}				
 			} 
