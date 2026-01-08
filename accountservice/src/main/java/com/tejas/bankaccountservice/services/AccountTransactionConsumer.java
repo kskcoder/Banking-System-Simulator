@@ -11,6 +11,7 @@ import com.tejas.bankingcommon.dto.ContactDetails;
 import com.tejas.bankingcommon.dto.MessageEvent;
 import com.tejas.bankingcommon.dto.MessageType;
 import com.tejas.bankingcommon.dto.TransactionEvent;
+import com.tejas.bankingcommon.enums.InternalServiceType;
 import com.tejas.bankingcommon.enums.TransactionStatus;
 
 import lombok.RequiredArgsConstructor;
