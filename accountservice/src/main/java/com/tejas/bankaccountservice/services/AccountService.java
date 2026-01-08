@@ -78,7 +78,7 @@ public class AccountService {
     }
 	
 	public Account createAccount(CreateAccountDTO accountReq) {
-		boolean userExistsResponse = false;
+		boolean userExistsResponse;
 		try {
 			userExistsResponse = authInterface.userExists(Long.valueOf(accountReq.getUserId())).getBody();
 		} catch (FeignException e) {
@@ -112,10 +112,11 @@ public class AccountService {
 	}
 
 	public Account getAccountByAccountNumber(String accountNumber) {
-		Account account = repo.getByAccountnumber(accountNumber).get();
+		Account account = repo.getByAccountnumber(accountNumber)
+			.orElseThrow(() -> new NotFoundException("Requested account not found."));
 		String userId = AccountUtils.getUserId();
 		
-		if (account != null && (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin())) {
+		if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
 			return account;
 		}
 			
@@ -128,36 +129,34 @@ public class AccountService {
 	}
 	
 	public List<Account> getAccountsByUserId(int userId) {
-		List<Account> accounts = repo.getByUserid(userId).get();
+		List<Account> accounts = repo.getByUserid(userId)
+			.orElseThrow(() -> new NotFoundException("Requested account not found."));
 		
-		if (!accounts.isEmpty()) {
-			if (isOwnerOfAccountId(accounts.stream().findFirst().get().getId())) {
-				return accounts;
-			} else {
-				throw new ForbiddenException("You do not have permission to access this resource.");
-			}
+		if (accounts.isEmpty()) {
+			throw new NotFoundException("Requested account not found.");
 		}
-		throw new NotFoundException("Requested account not found.");
-	}
-	
-	@CachePut(value="all_accounts_of_userid", key="#userId", unless="#result == null || #result.isEmpty()")
-	protected List<Account> getAccountsByUserId(List<Account> accounts, Long userId) {
-		return accounts;
+		
+		Long accountId = accounts.stream()
+			.findFirst()
+			.map(Account::getId)
+			.orElseThrow(() -> new NotFoundException("Requested account not found."));
+		if (isOwnerOfAccountId(accountId)) {
+			return accounts;
+		} else {
+			throw new ForbiddenException("You do not have permission to access this resource.");
+		}
 	}
 	
 	public Double getBalanceByAccountId(Long accountId) {
-		Account account = repo.getById(accountId).get();
+		Account account = repo.getById(accountId)
+			.orElseThrow(() -> new NotFoundException("Requested account not found."));
 		String userId = AccountUtils.getUserId();
 		
-		if (account != null) {
-			if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
-				return getCachedBalance(account);
-			} else {
-				throw new ForbiddenException("You do not have permission to access this resource.");
-			}
+		if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
+			return getCachedBalance(account);
+		} else {
+			throw new ForbiddenException("You do not have permission to access this resource.");
 		}
-			
-		throw new NotFoundException("Requested account not found.");
 	}
 	
 	@CachePut(value="balance", key="#account.id")
@@ -166,90 +165,81 @@ public class AccountService {
 	}
 	
 	public String closeAccount(String accountNumber) {
-		Account account = repo.getByAccountnumber(accountNumber).get();
+		Account account = repo.getByAccountnumber(accountNumber)
+			.orElseThrow(() -> new NotFoundException("Requested account not found."));
 		String userId = AccountUtils.getUserId();
 		
-		if (account != null) {
-			if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
-				Long accountId = account.getId();
-				Long accountUserId = Long.valueOf(account.getUserid());
-				repo.delete(account);
-				evictAccountCache(accountId);
-				evictUserAccountsCache(accountUserId);
-				evictAllAccountIdsCache();
-				return "Account Closed Successfully!";
-			} else {
-				throw new ForbiddenException("You do not have permission to access this resource.");
-			}
+		if (String.valueOf(account.getUserid()).equals(userId) || AccountUtils.isAdmin()) {
+			Long accountId = account.getId();
+			Long accountUserId = Long.valueOf(account.getUserid());
+			repo.delete(account);
+			evictAccountCache(accountId);
+			evictUserAccountsCache(accountUserId);
+			evictAllAccountIdsCache();
+			return "Account Closed Successfully!";
+		} else {
+			throw new ForbiddenException("You do not have permission to access this resource.");
 		}
-		
-		throw new NotFoundException("Requested account not found.");		
 	}
 
 	public Boolean isOwnerOfAccountNumber(String accountNumber) {
 		String role = AuthUtils.getRole();
 		
-		if (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString())) {
+		if (role != null && (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString()))) {
 			return true;
 		}
 		
 		String userId = AccountUtils.getUserId();
-		Account account = repo.getByAccountnumber(accountNumber).get();
-		if (account != null) {
-			boolean isOwner = String.valueOf(account.getUserid()).equals(userId);
-			return isOwner;
-		}
-			
-		throw new NotFoundException("Requested account not found.");
+		Account account = repo.getByAccountnumber(accountNumber)
+			.orElseThrow(() -> new NotFoundException("Requested account not found."));
+		boolean isOwner = String.valueOf(account.getUserid()).equals(userId);
+		return isOwner;
 	}
 	
 	public Boolean isOwnerOfAccountId(long accountId) {
 		String role = AuthUtils.getRole();
 		
-		if (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString())) {
+		if (role != null && (role.equals(UserType.INTERNAL_SERVICE.toString()) || role.equals(UserType.ADMIN.toString()))) {
 			return true;
 		}
 		
 		String userId = AccountUtils.getUserId();
-		Account account = repo.getById(accountId).get();
-		if (account != null) {
-			boolean isOwner = String.valueOf(account.getUserid()).equals(userId);
-			return isOwner;
-		}
-			
-		throw new NotFoundException("Requested account not found.");
+		Account account = repo.getById(accountId)
+			.orElseThrow(() -> new NotFoundException("Requested account not found."));
+		boolean isOwner = String.valueOf(account.getUserid()).equals(userId);
+		return isOwner;
 	}
 	
 	@Cacheable(value = "account_type", key = "#accountId", unless="#result == null")
 	public AccountType getAccountTypeByAccountId(long accountId) {
-		Account account = repo.getById(accountId).get();
-		if (account != null) {
-			return account.getAccountType();
-		}
-			
-		throw new NotFoundException("Requested account not found.");
+		Account account = repo.getById(accountId)
+			.orElseThrow(() -> new NotFoundException("Requested account not found."));
+		return account.getAccountType();
 	}
 
 	public List<Long> getAccountIdsByUserId() {
 		String userId = AccountUtils.getUserId();
-		List<Account> accounts = repo.getByUserid(Long.parseLong(userId)).get();
+		List<Account> accounts = repo.getByUserid(Long.parseLong(userId))
+			.orElseThrow(() -> new NoContentException("No accounts found."));
 		
-		if (!accounts.isEmpty()) {
-			if (String.valueOf(accounts.stream().findFirst().get().getUserid()).equals(userId) || AccountUtils.isAdmin()) {
-				List<Long> accountIds = accounts.stream().map(Account::getId).collect(Collectors.toList());
-				return accountIds;
-			} else {
-				throw new ForbiddenException("You do not have permission to access this resource.");
-			}
+		if (accounts.isEmpty()) {
+			throw new NoContentException("No accounts found.");
 		}
 		
-		throw new NoContentException("No accounts found.");
+		if (AccountUtils.isAdmin()) {
+			List<Long> accountIds = accounts.stream().map(Account::getId).collect(Collectors.toList());
+			return accountIds;
+		}
+		
+		List<Long> accountIds = accounts.stream().map(Account::getId).collect(Collectors.toList());
+		return accountIds;
 	}
 	
 	@Cacheable(value = "all_accounts_of_userid", key = "T(com.tejas.bankaccountservice.utils.AccountUtils).getUserId()", unless="#result == null || #result.isEmpty()")
 	public List<Account> getMyAccounts() {
 		String userId = AccountUtils.getUserId();
-		List<Account> accounts = repo.getByUserid(Long.parseLong(userId)).get();
+		List<Account> accounts = repo.getByUserid(Long.parseLong(userId))
+			.orElseThrow(() -> new NoContentException("No accounts found."));
 		
 		if (!accounts.isEmpty()) {
 			return accounts;
@@ -260,31 +250,27 @@ public class AccountService {
 	
 	@Cacheable(value = "userId", key = "#accountId", unless="#result == null")
 	public Long getuserIdByAccountId(long accountId) {
-		Account account = repo.getById(accountId).get();
-		if (account != null) {
-			return account.getUserid();
-		}
-			
-		throw new NotFoundException("Requested account not found.");
+		Account account = repo.getById(accountId)
+			.orElseThrow(() -> new NotFoundException("Requested account not found."));
+		return account.getUserid();
 	}
 	
 	@Cacheable(value = "account_number", key = "#accountId", unless="#result == null")
 	public String getAccountNumberByAccountId(long accountId) {
-		Account account = repo.getById(accountId).get();
-		if (account != null) {
-			return account.getAccountnumber();
-		}
-		throw new NotFoundException("Requested account not found.");
+		Account account = repo.getById(accountId)
+			.orElseThrow(() -> new NotFoundException("Requested account not found."));
+		return account.getAccountnumber();
 	}
 	
 	public Boolean accountExists(Long accountId) {
 		String requestingUserId = AccountUtils.getUserId();
-		Account account = repo.getById(accountId).get();
+		Account account = repo.getById(accountId)
+			.orElseThrow(() -> new NotFoundException("Requested account not found."));
 		
 		long userId = account.getUserid();
 		
 		if (AccountUtils.isAdmin() || String.valueOf(userId).equals(requestingUserId)) {
-			return repo.getById(accountId).isPresent();
+			return true;
 		} else {
 			throw new ForbiddenException("You do not have permission to access this resource.");
 		}
