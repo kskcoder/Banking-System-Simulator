@@ -22,10 +22,8 @@ import com.tejas.bankingcommon.enums.UserType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
-@Slf4j
 @Component
 @AllArgsConstructor
 public class JWTFilter implements WebFilter, Ordered {
@@ -51,12 +49,8 @@ public class JWTFilter implements WebFilter, Ordered {
         String secret = secretsConfig.getSecrets().get(serviceName);
 
         String external = request.getHeaders().getFirst("X-External");
-        
-        System.out.println("Gateway JWTFilter - X-External: " + external);
-        System.out.println("Gateway JWTFilter - Path: " + path);
 
         if ("1".equals(external)) {
-            System.out.println("Gateway JWTFilter - External request detected, setting up authentication");
             String userId = InternalServiceType.PAYMENT.toString();
             String role = UserType.INTERNAL_SERVICE.toString();
 
@@ -73,18 +67,10 @@ public class JWTFilter implements WebFilter, Ordered {
                     .header("X-User-Role", role)
                     .build();
 
-            System.out.println("Gateway JWTFilter - Authentication set, proceeding with modified request");
-            System.out.println("Gateway JWTFilter - Auth principal: " + auth.getPrincipal() + ", authorities: " + auth.getAuthorities());
-            
             ServerWebExchange modifiedExchange = exchange.mutate().request(modifiedRequest).build();
             
             return chain.filter(modifiedExchange)
-                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth))
-                    .doOnSuccess(v -> System.out.println("Gateway JWTFilter - Filter chain completed successfully"))
-                    .doOnError(e -> {
-                        System.out.println("Gateway JWTFilter - Filter chain error: " + e.getMessage());
-                        e.printStackTrace();
-                    });
+                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
         }
 
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
