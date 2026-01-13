@@ -79,7 +79,6 @@ public class PaymentConsumer {
 			HttpEntity<PaymentResponse> requestEntity = new HttpEntity<>(response, headers);
 			template.postForObject(url, requestEntity, String.class);
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 	

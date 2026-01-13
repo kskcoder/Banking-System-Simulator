@@ -39,9 +39,7 @@ import com.tejas.bankpaymentservice.utils.HmacUtil;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -215,15 +213,10 @@ public class PaymentService {
 	}
 
 	public ResponseEntity<OtpValidateResponse> submitOtp(SubmitPaymentOtp otpRequest) {
-		System.out.println("Payment Service - submitOtp called for paymentId: " + otpRequest.getPaymentId() + ", OTP: " + otpRequest.getOtp());
-		
 		Payment payment = getCachedPayment(otpRequest.getPaymentId());
 		
 		if (payment != null) {
-			System.out.println("Payment Service - Payment found, status: " + payment.getStatus());
-			
 			if (payment.getStatus().equals(PaymentStatus.FAILED)) {
-				System.out.println("Payment Service - Payment has failed status, returning FORBIDDEN");
 				OtpValidateResponse submitResponse = OtpValidateResponse.builder()
 						.referenceId(String.valueOf(otpRequest.getPaymentId()))
 						.validated(false)
@@ -239,8 +232,6 @@ public class PaymentService {
 					.otpValue(otpRequest.getOtp())
 					.build();
 			
-			System.out.println("Payment Service - Calling auth service to validate OTP for paymentId: " + otpRequest.getPaymentId());
-			
 			OtpValidateResponse otpResponse = new OtpValidateResponse(); 
 			boolean isValidated = false;
 			
@@ -250,10 +241,7 @@ public class PaymentService {
 					throw new GeneralServerException();
 				}
 				isValidated = otpResponse.isValidated();
-				System.out.println("Payment Service - OTP validation result from auth service: " + isValidated);
 			} catch (FeignException e) {
-				System.out.println("Payment Service - Error validating OTP: status=" + e.status() + ", message=" + e.contentUTF8());
-
 				payment.setStatus(PaymentStatus.INCORRECT_OTP);
 				repo.save(payment);
 				evictPaymentCache(payment.getId());
@@ -271,7 +259,6 @@ public class PaymentService {
 				if (otpResponse.isRetried()) {
 					return new ResponseEntity<>(otpResponse, HttpStatus.BAD_REQUEST);
 				}
-				System.out.println("Payment Service - OTP is valid, proceeding with payment processing");
 				return validOtp(payment);
 			} else {
 				payment.setStatus(PaymentStatus.INCORRECT_OTP);
@@ -283,14 +270,11 @@ public class PaymentService {
 			}
 			
 		} else {
-			System.out.println("Payment Service - Payment not found for paymentId: " + otpRequest.getPaymentId());
 			throw new NotFoundException("Incorrect Payment Id");
 		}
 	}
 	
 	public ResponseEntity<OtpValidateResponse> validOtp(Payment payment) {
-		System.out.println("Payment Service - validOtp called for paymentId: " + payment.getId());
-		
 		TransferRequest req = TransferRequest.builder()
 				.fromAccount(payment.getFromAccountNumber())
 				.toAccount(payment.getToAccountNumber())
@@ -298,16 +282,9 @@ public class PaymentService {
 				.paymentId(payment.getId())
 				.build();
 		
-		System.out.println("Payment Service - Calling transaction service to transfer: from=" + req.getFromAccount() + ", to=" + req.getToAccount() + ", amount=" + req.getAmount());
-		
 		try {
 			trInt.transfer(req).getBody();
-			System.out.println("Payment Service - Transfer completed successfully");
-			
-			//Not needed to check if transaction call has succeeded as failure is caught as exception. 
 		} catch (FeignException e) {
-			System.out.println("Payment Service - Error calling transaction service: status=" + e.status() + ", message=" + e.contentUTF8());
-			e.printStackTrace();
 			throw new GeneralServerException();
 		}
 		OtpValidateResponse submitResponse = OtpValidateResponse.builder()
@@ -335,7 +312,6 @@ public class PaymentService {
 			String bodyString = normalizeJsonBody(requestBody);
 			return HmacUtil.hmacSha256(vendorSecret, bodyString + timestamp);
 		} catch (Exception e) {
-			log.error("Payment Service - Error calculating signature: {}", e.getMessage(), e);
 			throw new GeneralServerException();
 		}
 	}
@@ -357,7 +333,6 @@ public class PaymentService {
 			
 			return normalized;
 		} catch (Exception e) {
-			log.warn("Payment Service - Failed to normalize JSON body, using original: {}", e.getMessage());
 			return body;
 		}
 	}
