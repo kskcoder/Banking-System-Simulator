@@ -23,6 +23,6 @@ WORKDIR /app
 
 COPY --from=builder /build/bankapigateway/target/*.jar app.jar
 
-EXPOSE 8080
+EXPOSE 8765
 
 ENTRYPOINT ["java","-jar","app.jar"]

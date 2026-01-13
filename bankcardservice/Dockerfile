@@ -8,12 +8,12 @@ COPY bankingcommon/pom.xml bankingcommon/pom.xml
 COPY bankingcommon/src bankingcommon/src
 RUN mvn -f bankingcommon/pom.xml clean install -DskipTests
 
-# 2️⃣ Build Transaction Service
-COPY banktransactionservice/pom.xml banktransactionservice/pom.xml
-RUN mvn -f banktransactionservice/pom.xml dependency:go-offline
+# 2️⃣ Build Card Service
+COPY bankcardservice/pom.xml bankcardservice/pom.xml
+RUN mvn -f bankcardservice/pom.xml dependency:go-offline
 
-COPY banktransactionservice/src banktransactionservice/src
-RUN mvn -f banktransactionservice/pom.xml clean package -DskipTests
+COPY bankcardservice/src bankcardservice/src
+RUN mvn -f bankcardservice/pom.xml clean package -DskipTests
 
 
 # ----------- RUNTIME STAGE -----------
@@ -21,8 +21,8 @@ FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
-COPY --from=builder /build/banktransactionservice/target/*.jar app.jar
+COPY --from=builder /build/bankcardservice/target/*.jar app.jar
 
-EXPOSE 8090
+EXPOSE 8095
 
 ENTRYPOINT ["java","-jar","app.jar"]

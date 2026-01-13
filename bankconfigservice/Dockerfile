@@ -1,30 +1,28 @@
-# ===============================
-# Stage 1: Build
-# ===============================
+# ----------- BUILD STAGE -----------
 FROM maven:3.9.6-eclipse-temurin-17 AS builder
 
-WORKDIR /app
+WORKDIR /build
 
-# Copy pom first for dependency caching
-COPY pom.xml .
-RUN mvn dependency:go-offline
+# 1️⃣ Build & install bankingcommon (local dependency)
+COPY bankingcommon/pom.xml bankingcommon/pom.xml
+COPY bankingcommon/src bankingcommon/src
+RUN mvn -f bankingcommon/pom.xml clean install -DskipTests
 
-# Copy source and build
-COPY src ./src
-RUN mvn clean package -DskipTests
+# 2️⃣ Build Config Service
+COPY bankconfigservice/pom.xml bankconfigservice/pom.xml
+RUN mvn -f bankconfigservice/pom.xml dependency:go-offline
 
-# ===============================
-# Stage 2: Runtime
-# ===============================
+COPY bankconfigservice/src bankconfigservice/src
+RUN mvn -f bankconfigservice/pom.xml clean package -DskipTests
+
+
+# ----------- RUNTIME STAGE -----------
 FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
-# Copy the built jar from builder stage
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /build/bankconfigservice/target/*.jar app.jar
 
-# Expose config server port
 EXPOSE 8888
 
-# JVM optimizations for containers
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]

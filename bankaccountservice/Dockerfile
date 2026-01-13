@@ -8,7 +8,7 @@ COPY bankingcommon/pom.xml bankingcommon/pom.xml
 COPY bankingcommon/src bankingcommon/src
 RUN mvn -f bankingcommon/pom.xml clean install -DskipTests
 
-# 2️⃣ Build Auth Service
+# 2️⃣ Build Account Service
 COPY bankaccountservice/pom.xml bankaccountservice/pom.xml
 RUN mvn -f bankaccountservice/pom.xml dependency:go-offline
 
@@ -23,6 +23,6 @@ WORKDIR /app
 
 COPY --from=builder /build/bankaccountservice/target/*.jar app.jar
 
-EXPOSE 8080
+EXPOSE 8085
 
 ENTRYPOINT ["java","-jar","app.jar"]
