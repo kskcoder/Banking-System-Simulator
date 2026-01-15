@@ -1,4 +1,3 @@
-CREATE TYPE user_type AS ENUM ('USER', 'ADMIN', 'INTERNAL_SERVICE');
 
 CREATE TYPE message_type AS ENUM ('LOGIN_OTP', 'REGISTER_OTP', 'PAYMENT_OTP', 'CREDIT', 'DEBIT');
 
@@ -10,7 +9,7 @@ CREATE TABLE usercred (
     email VARCHAR(255),
     password VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
-    role user_type NOT NULL,
+    role VARCHAR(50) NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );

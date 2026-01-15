@@ -4,18 +4,26 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: postgres
+    env_file:
+      - public.env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-1234}
       POSTGRES_DB: postgres
+    command: >
+      bash -c "
+      echo '#!/bin/bash' > /docker-entrypoint-initdb.d/01-create-databases.sh &&
+      echo 'set -e' >> /docker-entrypoint-initdb.d/01-create-databases.sh &&
+      echo 'env | grep \"_POSTGRES_DB=\" | while IFS=\"=\" read -r var_name db_name; do' >> /docker-entrypoint-initdb.d/01-create-databases.sh &&
+      echo '  if [ -n \"\$$db_name\" ]; then' >> /docker-entrypoint-initdb.d/01-create-databases.sh &&
+      echo '    psql -v ON_ERROR_STOP=1 --username \"\$$POSTGRES_USER\" --dbname \"\$$POSTGRES_DB\" -tc \"SELECT 1 FROM pg_database WHERE datname = '\''\$$db_name'\''\" | grep -q 1 || psql -v ON_ERROR_STOP=1 --username \"\$$POSTGRES_USER\" --dbname \"\$$POSTGRES_DB\" -c \"CREATE DATABASE \\\"\$$db_name\\\"\"' >> /docker-entrypoint-initdb.d/01-create-databases.sh &&
+      echo '  fi' >> /docker-entrypoint-initdb.d/01-create-databases.sh &&
+      echo 'done' >> /docker-entrypoint-initdb.d/01-create-databases.sh &&
+      chmod +x /docker-entrypoint-initdb.d/01-create-databases.sh &&
+      docker-entrypoint.sh postgres
+      "
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./postgres-init/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
-      - ./bankauthservice/.env:/tmp/bankauthservice.env:ro
-      - ./bankaccountservice/.env:/tmp/bankaccountservice.env:ro
-      - ./banktransactionservice/.env:/tmp/banktransactionservice.env:ro
-      - ./bankpaymentservice/.env:/tmp/bankpaymentservice.env:ro
-      - ./bankcardservice/.env:/tmp/bankcardservice.env:ro
     networks:
       - banking-network
     healthcheck:
@@ -95,7 +103,9 @@ services:
     ports:
       - "8888:8888"
     env_file:
-      - bankconfigservice/.env
+      - public.env
+    environment:
+      CONFIG_GIT_URI: ${CONFIG_GIT_URI_EXTERNAL:-https://github.com/kskcoder/Banking-System-Simulator-Config.git}
     networks:
       - banking-network
     healthcheck:
@@ -116,7 +126,7 @@ services:
       bankconfigservice:
         condition: service_healthy
     env_file:
-      - bankserviceregistry/.env
+      - public.env
     networks:
       - banking-network
     healthcheck:
@@ -139,9 +149,7 @@ services:
       bankconfigservice:
         condition: service_healthy
     env_file:
-      - bankapigateway/.env
-    environment:
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: ${EUREKA_URL:-http://bankserviceregistry:8761/eureka}
+      - public.env
     networks:
       - banking-network
     healthcheck:
@@ -159,6 +167,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      redis:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       bankserviceregistry:
@@ -166,10 +176,10 @@ services:
       bankconfigservice:
         condition: service_healthy
     env_file:
-      - bankauthservice/.env
+      - public.env
     environment:
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: ${EUREKA_URL:-http://bankserviceregistry:8761/eureka}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      POSTGRES_DB: ${BANK_AUTH_POSTGRES_DB:-bankauthdb}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${BANK_AUTH_POSTGRES_DB:-bankauthdb}
     networks:
       - banking-network
     healthcheck:
@@ -198,12 +208,10 @@ services:
       bankconfigservice:
         condition: service_healthy
     env_file:
-      - bankaccountservice/.env
+      - public.env
     environment:
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: ${EUREKA_URL:-http://bankserviceregistry:8761/eureka}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      SPRING_REDIS_HOST: redis
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POSTGRES_DB: ${BANK_ACCOUNT_POSTGRES_DB:-bankaccountdb}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${BANK_ACCOUNT_POSTGRES_DB:-bankaccountdb}
     networks:
       - banking-network
     healthcheck:
@@ -230,11 +238,10 @@ services:
       bankconfigservice:
         condition: service_healthy
     env_file:
-      - banktransactionservice/.env
+      - public.env
     environment:
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: ${EUREKA_URL:-http://bankserviceregistry:8761/eureka}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POSTGRES_DB: ${BANK_TRANSACTION_POSTGRES_DB:-banktransactiondb}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${BANK_TRANSACTION_POSTGRES_DB:-banktransactiondb}
     networks:
       - banking-network
     healthcheck:
@@ -261,11 +268,10 @@ services:
       bankconfigservice:
         condition: service_healthy
     env_file:
-      - bankpaymentservice/.env
+      - public.env
     environment:
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: ${EUREKA_URL:-http://bankserviceregistry:8761/eureka}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POSTGRES_DB: ${BANK_PAYMENT_POSTGRES_DB:-bankpaymentdb}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${BANK_PAYMENT_POSTGRES_DB:-bankpaymentdb}
     networks:
       - banking-network
     healthcheck:
@@ -290,10 +296,8 @@ services:
       bankconfigservice:
         condition: service_healthy
     env_file:
-      - bankmessagingservice/.env
-    environment:
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: ${EUREKA_URL:-http://bankserviceregistry:8761/eureka}
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      - public.env
+      - private.env
     networks:
       - banking-network
     healthcheck:
@@ -322,12 +326,10 @@ services:
       bankconfigservice:
         condition: service_healthy
     env_file:
-      - bankcardservice/.env
+      - public.env
     environment:
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: ${EUREKA_URL:-http://bankserviceregistry:8761/eureka}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      SPRING_REDIS_HOST: redis
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POSTGRES_DB: ${BANK_CARD_POSTGRES_DB:-bankcarddb}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${BANK_CARD_POSTGRES_DB:-bankcarddb}
     networks:
       - banking-network
     healthcheck:
