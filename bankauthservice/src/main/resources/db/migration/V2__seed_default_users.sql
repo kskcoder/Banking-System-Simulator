@@ -1,7 +1,8 @@
 INSERT INTO usercred
-(username, email, password, phone, role, created_at, updated_at)
+(id, username, email, password, phone, role, created_at, updated_at)
 VALUES
 (
+	1,
   'User1',
   'user1@example.com',
   '$2a$12$VB1l0WCqjB63eoEP/Ojg9OK37K2mxHTo0v2ncDrg5wIt6z5dZ7VTq',
@@ -11,6 +12,7 @@ VALUES
   NOW()
 ),
 (
+	2,
   'User2',
   'user2@example.com',
   '$2a$12$wTbzuM.TIydAfVshBfOscOdj4RYgWERWSDCJ.xzHvK.rzz2GYNoPe',
@@ -20,6 +22,7 @@ VALUES
   NOW()
 ),
 (
+	3,
   'TejasAdmin',
   'tejasadmin@example.com',
   '$2a$12$Q6QOQQ9aTD1KaCpaM897aeL7r4PJOGhYqa/impLCzNblctgKJoHPK',
@@ -28,3 +31,11 @@ VALUES
   NOW(),
   NOW()
 );
+
+SELECT setval(
+  pg_get_serial_sequence('usercred', 'id'),
+  (SELECT MAX(id) FROM usercred)
+);
+
+
+
