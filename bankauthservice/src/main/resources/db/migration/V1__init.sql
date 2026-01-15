@@ -1,26 +1,3 @@
--- USER ROLE ENUM
-CREATE TYPE user_type AS ENUM (
-  'USER',
-  'ADMIN',
-  'INTERNAL_SERVICE'
-);
-
--- OTP ENUMS
-CREATE TYPE message_type AS ENUM (
-  'LOGIN_OTP',
-  'REGISTER_OTP',
-  'PAYMENT_OTP',
-  'CREDIT',
-  'DEBIT'
-);
-
-CREATE TYPE otp_status AS ENUM (
-  'PENDING',
-  'VERIFIED',
-  'MAX_ATTEMPTS',
-  'EXPIRED'
-);
-
 -- USER TABLE
 CREATE TABLE usercred (
     id BIGSERIAL PRIMARY KEY,
