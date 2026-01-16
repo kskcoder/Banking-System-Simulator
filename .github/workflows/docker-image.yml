@@ -24,10 +24,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Get previous commit SHA
+        id: prev-commit
+        run: |
+          if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            echo "sha=${{ github.event.before }}" >> $GITHUB_OUTPUT
+          else
+            PREV_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+            echo "sha=${PREV_SHA}" >> $GITHUB_OUTPUT
+          fi
       - uses: dorny/paths-filter@v2
         id: filter
         with:
-          base: ${{ github.event.before || github.sha~1 }}
+          base: ${{ steps.prev-commit.outputs.sha }}
           filters: |
             bankconfigservice:
               - 'bankconfigservice/**'
