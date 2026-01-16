@@ -27,5 +27,5 @@ public class BankauthserviceApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(BankauthserviceApplication.class, args);
 	}
-
+ 
 }
