@@ -11,5 +11,5 @@ public class BankconfigserviceApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(BankconfigserviceApplication.class, args);
 	}
-
+ 
 }
