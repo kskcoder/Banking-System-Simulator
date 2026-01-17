@@ -3,6 +3,13 @@ name: Banking System Simulator Docker Deployment
 on:
   push:
     branches: [ "release" ]
+  workflow_dispatch:
+    inputs:
+      force_build_all:
+        description: 'Force build all services (ignore change detection)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -11,16 +18,17 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      bankconfigservice: ${{ steps.filter.outputs.bankconfigservice }}
-      bankserviceregistry: ${{ steps.filter.outputs.bankserviceregistry }}
-      bankapigateway: ${{ steps.filter.outputs.bankapigateway }}
-      bankauthservice: ${{ steps.filter.outputs.bankauthservice }}
-      bankaccountservice: ${{ steps.filter.outputs.bankaccountservice }}
-      banktransactionservice: ${{ steps.filter.outputs.banktransactionservice }}
-      bankpaymentservice: ${{ steps.filter.outputs.bankpaymentservice }}
-      bankmessagingservice: ${{ steps.filter.outputs.bankmessagingservice }}
-      bankcardservice: ${{ steps.filter.outputs.bankcardservice }}
-      bankingcommon: ${{ steps.filter.outputs.bankingcommon }}
+      bankconfigservice: ${{ steps.filter.outputs.bankconfigservice || (github.event.inputs.force_build_all == 'true') }}
+      bankserviceregistry: ${{ steps.filter.outputs.bankserviceregistry || (github.event.inputs.force_build_all == 'true') }}
+      bankapigateway: ${{ steps.filter.outputs.bankapigateway || (github.event.inputs.force_build_all == 'true') }}
+      bankauthservice: ${{ steps.filter.outputs.bankauthservice || (github.event.inputs.force_build_all == 'true') }}
+      bankaccountservice: ${{ steps.filter.outputs.bankaccountservice || (github.event.inputs.force_build_all == 'true') }}
+      banktransactionservice: ${{ steps.filter.outputs.banktransactionservice || (github.event.inputs.force_build_all == 'true') }}
+      bankpaymentservice: ${{ steps.filter.outputs.bankpaymentservice || (github.event.inputs.force_build_all == 'true') }}
+      bankmessagingservice: ${{ steps.filter.outputs.bankmessagingservice || (github.event.inputs.force_build_all == 'true') }}
+      bankcardservice: ${{ steps.filter.outputs.bankcardservice || (github.event.inputs.force_build_all == 'true') }}
+      bankingcommon: ${{ steps.filter.outputs.bankingcommon || (github.event.inputs.force_build_all == 'true') }}
+      force_build_all: ${{ github.event.inputs.force_build_all == 'true' || false }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -102,10 +110,13 @@ jobs:
         run: |
           SERVICE_CHANGED="${{ needs.detect-changes.outputs[matrix.service] }}"
           COMMON_CHANGED="${{ needs.detect-changes.outputs.bankingcommon }}"
+          FORCE_BUILD="${{ needs.detect-changes.outputs.force_build_all }}"
           
-          if [ "$SERVICE_CHANGED" == "true" ] || [ "$COMMON_CHANGED" == "true" ]; then
+          if [ "$SERVICE_CHANGED" == "true" ] || [ "$COMMON_CHANGED" == "true" ] || [ "$FORCE_BUILD" == "true" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
-            if [ "$COMMON_CHANGED" == "true" ]; then
+            if [ "$FORCE_BUILD" == "true" ]; then
+              echo "reason=force build all" >> $GITHUB_OUTPUT
+            elif [ "$COMMON_CHANGED" == "true" ]; then
               echo "reason=bankingcommon changed" >> $GITHUB_OUTPUT
             else
               echo "reason=${{ matrix.service }} changed" >> $GITHUB_OUTPUT
@@ -156,6 +167,8 @@ jobs:
       - name: Set up Docker Buildx
         if: steps.check-service.outputs.changed == 'true'
         uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
       
       - name: Login to Docker Hub
         if: steps.check-service.outputs.changed == 'true'
@@ -182,6 +195,7 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ steps.version.outputs.version }}
             ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:latest
