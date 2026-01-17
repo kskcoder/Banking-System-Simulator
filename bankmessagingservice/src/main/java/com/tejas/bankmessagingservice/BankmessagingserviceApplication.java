@@ -24,7 +24,7 @@ public class BankmessagingserviceApplication {
 	
 	@Bean
 	@ConfigurationProperties(prefix = "spring.mail", ignoreUnknownFields = true, ignoreInvalidFields = true)
-	public MailProperties mailProperties() {
+	MailProperties mailProperties() {
 		try {
 			return new MailProperties();
 		} catch (Exception e) {
