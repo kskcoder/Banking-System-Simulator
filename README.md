@@ -94,8 +94,6 @@ Entire system runs using one Docker Compose file. Services are built locally fro
 docker compose -f docker-local-compose.yml up -d
 ```
 
-**Note:** The `bash` in the code block above is just syntax highlighting. Run the command directly: `docker compose -f docker-local-compose.yml up -d`
-
 **Access Points:**
 - API Gateway: `http://localhost:8765`
 - Eureka Dashboard: `http://localhost:8761`
@@ -337,13 +335,11 @@ Use the following test credentials and data to explore the system:
 
 ---
 
-> **📌 Important:** All demo screenshots shown below are captured from **Swagger UI**. This is a backend-only microservices system - there is no frontend web application. The APIs can also be tested using Postman or any REST client, but all demo screenshots are from Swagger UI. To access Swagger UI, navigate to `http://localhost:8765/webjars/swagger-ui/index.html` (API Gateway).
-
 ### Authentication & JWT Generation
 
 **Auth Service - JWT Token Generation**
 
-![Auth Service JWT Generation](auth-jwt-generation.png)
+![Auth Service JWT Generation](https://github.com/user-attachments/assets/b688d053-84e6-48b3-b52e-3afc03979804)
 
 *JWT token generated after successful user authentication*
 
