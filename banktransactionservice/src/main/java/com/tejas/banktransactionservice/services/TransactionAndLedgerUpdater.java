@@ -1,8 +1,6 @@
 package com.tejas.banktransactionservice.services;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
