@@ -32,6 +32,7 @@ public class PaymentController {
 	PaymentService paymentService;
 	
 	@GetMapping("/all")
+	@Operation(summary = "Get all payments", description = "Retrieve all payments (Admin only)")
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<List<Payment>> getAllPayments() {
 		return ResponseEntity.ok().body(paymentService.getAllPayments());
