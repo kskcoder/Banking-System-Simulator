@@ -73,17 +73,6 @@
             "port": 5432,
             "askForPassword": true,
             "driver": "PostgreSQL",
-            "name": "bank_transaction",
-            "database": "transactiondb",
-            "username": "postgres"
-        },
-        {
-            "ssh": "Disabled",
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 5432,
-            "askForPassword": true,
-            "driver": "PostgreSQL",
             "name": "bankcarddb",
             "database": "bankcarddb",
             "username": "postgres"
@@ -97,6 +86,17 @@
             "driver": "PostgreSQL",
             "name": "bankpaymentdb",
             "database": "bankpaymentdb",
+            "username": "postgres"
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "askForPassword": true,
+            "driver": "PostgreSQL",
+            "name": "bank_transaction",
+            "database": "banktransactiondb",
             "username": "postgres"
         }
     ]
