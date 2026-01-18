@@ -2,6 +2,7 @@ package com.tejas.bankapigateway.configurations;
 
 import java.util.List;
 
+import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -12,10 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
-import org.springframework.core.Ordered;
 
 import com.tejas.bankapigateway.services.JWTService;
-import com.tejas.bankapigateway.configurations.GatewaySecretsConfig;
 import com.tejas.bankingcommon.enums.InternalServiceType;
 import com.tejas.bankingcommon.enums.UserType;
 

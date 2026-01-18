@@ -162,7 +162,7 @@ public class AccountService {
 	
 	@CachePut(value="balance", key="#account.id")
 	protected Double getCachedBalance(Account account) {
-	    return account.getBalance();
+	    return Double.valueOf(account.getBalance());
 	}
 	
 	public String closeAccount(String accountNumber) {
@@ -262,7 +262,7 @@ public class AccountService {
 	public Long getuserIdByAccountId(long accountId) {
 		Account account = repo.getById(accountId).orElseThrow(() -> new NotFoundException("Requested account not found."));
 		if (account != null) {
-			return account.getUserid();
+			return Long.valueOf(account.getUserid());
 		}
 			
 		throw new NotFoundException("Requested account not found.");

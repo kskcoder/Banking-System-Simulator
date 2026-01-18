@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import com.tejas.bankpaymentservice.utils.AuthUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tejas.bankingcommon.dto.CardVerificationRequest;
@@ -96,14 +97,7 @@ public class PaymentService {
 	
 	//Admin related functions
 	public List<Payment> getAllPayments() {
-		ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
-		        .getRequestAttributes();
-		if (attributes == null) {
-			throw new ForbiddenException("You do not have permission to access this resource.");
-		}
-		String role = attributes.getRequest().getHeader("X-User-Role");
-		
-		if (role == null || !role.equals("ADMIN")) {
+		if (!AuthUtils.isAdmin()) {
 			throw new ForbiddenException("You do not have permission to access this resource.");
 		}
 		
