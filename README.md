@@ -355,7 +355,7 @@ Use the following test credentials and data to explore the system:
 
 ![OTP Received in mail](https://github.com/user-attachments/assets/cf94c016-c6b9-4a22-affc-a436a3ffa5e8)
 
-![OTP Received in console](https://github.com/user-attachments/assets/ea322111-82ff-4d4c-9b33-59171e3b591e)
+![OTP Received in console](https://github.com/user-attachments/assets/abe27db0-b26a-45c8-89fb-665e585cae27)
 
 *OTP code generated and sent via console/email*
 
