@@ -351,13 +351,17 @@ Use the following test credentials and data to explore the system:
 
 **OTP Generation**
 
-![OTP Generation](otp-generation.png)
+![OTP Generation](https://github.com/user-attachments/assets/20bc48cb-8033-44e0-b8b9-ab09ffcda6ca)
+
+![OTP Received in mail](https://github.com/user-attachments/assets/cf94c016-c6b9-4a22-affc-a436a3ffa5e8)
+
+![OTP Received in console](https://github.com/user-attachments/assets/abe27db0-b26a-45c8-89fb-665e585cae27)
 
 *OTP code generated and sent via console/email*
 
 **OTP Verification**
 
-![OTP Verification](otp-verification.png)
+![OTP Verification](https://github.com/user-attachments/assets/afc909b9-11af-4ea8-a6e0-e9d9b4d85a38)
 
 *Successful OTP verification process*
 
@@ -367,11 +371,19 @@ Use the following test credentials and data to explore the system:
 
 **Debit Transaction**
 
+![Debit Transaction Mail in Console](https://github.com/user-attachments/assets/276324ce-54fa-48a5-bcb7-0b361103d29d)
+
+![Debit Transaction Mail in MailBox](https://github.com/user-attachments/assets/556b4644-a1b0-40cb-a48b-f8009a1657d7)
+
 ![Debit Transaction](debit-transaction.png)
 
 *Debit transaction processing and balance update*
 
 **Credit Transaction**
+
+![Credit Transaction Mail in Console](https://github.com/user-attachments/assets/561e09bd-c9f5-4e5a-aa07-82cfbc05035c)
+
+![Credit Transaction Mail in MailBox](https://github.com/user-attachments/assets/f0fe0240-387a-4bd0-96ee-7b6709117842)
 
 ![Credit Transaction](credit-transaction.png)
 
