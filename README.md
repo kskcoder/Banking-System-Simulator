@@ -488,6 +488,57 @@ While all demo screenshots are from Swagger UI, you can also test the APIs using
 
 **Note:** The demo pictures above show actual API responses from Swagger UI. This backend system does not include a frontend web application.
 
+### 💳 Payment Service - Signature Calculation
+
+The Payment Service uses HMAC-SHA256 signatures for request authentication. For **testing/demo purposes**, you can use the helper endpoint to calculate signatures.
+
+#### Using the Demo Signature Endpoint
+
+**Endpoint:** `POST /payments/demo/calculate-signature`
+
+**Headers:**
+- `X-Vendor-Secret`: `gatewayTPayVendorKey` (for demo)
+- `X-Timestamp`: Any timestamp value (e.g., `1234567890`)
+
+**Body:** Your payment request JSON (must be **completely copy-pasted as-is**)
+
+**Response:** Returns the calculated signature (Base64 HMAC-SHA256)
+
+#### Step-by-Step Workflow
+
+**For Payment Initiation:**
+
+1. Prepare your payment request body (e.g., `{"fromAccountNumber":"AC11768471543584479","toAccountNumber":"AC21768471543584044","amount":100.0}`)
+2. **Copy the entire body exactly as-is** (including all spaces, formatting, etc.)
+3. Call `POST /payments/demo/calculate-signature` with:
+   - Same body (copy-pasted exactly)
+   - Header: `X-Vendor-Secret: gatewayTPayVendorKey`
+   - Header: `X-Timestamp: 1234567890` (or any timestamp)
+4. Copy the returned signature value
+5. Use the signature in the `X-Signature` header when calling `POST /payments/initiate`:
+   - Same body (copy-pasted exactly)
+   - Header: `X-Signature: <signature-from-step-4>`
+   - Header: `X-Timestamp: <same-timestamp-from-step-3>`
+   - Header: `X-Vendor-Id: TPay`
+   - Header: `X-Vendor-Secret: gatewayTPayVendorKey`
+   - Header: `X-External: 1`
+
+**For OTP Submission:**
+
+The same process applies for `POST /payments/submitotp`:
+
+1. Prepare your OTP request body (e.g., `{"paymentId":1,"otp":"123456"}`)
+   - **Important:** Send OTP as a **string** (e.g., `"otp":"123456"`), not as an integer
+2. **Copy the entire body exactly as-is**
+3. Call `POST /payments/demo/calculate-signature` with the same body and headers
+4. Use the returned signature in `POST /payments/submitotp` with the same body and headers
+
+**Important Notes:**
+
+- ⚠️ The request body sent to `/payments/demo/calculate-signature` must be **completely copy-pasted as-is** to the actual payment endpoint. Any changes (spaces, formatting, etc.) will result in signature mismatch.
+- ⚠️ OTP values must be sent as **strings** (e.g., `"otp":"123456"`), not integers (e.g., `"otp":123456`).
+- ⚠️ This endpoint is for **demo/testing only**. In production, external vendors calculate signatures themselves using their secret keys and the same algorithm (normalized JSON body + timestamp, then HMAC-SHA256 + Base64).
+
 ## 🧠 Notes
 
 This project intentionally avoids:
