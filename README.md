@@ -327,11 +327,13 @@ Use the following test credentials and data to explore the system:
 - **TejasAdmin** → Account: `AC31768471543584173` | Type: CURRENT | Balance: ₹25,810
 
 **Test Cards:**
-- **User1** → Card ending: `2745` | Limit: ₹50,000 | Status: INACTIVE
-- **User2** → Card ending: `6035` | Limit: ₹50,000 | Status: INACTIVE
-- **TejasAdmin** → Card ending: `7775` | Limit: ₹200,000 | Status: INACTIVE
+- **User1** → Card: `1111167093812745` | CVV: `592` | Expiry: `01/2031` | Limit: ₹50,000 | Status: INACTIVE
+- **User2** → Card: `1111420846226035` | CVV: `336` | Expiry: `01/2031` | Limit: ₹50,000 | Status: INACTIVE
+- **TejasAdmin** → Card: `1111166139647775` | CVV: `620` | Expiry: `01/2031` | Limit: ₹200,000 | Status: INACTIVE
 
-**Note:** Username and password are the same for all test users. Cards will be activated after first use.
+**Note:** 
+- Username and password are the same for all test users. Cards will be activated after first use.
+- **Important:** When using card numbers in API requests (signature calculation, payment body, etc.), input them **without spaces** (e.g., use `1111167093812745` instead of `1111 1670 9381 2745`).
 
 ---
 
@@ -536,6 +538,7 @@ The same process applies for `POST /payments/submitotp`:
 **Important Notes:**
 
 - ⚠️ The request body sent to `/payments/demo/calculate-signature` must be **completely copy-pasted as-is** to the actual payment endpoint. Any changes (spaces, formatting, etc.) will result in signature mismatch.
+- ⚠️ **Card numbers must be input without spaces** in request bodies and signature calculations (e.g., use `1111167093812745` instead of `1111 1670 9381 2745`).
 - ⚠️ OTP values must be sent as **strings** (e.g., `"otp":"123456"`), not integers (e.g., `"otp":123456`).
 - ⚠️ This endpoint is for **demo/testing only**. In production, external vendors calculate signatures themselves using their secret keys and the same algorithm (normalized JSON body + timestamp, then HMAC-SHA256 + Base64).
 

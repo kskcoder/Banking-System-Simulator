@@ -1,5 +1,5 @@
 -- Card 1 (Account ID: 1, SAVINGS)
--- Raw values for response: cardNumber="1111 1670 9381 2745", cvv="592"
+-- Raw values for response: cardNumber="1111 1670 9381 2745", cvv="592", expiry="01/2031"
 INSERT INTO cards
 (id, account_id, card_number, cvv, last_digits, expiry_date, card_limit, status, created_at, updated_at)
 VALUES
@@ -16,7 +16,7 @@ VALUES
   NOW()
 ),
 -- Card 2 (Account ID: 2, SAVINGS)
--- Raw values for response: cardNumber="1111 4208 4622 6035", cvv="336"
+-- Raw values for response: cardNumber="1111 4208 4622 6035", cvv="336", expiry="01/2031"
 (
   2,
   2,
@@ -30,7 +30,7 @@ VALUES
   NOW()
 ),
 -- Card 3 (Account ID: 3, CURRENT)
--- Raw values for response: cardNumber="1111 1661 3964 7775", cvv="620"
+-- Raw values for response: cardNumber="1111 1661 3964 7775", cvv="620", expiry="01/2031"
 (
   3,
   3,
