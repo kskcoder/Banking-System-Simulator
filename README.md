@@ -327,11 +327,13 @@ Use the following test credentials and data to explore the system:
 - **TejasAdmin** → Account: `AC31768471543584173` | Type: CURRENT | Balance: ₹25,810
 
 **Test Cards:**
-- **User1** → Card ending: `2745` | Limit: ₹50,000 | Status: INACTIVE
-- **User2** → Card ending: `6035` | Limit: ₹50,000 | Status: INACTIVE
-- **TejasAdmin** → Card ending: `7775` | Limit: ₹200,000 | Status: INACTIVE
+- **User1** → Card: `1111167093812745` | CVV: `592` | Expiry: `01/2031` | Limit: ₹50,000 | Status: INACTIVE
+- **User2** → Card: `1111420846226035` | CVV: `336` | Expiry: `01/2031` | Limit: ₹50,000 | Status: INACTIVE
+- **TejasAdmin** → Card: `1111166139647775` | CVV: `620` | Expiry: `01/2031` | Limit: ₹200,000 | Status: INACTIVE
 
-**Note:** Username and password are the same for all test users. Cards will be activated after first use.
+**Note:** 
+- Username and password are the same for all test users. Cards will be activated after first use.
+- **Important:** When using card numbers in API requests (signature calculation, payment body, etc.), input them **without spaces** (e.g., use `1111167093812745` instead of `1111 1670 9381 2745`).
 
 ---
 
@@ -349,17 +351,13 @@ Use the following test credentials and data to explore the system:
 
 **OTP Generation**
 
-![OTP Generation](https://github.com/user-attachments/assets/20bc48cb-8033-44e0-b8b9-ab09ffcda6ca)
-
-![OTP Received in mail](https://github.com/user-attachments/assets/cf94c016-c6b9-4a22-affc-a436a3ffa5e8)
-
-![OTP Received in console](https://github.com/user-attachments/assets/abe27db0-b26a-45c8-89fb-665e585cae27)
+![OTP Generation](otp-generation.png)
 
 *OTP code generated and sent via console/email*
 
 **OTP Verification**
 
-![OTP Verification](https://github.com/user-attachments/assets/afc909b9-11af-4ea8-a6e0-e9d9b4d85a38)
+![OTP Verification](otp-verification.png)
 
 *Successful OTP verification process*
 
@@ -369,19 +367,11 @@ Use the following test credentials and data to explore the system:
 
 **Debit Transaction**
 
-![Debit Transaction Mail in Console](https://github.com/user-attachments/assets/276324ce-54fa-48a5-bcb7-0b361103d29d)
-
-![Debit Transaction Mail in MailBox](https://github.com/user-attachments/assets/556b4644-a1b0-40cb-a48b-f8009a1657d7)
-
 ![Debit Transaction](debit-transaction.png)
 
 *Debit transaction processing and balance update*
 
 **Credit Transaction**
-
-![Credit Transaction Mail in Console](https://github.com/user-attachments/assets/561e09bd-c9f5-4e5a-aa07-82cfbc05035c)
-
-![Debit Transaction Mail in MailBox](https://github.com/user-attachments/assets/f0fe0240-387a-4bd0-96ee-7b6709117842)
 
 ![Credit Transaction](credit-transaction.png)
 
@@ -548,6 +538,7 @@ The same process applies for `POST /payments/submitotp`:
 **Important Notes:**
 
 - ⚠️ The request body sent to `/payments/demo/calculate-signature` must be **completely copy-pasted as-is** to the actual payment endpoint. Any changes (spaces, formatting, etc.) will result in signature mismatch.
+- ⚠️ **Card numbers must be input without spaces** in request bodies and signature calculations (e.g., use `1111167093812745` instead of `1111 1670 9381 2745`).
 - ⚠️ OTP values must be sent as **strings** (e.g., `"otp":"123456"`), not integers (e.g., `"otp":123456`).
 - ⚠️ This endpoint is for **demo/testing only**. In production, external vendors calculate signatures themselves using their secret keys and the same algorithm (normalized JSON body + timestamp, then HMAC-SHA256 + Base64).
 
