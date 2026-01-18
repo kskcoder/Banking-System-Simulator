@@ -24,10 +24,11 @@ public class CachedBodyGlobalFilter implements WebFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
 
-        if (!path.startsWith("/bankpaymentservice") 
-                || path.startsWith("/bankpaymentservice/v3/api-docs")
+        if (path.startsWith("/bankpaymentservice/v3/api-docs")
                 || path.startsWith("/bankpaymentservice/swagger-ui")
-                || path.startsWith("/bankpaymentservice/webjars")) {
+                || path.startsWith("/bankpaymentservice/webjars")
+                || (!path.startsWith("/bankpaymentservice/payments/submitotp")
+                    && !path.startsWith("/bankpaymentservice/payments/initiate"))) {
             return chain.filter(exchange);
         }
 
