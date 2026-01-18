@@ -97,7 +97,6 @@ public class JWTFilter implements WebFilter, Ordered {
                     .header("X-User-Id", userId)
                     .header("X-User-Role", role)
                     .build();
-
             return chain.filter(exchange.mutate().request(modifiedRequest).build())
                     .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
 

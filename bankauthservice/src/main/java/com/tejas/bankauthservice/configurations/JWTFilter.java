@@ -39,6 +39,9 @@ public class JWTFilter extends OncePerRequestFilter {
 	
 	@Value("${interServiceSecretKey}")
 	private String interServiceSecretKey;
+	
+	@Value("${authSecretKey}")
+	private String authSecretKey;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -61,8 +64,11 @@ public class JWTFilter extends OncePerRequestFilter {
 		System.out.println("Auth Service JWTFilter - interServiceSecretKey: " + (interServiceSecretKey != null ? "present (length: " + interServiceSecretKey.length() + ")" : "null"));
 		System.out.println("Auth Service JWTFilter - Keys match: " + (internalAuthKey != null && interServiceSecretKey != null && interServiceSecretKey.equals(internalAuthKey)));
 		
+		System.out.println(internalAuthKey);
+		System.out.println(authSecretKey);
+		
 		// Handle inter-service authentication
-		if (internalAuthKey != null && interServiceSecretKey.equals(internalAuthKey)) {
+		if (internalAuthKey != null && interServiceSecretKey.equals(internalAuthKey) || interServiceSecretKey.equals(authSecretKey)) {
 			role = request.getHeader("X-User-Role");
 			userId = request.getHeader("X-User-Id");
 			
