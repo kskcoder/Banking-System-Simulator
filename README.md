@@ -415,73 +415,38 @@ Use the following test credentials and data to explore the system:
 
 ![Payment Confirmation](https://github.com/user-attachments/assets/afc909b9-11af-4ea8-a6e0-e9d9b4d85a38)
 
-![Payment Webhook on external site](https://github.com/user-attachments/assets/afc909b9-11af-4ea8-a6e0-e9d9b4d85a38)
+![Payment Webhook on external site](https://github.com/user-attachments/assets/8385fb2e-0dc9-4d55-9fde-f5da666e43cb)
 
 *Payment success confirmation and notification on Webhook simulating vendor's webhook*
-
 ---
 
 ### Card Management
 
 **Card Creation**
 
-![Card Creation](card-creation.png)
+![Card Creation](https://github.com/user-attachments/assets/a2b9c9fc-0a6d-4dc9-9357-827078867e5c)
 
 *New card creation and limit assignment*
-
-**Card Limits**
-
-![Card Limits](card-limits.png)
-
-*Card limit management and updates*
-
----
-
-### Messaging & Notifications
-
-**Transaction Notifications**
-
-![Transaction Notifications](transaction-notifications.png)
-
-*Kafka-based async transaction notifications*
-
-**OTP Email**
-
-![OTP Email](otp-email.png)
-
-*OTP code delivered via email*
-
 ---
 
 ### Service Discovery & Monitoring
 
 **Eureka Dashboard**
 
-![Eureka Dashboard](eureka-dashboard.png)
+![Eureka Dashboard](https://github.com/user-attachments/assets/ce453c2c-7036-4cc9-b144-c9d6a3e3c2b4)
 
 *Service registry showing all registered microservices*
-
-**API Gateway Routes**
-
-![API Gateway Routes](api-gateway-routes.png)
-
-*API Gateway routing configuration and endpoints*
-
 ---
 
 ### Account Management
 
 **Account Creation**
 
-![Account Creation](account-creation.png)
+![Account Creation 1](https://github.com/user-attachments/assets/12957d85-024c-4108-84cc-b75f7cdcc4a4)
+
+![Account Creation 2](https://github.com/user-attachments/assets/762f69d8-a1e3-468f-be55-07415d808f2f)
 
 *New bank account creation process*
-
-**Account Balance**
-
-![Account Balance](account-balance.png)
-
-*Account balance inquiry and details*
 
 ## 🔧 API Testing & Documentation
 
