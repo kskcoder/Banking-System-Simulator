@@ -375,7 +375,9 @@ Use the following test credentials and data to explore the system:
 
 ![Debit Transaction Mail in MailBox](https://github.com/user-attachments/assets/556b4644-a1b0-40cb-a48b-f8009a1657d7)
 
-![Debit Transaction](debit-transaction.png)
+![Debit Transaction 1]([debit-transaction.png](https://github.com/user-attachments/assets/2a7acb54-bd90-4275-8c42-2020b71a488e))
+
+![Debit Transaction 2]([debit-transaction.png](https://github.com/user-attachments/assets/6411f734-0849-428b-b305-122960dade34))
 
 *Debit transaction processing and balance update*
 
@@ -385,13 +387,17 @@ Use the following test credentials and data to explore the system:
 
 ![Credit Transaction Mail in MailBox](https://github.com/user-attachments/assets/f0fe0240-387a-4bd0-96ee-7b6709117842)
 
-![Credit Transaction](credit-transaction.png)
+![Credit Transaction 1]([debit-transaction.png](https://github.com/user-attachments/assets/f237c84b-6885-4ff5-81b9-c4b341865bf4))
+
+![Credit Transaction 2]([debit-transaction.png](https://github.com/user-attachments/assets/96566fde-f821-4793-a803-e39904bedc86))
 
 *Credit transaction processing and balance update*
 
-**Transaction History**
+**Transaction and Ledger History**
 
-![Transaction History](transaction-history.png)
+![Transaction History](https://github.com/user-attachments/assets/6253b34b-5baa-414e-bb9b-046472cf8406)
+
+![Transaction Ledger History](https://github.com/user-attachments/assets/a67d4c93-8310-4000-a376-455831430104)
 
 *View of transaction history and account statements*
 
@@ -401,15 +407,17 @@ Use the following test credentials and data to explore the system:
 
 **Payment Initiation**
 
-![Payment Processing](payment-processing.png)
+![Payment Processing](https://github.com/user-attachments/assets/20bc48cb-8033-44e0-b8b9-ab09ffcda6ca)
 
 *Payment request processing flow*
 
 **Payment Confirmation**
 
-![Payment Confirmation](payment-confirmation.png)
+![Payment Confirmation](https://github.com/user-attachments/assets/afc909b9-11af-4ea8-a6e0-e9d9b4d85a38)
 
-*Payment success confirmation and notification*
+![Payment Webhook on external site](https://github.com/user-attachments/assets/afc909b9-11af-4ea8-a6e0-e9d9b4d85a38)
+
+*Payment success confirmation and notification on Webhook simulating vendor's webhook*
 
 ---
 
