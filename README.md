@@ -375,9 +375,9 @@ Use the following test credentials and data to explore the system:
 
 ![Debit Transaction Mail in MailBox](https://github.com/user-attachments/assets/556b4644-a1b0-40cb-a48b-f8009a1657d7)
 
-![Debit Transaction 1]([debit-transaction.png](https://github.com/user-attachments/assets/2a7acb54-bd90-4275-8c42-2020b71a488e))
+![Debit Transaction 1](https://github.com/user-attachments/assets/2a7acb54-bd90-4275-8c42-2020b71a488e)
 
-![Debit Transaction 2]([debit-transaction.png](https://github.com/user-attachments/assets/6411f734-0849-428b-b305-122960dade34))
+![Debit Transaction 2](https://github.com/user-attachments/assets/6411f734-0849-428b-b305-122960dade34)
 
 *Debit transaction processing and balance update*
 
@@ -387,9 +387,9 @@ Use the following test credentials and data to explore the system:
 
 ![Credit Transaction Mail in MailBox](https://github.com/user-attachments/assets/f0fe0240-387a-4bd0-96ee-7b6709117842)
 
-![Credit Transaction 1]([debit-transaction.png](https://github.com/user-attachments/assets/f237c84b-6885-4ff5-81b9-c4b341865bf4))
+![Credit Transaction 1](https://github.com/user-attachments/assets/f237c84b-6885-4ff5-81b9-c4b341865bf4)
 
-![Credit Transaction 2]([debit-transaction.png](https://github.com/user-attachments/assets/96566fde-f821-4793-a803-e39904bedc86))
+![Credit Transaction 2](https://github.com/user-attachments/assets/96566fde-f821-4793-a803-e39904bedc86)
 
 *Credit transaction processing and balance update*
 
@@ -398,6 +398,16 @@ Use the following test credentials and data to explore the system:
 ![Transaction History](https://github.com/user-attachments/assets/6253b34b-5baa-414e-bb9b-046472cf8406)
 
 ![Transaction Ledger History](https://github.com/user-attachments/assets/a67d4c93-8310-4000-a376-455831430104)
+
+*View of transaction history and account statements*
+
+**Account Statement PDF**
+
+![Statement generation request](https://github.com/user-attachments/assets/962a13d7-df17-4959-a82a-114bab4b3693)
+
+![PDF Statement](https://github.com/user-attachments/assets/1e06118a-2c92-4e60-b581-5fa5b2affffd)
+
+[statement_AC31768471543584173_19Jan20261159.pdf](https://github.com/user-attachments/files/24714878/statement_AC31768471543584173_19Jan20261159.pdf)
 
 *View of transaction history and account statements*
 
