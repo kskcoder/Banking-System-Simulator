@@ -428,6 +428,30 @@ Use the following test credentials and data to explore the system:
 ![Payment Webhook on external site](https://github.com/user-attachments/assets/8385fb2e-0dc9-4d55-9fde-f5da666e43cb)
 
 *Payment success confirmation and notification on Webhook simulating vendor's webhook*
+
+**⚠️ Webhook Configuration & Security:**
+
+The payment service sends payment status updates to vendor webhook URLs configured in the Config Server repository. For testing purposes, a public webhook URL is configured:
+
+- **Webhook URL:** `TPAY_WEBHOOK_URL=https://webhook.site/68a42906-0506-4fda-9800-954bb8530a62` (configured in `public.env`)
+
+**Important Security Notes:**
+
+1. **Clear Messages After Testing:** After testing payment flows, **immediately clear all messages** from the webhook.site page. This is a public URL, and anyone with access can see:
+   - Payment request details
+   - Sender's IP address
+   - Payment status responses
+   - Other sensitive transaction information
+
+2. **Webhook URL Configuration:** The webhook URL is configured in the Config Server repository (referenced by `CONFIG_GIT_URI_EXTERNAL` in `public.env`). To update it:
+   - Modify the `payment.callbackUrl.TPay` property in the config repository
+   - Or update `TPAY_WEBHOOK_URL` in `public.env` if using environment variable mapping
+
+3. **Expired Webhook URLs:** If the webhook URL expires (you don't see the final payment response on webhook.site):
+   - Generate a new webhook URL at [webhook.site](https://webhook.site)
+   - Update the configuration in the Config Server repository or `public.env`
+   - Restart the payment service to apply the changes
+
 ---
 
 ### Card Management
@@ -519,6 +543,8 @@ The Payment Service uses HMAC-SHA256 signatures for request authentication. For 
    - Header: `X-Vendor-Id: TPay`
    - Header: `X-Vendor-Secret: gatewayTPayVendorKey`
    - Header: `X-External: 1`
+6. After payment completion, check the webhook URL (`TPAY_WEBHOOK_URL` from `public.env`) to see the payment status response
+7. **⚠️ IMPORTANT:** Immediately clear all messages from the webhook.site page after testing, as it's a public URL and exposes sensitive information including IP addresses
 
 **For OTP Submission:**
 
@@ -529,6 +555,8 @@ The same process applies for `POST /payments/submitotp`:
 2. **Copy the entire body exactly as-is**
 3. Call `POST /payments/demo/calculate-signature` with the same body and headers
 4. Use the returned signature in `POST /payments/submitotp` with the same body and headers
+5. After OTP submission and payment completion, check the webhook URL to see the final payment status response
+6. **⚠️ IMPORTANT:** Immediately clear all messages from the webhook.site page after testing, as it's a public URL and exposes sensitive information including IP addresses
 
 **Important Notes:**
 
