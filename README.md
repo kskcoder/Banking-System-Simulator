@@ -1,4 +1,4 @@
-# 🏦 Banking Microservices System
+# 🏦 Banking System Simulator
 
 A production-style banking backend system built using Java, Spring Boot, and Docker, following real-world microservices architecture and deployment practices.
 
