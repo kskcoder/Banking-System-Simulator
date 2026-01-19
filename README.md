@@ -6,16 +6,32 @@ The system supports authentication, accounts, transactions, payments, cards, mes
 
 ## 🧩 Architecture Overview
 
+### System Design Diagrams
+
+#### High-Level Design (HLD)
+The High-Level Design diagram provides an overview of the entire system architecture, showing all microservices, infrastructure components, and their interactions.
+
+**📊 [View HLD Diagram](https://github.com/your-username/Banking-System-Simulator/blob/main/SYSTEM_DESIGN_HLD.md#31-high-level-architecture-diagram)**
+
+**📝 [HLD Documentation](https://github.com/your-username/Banking-System-Simulator/blob/main/SYSTEM_DESIGN_HLD.md)** - Complete High-Level Design document with architecture patterns, component details, data flows, and security architecture.
+
+#### Low-Level Design (LLD)
+The Low-Level Design diagram shows detailed component-level architecture, including controllers, services, repositories, database schemas, API contracts, and internal service interactions.
+
+**📊 [View LLD Diagram](https://github.com/your-username/Banking-System-Simulator/blob/main/SYSTEM_DESIGN_LLD.md#21-database-schemas)**
+
+**📝 [LLD Documentation](https://github.com/your-username/Banking-System-Simulator/blob/main/SYSTEM_DESIGN_LLD.md)** - Complete Low-Level Design document with database schemas, API contracts, Kafka topics, service-to-service communication, and implementation details.
+
 ### Core Components
 
 - **Config Server** – Centralized configuration management
 - **Service Registry (Eureka)** – Service discovery
 - **API Gateway** – Single entry point for all client requests
 - **Auth Service** – User authentication & OTP handling
-- **Account Service** – Account creation & balance management
+- **Account Service** – Account creation & balance management, monthly interest calculation (scheduled task)
 - **Transaction Service** – Debit/Credit tracking
 - **Payment Service** – Payment processing
-- **Card Service** – Card & limits management
+- **Card Service** – Card & limits management, daily limit reset (scheduled task)
 - **Messaging Service** – Email notifications (OTP & transaction alerts) via Gmail SMTP, receives events via Kafka
 
 ### Infrastructure
@@ -259,6 +275,8 @@ Uses external email provider. Enabled only when email credentials are provided i
 - **Swagger/OpenAPI 3** (API documentation)
 - **Docker & Docker Compose** (Containerization)
 - **GitHub Actions** (CI/CD)
+- **JUnit 5** (Testing framework)
+- **Mockito** (Mocking framework for unit tests)
 
 See [Service Technologies](#service-technologies) section for detailed tech stack per service.
 
@@ -294,10 +312,10 @@ Each microservice is built with the following technologies:
 | **Service Registry** | Spring Cloud Netflix Eureka Server |
 | **API Gateway** | Spring Cloud Gateway, Load Balancing |
 | **Auth Service** | Spring Security, JWT (jjwt), PostgreSQL, Redis (caching), Kafka (OTP messaging) |
-| **Account Service** | Spring Data JPA, PostgreSQL, Redis (caching), Kafka (events), Feign Client |
+| **Account Service** | Spring Data JPA, PostgreSQL, Redis (caching), Kafka (events), Feign Client, Spring Scheduling (monthly interest calculation) |
 | **Transaction Service** | Spring Data JPA, PostgreSQL, Kafka (events), Feign Client |
 | **Payment Service** | Spring Data JPA, PostgreSQL, Kafka (events), Feign Client |
-| **Card Service** | Spring Data JPA, PostgreSQL, Redis (caching), Kafka (events), Feign Client |
+| **Card Service** | Spring Data JPA, PostgreSQL, Redis (caching), Kafka (events), Feign Client, Spring Scheduling (daily limit reset) |
 | **Messaging Service** | Spring Kafka (event consumption), Spring Mail (Gmail SMTP), HTML email templates |
 
 **Common Technologies Across Services:**
@@ -307,6 +325,7 @@ Each microservice is built with the following technologies:
 - PostgreSQL (via Spring Data JPA)
 - Swagger/OpenAPI 3
 - Docker
+- JUnit 5 & Mockito (Testing)
 
 ## 📸 Demo Pictures
 
@@ -599,6 +618,27 @@ Banking-System-Simulator/
 All services include health checks and are monitored via:
 - Eureka Dashboard: `http://localhost:8761`
 - Service health endpoints: `http://localhost:<port>/actuator/health`
+
+## ⏰ Scheduled Tasks
+
+The system includes automated scheduled tasks:
+
+### Account Service - Monthly Interest Calculation
+- **Schedule**: 1st day of every month at midnight (Asia/Kolkata timezone)
+- **Function**: Calculates and credits monthly interest to SAVINGS accounts
+- **Interest Rates**: 
+  - 3.5% annually for balances < ₹1,00,000
+  - 7% annually for balances ≥ ₹1,00,000
+- **Implementation**: `InterestService.processMonthlyInterest()`
+- **Event**: Publishes interest transaction to Kafka `transaction-interest-topic`
+
+### Card Service - Daily Limit Reset
+- **Schedule**: Daily at midnight
+- **Function**: Resets daily spending limit for all ACTIVE cards
+- **Daily Limits**:
+  - ₹50,000 for SAVINGS account cards
+  - ₹200,000 for CURRENT account cards
+- **Implementation**: `LimitResetService.resetDailyLimit()`
 
 ## 📚 Additional Resources
 
