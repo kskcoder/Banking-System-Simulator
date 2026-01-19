@@ -375,7 +375,9 @@ Use the following test credentials and data to explore the system:
 
 ![Debit Transaction Mail in MailBox](https://github.com/user-attachments/assets/556b4644-a1b0-40cb-a48b-f8009a1657d7)
 
-![Debit Transaction](debit-transaction.png)
+![Debit Transaction 1](https://github.com/user-attachments/assets/2a7acb54-bd90-4275-8c42-2020b71a488e)
+
+![Debit Transaction 2](https://github.com/user-attachments/assets/6411f734-0849-428b-b305-122960dade34)
 
 *Debit transaction processing and balance update*
 
@@ -385,13 +387,27 @@ Use the following test credentials and data to explore the system:
 
 ![Credit Transaction Mail in MailBox](https://github.com/user-attachments/assets/f0fe0240-387a-4bd0-96ee-7b6709117842)
 
-![Credit Transaction](credit-transaction.png)
+![Credit Transaction 1](https://github.com/user-attachments/assets/f237c84b-6885-4ff5-81b9-c4b341865bf4)
+
+![Credit Transaction 2](https://github.com/user-attachments/assets/96566fde-f821-4793-a803-e39904bedc86)
 
 *Credit transaction processing and balance update*
 
-**Transaction History**
+**Transaction and Ledger History**
 
-![Transaction History](transaction-history.png)
+![Transaction History](https://github.com/user-attachments/assets/6253b34b-5baa-414e-bb9b-046472cf8406)
+
+![Transaction Ledger History](https://github.com/user-attachments/assets/a67d4c93-8310-4000-a376-455831430104)
+
+*View of transaction history and account statements*
+
+**Account Statement PDF**
+
+![Statement generation request](https://github.com/user-attachments/assets/962a13d7-df17-4959-a82a-114bab4b3693)
+
+![PDF Statement](https://github.com/user-attachments/assets/1e06118a-2c92-4e60-b581-5fa5b2affffd)
+
+[statement_AC31768471543584173_19Jan20261159.pdf](https://github.com/user-attachments/files/24714878/statement_AC31768471543584173_19Jan20261159.pdf)
 
 *View of transaction history and account statements*
 
@@ -401,15 +417,40 @@ Use the following test credentials and data to explore the system:
 
 **Payment Initiation**
 
-![Payment Processing](payment-processing.png)
+![Payment Processing](https://github.com/user-attachments/assets/20bc48cb-8033-44e0-b8b9-ab09ffcda6ca)
 
 *Payment request processing flow*
 
 **Payment Confirmation**
 
-![Payment Confirmation](payment-confirmation.png)
+![Payment Confirmation](https://github.com/user-attachments/assets/afc909b9-11af-4ea8-a6e0-e9d9b4d85a38)
 
-*Payment success confirmation and notification*
+![Payment Webhook on external site](https://github.com/user-attachments/assets/8385fb2e-0dc9-4d55-9fde-f5da666e43cb)
+
+*Payment success confirmation and notification on Webhook simulating vendor's webhook*
+
+**⚠️ Webhook Configuration & Security:**
+
+The payment service sends payment status updates to vendor webhook URLs configured in the Config Server repository. For testing purposes, a public webhook URL is configured:
+
+- **Webhook URL:** `TPAY_WEBHOOK_URL=https://webhook.site/68a42906-0506-4fda-9800-954bb8530a62` (configured in `public.env`)
+
+**Important Security Notes:**
+
+1. **Clear Messages After Testing:** After testing payment flows, **immediately clear all messages** from the webhook.site page. This is a public URL, and anyone with access can see:
+   - Payment request details
+   - Sender's IP address
+   - Payment status responses
+   - Other sensitive transaction information
+
+2. **Webhook URL Configuration:** The webhook URL is configured in the Config Server repository (referenced by `CONFIG_GIT_URI_EXTERNAL` in `public.env`). To update it:
+   - Modify the `payment.callbackUrl.TPay` property in the config repository
+   - Or update `TPAY_WEBHOOK_URL` in `public.env` if using environment variable mapping
+
+3. **Expired Webhook URLs:** If the webhook URL expires (you don't see the final payment response on webhook.site):
+   - Generate a new webhook URL at [webhook.site](https://webhook.site)
+   - Update the configuration in the Config Server repository or `public.env`
+   - Restart the payment service to apply the changes
 
 ---
 
@@ -417,63 +458,29 @@ Use the following test credentials and data to explore the system:
 
 **Card Creation**
 
-![Card Creation](card-creation.png)
+![Card Creation](https://github.com/user-attachments/assets/a2b9c9fc-0a6d-4dc9-9357-827078867e5c)
 
 *New card creation and limit assignment*
-
-**Card Limits**
-
-![Card Limits](card-limits.png)
-
-*Card limit management and updates*
-
----
-
-### Messaging & Notifications
-
-**Transaction Notifications**
-
-![Transaction Notifications](transaction-notifications.png)
-
-*Kafka-based async transaction notifications*
-
-**OTP Email**
-
-![OTP Email](otp-email.png)
-
-*OTP code delivered via email*
-
 ---
 
 ### Service Discovery & Monitoring
 
 **Eureka Dashboard**
 
-![Eureka Dashboard](eureka-dashboard.png)
+![Eureka Dashboard](https://github.com/user-attachments/assets/ce453c2c-7036-4cc9-b144-c9d6a3e3c2b4)
 
 *Service registry showing all registered microservices*
-
-**API Gateway Routes**
-
-![API Gateway Routes](api-gateway-routes.png)
-
-*API Gateway routing configuration and endpoints*
-
 ---
 
 ### Account Management
 
 **Account Creation**
 
-![Account Creation](account-creation.png)
+![Account Creation 1](https://github.com/user-attachments/assets/12957d85-024c-4108-84cc-b75f7cdcc4a4)
+
+![Account Creation 2](https://github.com/user-attachments/assets/762f69d8-a1e3-468f-be55-07415d808f2f)
 
 *New bank account creation process*
-
-**Account Balance**
-
-![Account Balance](account-balance.png)
-
-*Account balance inquiry and details*
 
 ## 🔧 API Testing & Documentation
 
@@ -536,6 +543,8 @@ The Payment Service uses HMAC-SHA256 signatures for request authentication. For 
    - Header: `X-Vendor-Id: TPay`
    - Header: `X-Vendor-Secret: gatewayTPayVendorKey`
    - Header: `X-External: 1`
+6. After payment completion, check the webhook URL (`TPAY_WEBHOOK_URL` from `public.env`) to see the payment status response
+7. **⚠️ IMPORTANT:** Immediately clear all messages from the webhook.site page after testing, as it's a public URL and exposes sensitive information including IP addresses
 
 **For OTP Submission:**
 
@@ -546,6 +555,8 @@ The same process applies for `POST /payments/submitotp`:
 2. **Copy the entire body exactly as-is**
 3. Call `POST /payments/demo/calculate-signature` with the same body and headers
 4. Use the returned signature in `POST /payments/submitotp` with the same body and headers
+5. After OTP submission and payment completion, check the webhook URL to see the final payment status response
+6. **⚠️ IMPORTANT:** Immediately clear all messages from the webhook.site page after testing, as it's a public URL and exposes sensitive information including IP addresses
 
 **Important Notes:**
 
