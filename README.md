@@ -130,7 +130,7 @@ wget https://raw.githubusercontent.com/kskcoder/Banking-System-Simulator/release
 
 **Alternative:** Right-click these links and select "Save As": [public.env](https://raw.githubusercontent.com/kskcoder/Banking-System-Simulator/release/public.env) | [docker-hub-compose.yml](https://raw.githubusercontent.com/kskcoder/Banking-System-Simulator/release/docker-hub-compose.yml)
 
-**Note:** For email functionality, create `private.env` locally (see [Email Setup](#-otp--email-setup) section). This file is not included in the repository for security reasons.
+**Note:** For email functionality, create `private.env` locally (see [Email Setup](#otp-email-setup) section). This file is not included in the repository for security reasons.
 
 **Command:**
 ```bash
@@ -260,7 +260,7 @@ Uses external email provider. Enabled only when email credentials are provided i
 - **Docker & Docker Compose** (Containerization)
 - **GitHub Actions** (CI/CD)
 
-See [Service Technologies](#-service-technologies) section for detailed tech stack per service.
+See [Service Technologies](#service-technologies) section for detailed tech stack per service.
 
 ## 🎯 Design Goals
 
