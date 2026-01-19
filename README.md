@@ -11,16 +11,16 @@ The system supports authentication, accounts, transactions, payments, cards, mes
 #### High-Level Design (HLD)
 The High-Level Design diagram provides an overview of the entire system architecture, showing all microservices, infrastructure components, and their interactions.
 
-**📊 [View HLD Diagram](https://github.com/your-username/Banking-System-Simulator/blob/main/SYSTEM_DESIGN_HLD.md#31-high-level-architecture-diagram)**
+**📊 [HLD Diagram](https://github.com/user-attachments/assets/44b6f5af-d013-4f76-bf8d-c9e6d1e3f52c)**
 
-**📝 [HLD Documentation](https://github.com/your-username/Banking-System-Simulator/blob/main/SYSTEM_DESIGN_HLD.md)** - Complete High-Level Design document with architecture patterns, component details, data flows, and security architecture.
+**📝 [HLD Documentation](https://github.com/kskcoder/Banking-System-Simulator/blob/development/SYSTEM_DESIGN_HLD.md)** - Complete High-Level Design document with architecture patterns, component details, data flows, and security architecture.
 
 #### Low-Level Design (LLD)
 The Low-Level Design diagram shows detailed component-level architecture, including controllers, services, repositories, database schemas, API contracts, and internal service interactions.
 
-**📊 [View LLD Diagram](https://github.com/your-username/Banking-System-Simulator/blob/main/SYSTEM_DESIGN_LLD.md#21-database-schemas)**
+**📊 [LLD Diagram](https://github.com/user-attachments/assets/595dc23b-e638-4820-96ed-8d19aa0ea2bf)**
 
-**📝 [LLD Documentation](https://github.com/your-username/Banking-System-Simulator/blob/main/SYSTEM_DESIGN_LLD.md)** - Complete Low-Level Design document with database schemas, API contracts, Kafka topics, service-to-service communication, and implementation details.
+**📝 [LLD Documentation](https://github.com/kskcoder/Banking-System-Simulator/blob/development/SYSTEM_DESIGN_LLD.md)** - Complete Low-Level Design document with database schemas, API contracts, Kafka topics, service-to-service communication, and implementation details.
 
 ### Core Components
 
