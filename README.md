@@ -424,7 +424,7 @@ Use the following test credentials and data to explore the system:
 
 ![Statement generation request](https://github.com/user-attachments/assets/962a13d7-df17-4959-a82a-114bab4b3693)
 
-![PDF Statement](https://github.com/user-attachments/assets/1e06118a-2c92-4e60-b581-5fa5b2affffd)
+![PDF Statement](https://github.com/user-attachments/assets/85d35c67-2ece-4d8d-bd6a-5c755d34d3a6)
 
 [statement_AC31768471543584173_19Jan20261159.pdf](https://github.com/user-attachments/files/24714878/statement_AC31768471543584173_19Jan20261159.pdf)
 
